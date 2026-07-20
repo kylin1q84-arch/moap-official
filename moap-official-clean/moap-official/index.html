@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071a17">
+  <title>MOAP Official｜麻将数据分析平台</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="logo">麻</div><div><h1>MOAP OFFICIAL</h1><p>五人麻将联赛官方数据平台</p></div></div>
+    <div class="auth-copy">使用 Supabase 中创建的账号登录。比赛数据、排名、对位和荣誉均从云端读取。</div>
+    <label>登录邮箱<input id="loginEmail" type="email" autocomplete="email" placeholder="name@example.com"></label>
+    <label>密码<input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码"></label>
+    <button class="btn primary auth-submit" id="loginBtn" type="button">登录系统</button>
+    <div class="auth-status" id="authStatus">等待登录</div>
+  </div>
+</div>
+
+<div class="shell" id="appShell" hidden>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">麻</div>
+      <div>
+        <h1>MOAP OFFICIAL</h1>
+        <p>Mahjong Official Analytics Platform · 五人官方数据系统</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
+      <span class="badge" id="versionBadge">v10.1 LTS Official</span>
+      <span class="badge" id="accountBadge" hidden></span>
+      <button class="btn" id="exportBtn" type="button">导出当前数据</button>
+      <button class="btn" id="logoutBtn" type="button" hidden>退出登录</button>
+    </div>
+  </header>
+
+  <div class="mobile-nav" id="mobileNav"></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav id="sidebarNav"></nav>
+      <div class="side-footer">
+        数据源：Supabase 云端数据库<br>
+        认证基线：MOAP v10.1 LTS<br>
+        管理员录入后永久保存并实时更新。
+      </div>
+    </aside>
+
+    <main>
+      <section class="view active" data-view="overview">
+        <div class="hero">
+          <div><h2>联赛总览</h2><p>从 65 场正式记录中，快速查看排名、状态与最新比赛。</p></div>
+          <span class="chip gold">CURRENT GOAT · <b id="goatName">罗海泓</b></span>
+        </div>
+        <div class="kpis" id="overviewKpis"></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>生涯积分榜</h3><small>按总积分排序</small></div>
+            <div class="table-scroll"><table><thead><tr><th>排名</th><th>牌手</th><th>积分</th><th>场均</th><th>MVP</th><th>正分率</th></tr></thead><tbody id="overviewLeaderboard"></tbody></table></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>最新比赛</h3><small id="latestMeta"></small></div>
+            <div id="latestMatch"></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>最近五场状态</h3><small>实际参赛得分合计</small></div>
+            <div id="recentFormList"></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>GOAT指数</h3><small>荣誉积分 + MVP + 冠军加成</small></div>
+            <div id="goatMini"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="leaderboard">
+        <div class="hero">
+          <div><h2>排行榜</h2><p>在生涯与赛季维度之间切换，并按不同指标重新排序。</p></div>
+        </div>
+        <div class="card section">
+          <div class="form-row">
+            <label>统计范围<select id="boardScope"><option value="career">生涯 S1–S3</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
+            <label>排序指标<select id="boardSort"><option value="totalScore">总积分</option><option value="averageScore">场均</option><option value="mvps">MVP</option><option value="positiveRate">正分率</option><option value="bgr">BGR</option><option value="honorPoints">荣誉积分</option><option value="goatIndex">GOAT指数</option></select></label>
+            <label>比赛类型<select id="boardType"><option value="all">全部</option><option value="4">四人局场均</option><option value="5">五人局场均</option></select></label>
+            <label>搜索牌手<input id="boardSearch" placeholder="输入姓名"></label>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>排名</th><th>牌手</th><th>参赛</th><th>总积分</th><th>场均</th><th>正分率</th><th>MVP</th><th>四人局</th><th>五人局</th><th>荣誉分</th><th>GOAT</th></tr></thead>
+              <tbody id="fullLeaderboard"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="player">
+        <div class="hero">
+          <div><h2>个人档案</h2><p>查看个人趋势、赛季表现、对位关系与官方荣誉。</p></div>
+          <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
+        </div>
+        <div class="card section" style="margin-bottom:16px">
+          <div class="player-head" id="playerHeader"></div>
+          <div class="kpis" id="playerKpis" style="margin-top:16px;margin-bottom:0"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>生涯积分曲线</h3><small id="chartCaption"></small></div>
+            <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>最近十场</h3><small>得分与MVP</small></div>
+            <div id="recentMatchesPlayer" class="score-list"></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>赛季分解</h3><small>S1–S3</small></div>
+            <div class="table-scroll"><table><thead><tr><th>赛季</th><th>场次</th><th>积分</th><th>场均</th><th>正分率</th><th>MVP</th><th>最高/最低</th></tr></thead><tbody id="playerSeasonTable"></tbody></table></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>对位关系</h3><small>净分 / 胜率</small></div>
+            <div id="playerRivals"></div>
+          </div>
+        </div>
+        <div class="card section">
+          <div class="section-head"><h3>官方荣誉墙</h3><small id="honorSummary"></small></div>
+          <div class="honor-grid" id="playerHonors"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="matches">
+        <div class="hero"><div><h2>比赛中心</h2><p>按赛季、牌手和比赛类型筛选所有正式记录。</p></div></div>
+        <div class="card section">
+          <div class="form-row">
+            <label>赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
+            <label>牌手<select id="matchPlayer"><option value="all">全部牌手</option></select></label>
+            <label>比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
+            <label>关键词<input id="matchQuery" placeholder="场地 / 场次 / 日期"></label>
+          </div>
+          <div class="list" id="matchList"></div>
+          <button class="btn load-more" id="loadMoreBtn" type="button">加载更多</button>
+        </div>
+      </section>
+
+      <section class="view" data-view="entry">
+        <div class="hero"><div><h2>录入新比赛</h2><p>演示版支持实时校验、自动判定MVP和更新基础榜单；刷新页面后不会保留。</p></div></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>比赛信息</h3><small>本地演示录入</small></div>
+            <div class="form-row">
+              <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
+              <label>比赛日期<input type="date" id="entryDate"></label>
+              <label>比赛类型<select id="entryType"><option>五人局</option><option>四人局</option></select></label>
+              <label>场地<input id="entryVenue" placeholder="例如：棋牌室"></label>
+            </div>
+            <div id="entryPlayers"></div>
+            <div id="entryValidation" class="validation">请选择参赛牌手并填写分数。</div>
+            <div style="display:flex;gap:9px;margin-top:13px;flex-wrap:wrap">
+              <button class="btn primary" id="saveMatchBtn" type="button">保存到云端数据库</button>
+              <button class="btn" id="clearEntryBtn" type="button">清空</button>
+              <button class="btn" id="resetDemoBtn" type="button">重新同步云端</button>
+            </div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>录入说明</h3><small>正式版将接入数据库</small></div>
+            <div class="list">
+              <div class="honor-item"><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div>
+              <div class="honor-item"><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div>
+              <div class="honor-item"><strong>即时更新</strong><small>总积分、场均、正分率和MVP会在当前会话中重算。</small></div>
+              <div class="honor-item"><strong>下一阶段</strong><small>接入 Supabase 后，新增比赛将永久保存，并自动重算荣誉、GOAT和审计记录。</small></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="rival">
+        <div class="hero"><div><h2>对位中心</h2><p>查看两名牌手之间的净分和对位胜率。</p></div></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>对位净分矩阵</h3><small>行牌手相对列牌手</small></div>
+            <div class="matrix-wrap"><table class="matrix" id="netMatrix"></table></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字</small></div>
+            <div id="rivalDetail" class="empty">请选择一个对位。</div>
+          </div>
+        </div>
+        <div class="card section">
+          <div class="section-head"><h3>对位胜率矩阵</h3><small>并列场次不计为胜</small></div>
+          <div class="matrix-wrap"><table class="matrix" id="winMatrix"></table></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="honors">
+        <div class="hero"><div><h2>荣誉中心</h2><p>GOAT指数、荣誉排名与五人官方荣誉档案。</p></div></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>GOAT官方排名</h3><small>当前认证结果</small></div>
+            <div id="goatRanking"></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>荣誉档案</h3><label style="min-width:150px">牌手<select id="honorPlayer"></select></label></div>
+            <div class="split-stats" id="honorStats"></div>
+          </div>
+        </div>
+        <div class="card section">
+          <div class="section-head"><h3>荣誉清单</h3><small id="honorListSummary"></small></div>
+          <div class="honor-grid" id="honorList"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="system">
+        <div class="hero"><div><h2>系统与审计</h2><p>展示版本状态、健康检查及数据迁移信息。</p></div></div>
+        <div class="kpis" id="systemKpis"></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>健康检查</h3><small>8 / 8 PASS</small></div>
+            <div class="health-grid" id="healthList"></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>版本信息</h3><small>LTS Official</small></div>
+            <div id="versionInfo" class="list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
