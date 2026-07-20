@@ -1,0 +1,4 @@
+import { Nav } from '@/components/Nav'
+import { requireUser } from '@/lib/auth'
+export const dynamic='force-dynamic'
+export default async function HonorsPage(){const {supabase,profile}=await requireUser(); const {data}=await supabase.from('award_results').select('*,players(name)').order('points',{ascending:false}).order('scope'); return <><Nav role={profile?.role}/><main className="shell"><header className="page-head"><div><h1>荣誉中心</h1><p className="sub">v10.1 LTS官方认证荣誉快照</p></div></header><section className="card"><div className="table-wrap"><table><thead><tr><th>范围</th><th>玩家</th><th>荣誉</th><th>等级</th><th>类别</th><th>积分</th><th>状态</th></tr></thead><tbody>{(data||[]).map((h:any)=><tr key={h.id}><td>{h.scope}</td><td>{h.players?.name}</td><td className="gold">{h.award_name}</td><td>{h.grade}</td><td>{h.category}</td><td>{h.points}</td><td>{h.status}</td></tr>)}</tbody></table></div></section></main></>}

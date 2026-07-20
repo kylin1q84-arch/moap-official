@@ -1,0 +1,6 @@
+GitHub 上传说明：
+1. 新建空仓库 moap-official。
+2. 打开本文件所在文件夹。
+3. 上传本文件夹内的全部内容，不要再套一层带空格或括号的文件夹。
+4. GitHub 仓库首页应直接看到 package.json、app、components、lib。
+5. Vercel Root Directory 保持默认 ./。
