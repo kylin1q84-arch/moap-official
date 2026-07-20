@@ -1,0 +1,3 @@
+上传时请进入解压后的 moap-cloud-v2 文件夹，把里面的所有文件直接上传到 GitHub 仓库根目录。
+GitHub 首页必须直接看到：package.json、vercel.json、src、supabase。
+Root Directory 保持 ./，不要再上传外层带空格或括号的文件夹。
