@@ -1,52 +1,41 @@
-# MOAP Official Free Edition v1.0
+# MOAP Cloud v2（完整云端版）
 
-基于 `MOAP_Official_v10.1_LTS_Official.xlsx` 制作的正式云端项目，采用零成本方案：
+这一版以原来的 `MOAP_Web_MVP_v1/index.html` 为母版，保留原有深绿金色界面和全部主要交互：
 
-- Next.js 16（网页）
-- Supabase Free（数据库、账号登录、权限）
-- GitHub Free（私有源代码仓库）
-- Vercel Hobby（免费发布与 `*.vercel.app` 网址）
+- 联赛总览、排行榜、个人档案、累计积分曲线
+- 最近比赛、筛选搜索、四人局/五人局数据
+- 对位净分矩阵、对位胜率矩阵
+- 荣誉中心、GOAT、系统健康检查
+- 管理员云端录入，积分合计与人数强制校验
+- Supabase 邮箱密码登录；管理员可写，普通成员只读
 
-## 已包含
+## 数据来源
 
-- 65场历史比赛、325条逐人成绩迁移SQL
-- 五名玩家档案
-- 登录与管理员/普通成员权限
-- 生涯积分榜、赛季数据、比赛中心、玩家详情
-- 正式比赛录入：人数校验、总分必须为0、自动并列MVP
-- v10.1荣誉快照与动态GOAT指数
-- RLS安全策略和审计日志
+网页登录后会实时读取 Supabase 的 `players`、`seasons`、`matches`、`match_results`、`award_results`、`system_versions` 和当前账号 `profiles`。
+`src/certified-data.js` 仅保留 v10.1 的认证说明与离线基线，不再作为比赛主数据库；页面实际排名和对位均由 Supabase 原始比赛记录重算。
 
-## 部署顺序
+## 你现有数据库不需要重做
 
-详细步骤见 `DEPLOY_STEP_BY_STEP.md`。最短流程：
+原来的 5 名玩家、65 场比赛、325 条结果和登录账号全部保留。建议在 Supabase SQL Editor 运行一次：
 
-1. 创建Supabase免费项目。
-2. 在SQL Editor依次运行 `supabase/01` 到 `07`。
-3. 把本项目上传到GitHub私有仓库。
-4. Vercel导入GitHub仓库。
-5. 设置两个环境变量：
+`supabase/08_cloud_v2_upgrade.sql`
+
+它只修复 RPC 与权限，不删除数据。
+
+## Vercel 部署
+
+1. 新建一个干净 GitHub 私有仓库，例如 `moap-cloud-v2`。
+2. 上传本 ZIP 解压后的**内部全部文件**，确保仓库首页直接看到 `package.json`、`src`、`vercel.json`。
+3. Vercel 导入仓库。Root Directory 保持 `./`。
+4. 保留已有环境变量：
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-6. 点击Deploy。
+5. 点击 Deploy。`vercel.json` 已固定 Build Command 和 Output Directory，不需要手动选择 Next.js，也不要填写 `public`。
 
-## 本地运行（可选）
+## 登录权限
 
-```bash
-cp .env.example .env.local
-npm install
-npm run dev
-```
+数据库 `profiles.role`：
+- `admin`：可以录入比赛
+- `viewer`：只能查看
 
-打开 `http://localhost:3000`。
-
-## 重要安全说明
-
-- 不要把Supabase密码、数据库密码或Secret Key提交到GitHub。
-- 浏览器和Vercel只填写Publishable Key，不填写Secret Key。
-- 源代码建议使用GitHub私有仓库。
-- 正式数据写入只允许通过数据库RPC，网页端不能绕过校验直接修改比赛表。
-
-## 当前范围
-
-荣誉中心使用v10.1 LTS认证快照；GOAT指数会依据荣誉积分、生涯MVP和赛季冠军动态计算。后续新增S4比赛会实时更新基础数据和GOAT中的MVP部分；完整S4赛季荣誉需要在赛季结束时执行下一版荣誉引擎。
+罗海泓账号应绑定 `P001 / admin`。
