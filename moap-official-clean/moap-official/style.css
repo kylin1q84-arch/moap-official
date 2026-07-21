@@ -172,3 +172,20 @@
     .auth-card label{margin-top:12px}.auth-submit{width:100%;margin-top:18px;padding:12px}.auth-status{min-height:20px;margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}
     .auth-status.error{color:#ffaaaa}.auth-status.ok{color:#9be8c2}
     .cloud-note{font-size:11px;color:var(--muted)}
+
+/* MOAP Honor Detail Interaction */
+.honor-clickable{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
+.honor-clickable:hover{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.055);transform:translateY(-1px)}
+.honor-open-hint{display:block;margin-top:8px;color:#facc15;font-size:11px}
+body.modal-open{overflow:hidden}
+.honor-modal-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(3,7,18,.78);backdrop-filter:blur(8px)}
+.honor-modal-backdrop[hidden]{display:none}
+.honor-modal{position:relative;width:min(760px,100%);max-height:88vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:24px;background:#101827;color:#f8fafc;box-shadow:0 28px 80px rgba(0,0,0,.45)}
+.honor-modal-close{position:absolute;top:14px;right:16px;border:0;background:transparent;color:#cbd5e1;font-size:30px;cursor:pointer}
+.honor-modal-header{display:flex;gap:16px;align-items:center;padding-right:34px}.honor-modal-header p{margin:0 0 4px;color:#94a3b8;font-size:13px}.honor-modal-header h2{margin:0 0 6px;font-size:26px}
+.honor-modal-grade{display:grid;place-items:center;width:54px;height:54px;flex:0 0 auto;border-radius:16px;font-size:24px;font-weight:800}
+.honor-modal-section{margin-top:22px}.honor-modal-section h3{margin:0 0 10px;font-size:15px;color:#cbd5e1}.honor-modal-section p{margin:0;line-height:1.7;color:#e2e8f0}.honor-modal-summary{margin-top:8px!important;color:#facc15!important}
+.honor-ranking-table{overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:14px}.honor-ranking-table>div{display:grid;grid-template-columns:54px 1fr auto;gap:12px;padding:11px 14px;border-top:1px solid rgba(255,255,255,.08);align-items:center}.honor-ranking-table>div:first-child{border-top:0}.honor-ranking-table .is-winner{background:rgba(250,204,21,.1)}.honor-ranking-table small{display:block;margin-top:3px;color:#94a3b8}
+.honor-chip-list{display:flex;flex-wrap:wrap;gap:8px}.honor-chip-list span{padding:8px 10px;border-radius:999px;background:rgba(148,163,184,.12);color:#e2e8f0;font-size:13px}
+.honor-evidence-list{display:grid;gap:8px}.honor-evidence-list article{display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:center;padding:11px 13px;border-radius:12px;background:rgba(148,163,184,.08)}.honor-evidence-list article span{display:block;color:#94a3b8;font-size:12px;margin-top:3px}.honor-evidence-list article>b{font-size:18px}.honor-modal-footer{margin-top:22px;color:#64748b;font-size:12px}
+@media(max-width:560px){.honor-modal{padding:19px;border-radius:18px}.honor-modal-header h2{font-size:21px}.honor-ranking-table>div{grid-template-columns:40px 1fr auto;padding:10px}}
