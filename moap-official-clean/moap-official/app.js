@@ -1,5 +1,7 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 import { HONOR_CATALOG, HONOR_DETAILS } from "./honor-details.js";
+import { MOAP_CONFIG } from "./config.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 let currentView = "overview";
 let currentPlayer = "P001";
@@ -12,30 +14,10 @@ const NAV = [
 ];
 
 
-// 中国大陆访问版：浏览器不再直连 supabase.co，所有数据通过本站 /api 代理访问。
+const sb = createClient(MOAP_CONFIG.supabaseUrl, MOAP_CONFIG.supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+});
 let currentRole="admin",appBooted=false;
-
-async function apiJson(url, options={}){
-  const response = await fetch(url, {
-    cache: "no-store",
-    ...options,
-    headers: {
-      "Accept": "application/json",
-      ...(options.body ? {"Content-Type":"application/json"} : {}),
-      ...(options.headers || {})
-    }
-  });
-  const text = await response.text();
-  let payload = null;
-  if(text){
-    try{ payload = JSON.parse(text); }
-    catch{ payload = { message: text }; }
-  }
-  if(!response.ok){
-    throw new Error(payload?.message || payload?.error || `API 请求失败（${response.status}）`);
-  }
-  return payload;
-}
 
 function setAuthStatus(message,isError=false,isOk=false){
   const el=document.querySelector("#authStatus"); if(!el)return;
@@ -110,19 +92,19 @@ function buildLiveState(db){
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,profiles,goat,rivalNet,rivalWinRate,version,healthChecks:checks};
 }
 
+async function fetchTable(table,columns="*"){
+  const {data,error}=await sb.from(table).select(columns);if(error)throw new Error(`${table}: ${error.message}`);return data||[];
+}
 async function reloadCloudData(){
-  const db = await apiJson("/api/bootstrap");
+  const [players,seasons,matches,results,awards,versions]=await Promise.all([
+    fetchTable("players"),fetchTable("seasons"),fetchTable("matches"),fetchTable("match_results"),fetchTable("award_results"),
+    sb.from("system_versions").select("*").order("release_date",{ascending:false})
+  ]);
+  if(versions.error)throw new Error(`system_versions: ${versions.error.message}`);
   currentRole="admin";
-  state=buildLiveState({
-    players:db.players||[],
-    seasons:db.seasons||[],
-    matches:db.matches||[],
-    results:db.results||[],
-    awards:db.awards||[],
-    versions:db.versions||[]
-  });
+  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[]});
   if(appBooted){initNav();populateSelects();initEntry();showView(currentView);}
-  document.querySelector("#healthBadge").textContent=`代理健康 ${state.meta.healthScore}%`;
+  document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
 }
 
@@ -366,14 +348,12 @@ $("#saveMatchBtn").addEventListener("click",async()=>{
         return {player_id:p.playerId,score:x?x.score:null,is_absent:!x};
       })
     };
-    await apiJson("/api/matches",{
-      method:"POST",
-      body:JSON.stringify({payload})
-    });
+    const {error}=await sb.rpc("create_match_with_results",{p_payload:payload});
+    if(error) throw error;
     await reloadCloudData();
     clearEntry(); showView("overview"); toast(`${nextId} 已永久保存到云端`);
   }catch(err){console.error(err);toast("保存失败："+(err.message||String(err)));}
-  finally{button.disabled=false;button.textContent="通过代理保存到数据库";}
+  finally{button.disabled=false;button.textContent="保存到云端数据库";}
 });
 function clearEntry(){
   $$(".entry-score").forEach(x=>x.value=""); $("#entryVenue").value="";
@@ -381,7 +361,7 @@ function clearEntry(){
 }
 $("#clearEntryBtn").addEventListener("click",clearEntry);
 $("#resetDemoBtn").addEventListener("click",async()=>{
-  try{await reloadCloudData();toast("已通过 EdgeOne 代理重新同步数据");}
+  try{await reloadCloudData();toast("已重新同步 Supabase 云端数据");}
   catch(err){toast("同步失败："+(err.message||String(err)));}
 });
 
@@ -487,16 +467,25 @@ function boot(){
 }
 
 async function start(){
+  if(!MOAP_CONFIG.supabaseUrl || !MOAP_CONFIG.supabaseKey){
+    document.querySelector("#appShell").hidden=false;
+    toast("缺少 Supabase 配置，请检查 Vercel 环境变量后重新部署。");
+    return;
+  }
   try{
     await reloadCloudData();
+    const gate=document.querySelector("#authGate");
+    if(gate) gate.hidden=true;
     document.querySelector("#appShell").hidden=false;
     const badge=document.querySelector("#accountBadge");
-    if(badge){badge.hidden=false;badge.textContent="大陆直达模式 · 可录入";}
+    if(badge){badge.hidden=false;badge.textContent="公开直达模式 · 可录入";}
     if(!appBooted)boot();
   }catch(err){
     console.error(err);
+    const gate=document.querySelector("#authGate");
+    if(gate) gate.hidden=true;
     document.querySelector("#appShell").hidden=false;
-    toast("同站代理同步失败："+(err.message||String(err)));
+    toast("云端同步失败："+(err.message||String(err)));
   }
 }
 start();

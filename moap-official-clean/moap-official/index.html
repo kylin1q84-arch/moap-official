@@ -9,18 +9,7 @@
 </head>
 <body>
 
-<div class="auth-gate" id="authGate">
-  <div class="auth-card">
-    <div class="auth-brand"><div class="logo">麻</div><div><h1>MOAP OFFICIAL</h1><p>五人麻将联赛官方数据平台</p></div></div>
-    <div class="auth-copy">使用 Supabase 中创建的账号登录。比赛数据、排名、对位和荣誉均从云端读取。</div>
-    <label>登录邮箱<input id="loginEmail" type="email" autocomplete="email" placeholder="name@example.com"></label>
-    <label>密码<input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码"></label>
-    <button class="btn primary auth-submit" id="loginBtn" type="button">登录系统</button>
-    <div class="auth-status" id="authStatus">等待登录</div>
-  </div>
-</div>
-
-<div class="shell" id="appShell" hidden>
+<div class="shell" id="appShell">
   <header class="topbar">
     <div class="brand">
       <div class="logo">麻</div>
@@ -32,9 +21,8 @@
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
       <span class="badge" id="versionBadge">v10.1 LTS Official</span>
-      <span class="badge" id="accountBadge" hidden></span>
+      <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
-      <button class="btn" id="logoutBtn" type="button" hidden>退出登录</button>
     </div>
   </header>
 
@@ -46,7 +34,7 @@
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
         认证基线：MOAP v10.1 LTS<br>
-        管理员录入后永久保存并实时更新。
+        公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
 
@@ -149,10 +137,10 @@
       </section>
 
       <section class="view" data-view="entry">
-        <div class="hero"><div><h2>录入新比赛</h2><p>演示版支持实时校验、自动判定MVP和更新基础榜单；刷新页面后不会保留。</p></div></div>
+        <div class="hero"><div><h2>录入新比赛</h2><p>直接录入 Supabase 云端数据库，自动校验、判定MVP并实时更新。</p></div></div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>比赛信息</h3><small>本地演示录入</small></div>
+            <div class="section-head"><h3>比赛信息</h3><small>公开直达录入</small></div>
             <div class="form-row">
               <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
               <label>比赛日期<input type="date" id="entryDate"></label>
@@ -168,12 +156,12 @@
             </div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>录入说明</h3><small>正式版将接入数据库</small></div>
+            <div class="section-head"><h3>录入说明</h3><small>已连接 Supabase 云端</small></div>
             <div class="list">
               <div class="honor-item"><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div>
               <div class="honor-item"><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div>
-              <div class="honor-item"><strong>即时更新</strong><small>总积分、场均、正分率和MVP会在当前会话中重算。</small></div>
-              <div class="honor-item"><strong>下一阶段</strong><small>接入 Supabase 后，新增比赛将永久保存，并自动重算荣誉、GOAT和审计记录。</small></div>
+              <div class="honor-item"><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和对位数据立即重算。</small></div>
+              <div class="honor-item"><strong>公开模式</strong><small>无需邮箱密码。任何拿到网址的人都可以查看和录入，请避免误操作。</small></div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 {
-  "name": "moap-cloud-v2",
-  "version": "2.0.0",
+  "name": "moap-honor-vercel-direct",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "scripts": {
