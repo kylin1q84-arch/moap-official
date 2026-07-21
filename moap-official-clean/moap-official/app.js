@@ -1,6 +1,5 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
-import { MOAP_CONFIG } from "./config.js";
+import { HONOR_CATALOG, HONOR_DETAILS } from "./honor-details.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 let currentView = "overview";
 let currentPlayer = "P001";
@@ -13,8 +12,30 @@ const NAV = [
 ];
 
 
-const sb = createClient(MOAP_CONFIG.supabaseUrl,MOAP_CONFIG.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
-let currentUser=null,currentRole="viewer",appBooted=false;
+// 中国大陆访问版：浏览器不再直连 supabase.co，所有数据通过本站 /api 代理访问。
+let currentRole="admin",appBooted=false;
+
+async function apiJson(url, options={}){
+  const response = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Accept": "application/json",
+      ...(options.body ? {"Content-Type":"application/json"} : {}),
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  let payload = null;
+  if(text){
+    try{ payload = JSON.parse(text); }
+    catch{ payload = { message: text }; }
+  }
+  if(!response.ok){
+    throw new Error(payload?.message || payload?.error || `API 请求失败（${response.status}）`);
+  }
+  return payload;
+}
 
 function setAuthStatus(message,isError=false,isOk=false){
   const el=document.querySelector("#authStatus"); if(!el)return;
@@ -36,7 +57,7 @@ function buildLiveState(db){
     results:(resultMap[m.id]||[]).map(r=>({playerId:r.player_id,player:nameBy[r.player_id]||r.player_id,score:r.score==null?null:Number(r.score),isMvp:!!r.is_mvp,isAbsent:!!r.is_absent}))
   }));
   const honors={};players.forEach(p=>honors[p.playerId]=[]);
-  db.awards.forEach(a=>(honors[a.player_id]??=[]).push({scope:a.scope,honorId:a.award_id,name:a.award_name,grade:a.grade,category:a.category,value:a.value==null?null:Number(a.value),points:Number(a.points||0),status:a.status}));
+  db.awards.forEach(a=>{const key=`${a.player_id}|${a.scope}|${a.award_id}`;const catalog=HONOR_CATALOG.find(x=>x.honorId===a.award_id);(honors[a.player_id]??=[]).push({ownerPlayerId:a.player_id,scope:a.scope,honorId:a.award_id,name:a.award_name,grade:a.grade,category:a.category,value:a.value==null?null:Number(a.value),points:Number(a.points||0),status:a.status,details:HONOR_DETAILS[key]||{rule:catalog?.rule||"暂无规则说明",unit:catalog?.unit||"",winner:nameBy[a.player_id]||a.player_id,calculationStatus:"LIVE_AWARD_NO_STATIC_EVIDENCE"}})});
   const seasonIds=[...new Set([...(db.seasons||[]).map(s=>s.id),...matches.map(m=>m.season)])].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const seasons=seasonIds.map(id=>{const x=(db.seasons||[]).find(s=>s.id===id);return {id,name:x?.name||id,status:x?.status||"closed"};});
 
@@ -89,31 +110,20 @@ function buildLiveState(db){
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,profiles,goat,rivalNet,rivalWinRate,version,healthChecks:checks};
 }
 
-async function fetchTable(table,columns="*"){
-  const {data,error}=await sb.from(table).select(columns);if(error)throw new Error(`${table}: ${error.message}`);return data||[];
-}
 async function reloadCloudData(){
-  const [players,seasons,matches,results,awards,versions,profileRes]=await Promise.all([
-    fetchTable("players"),fetchTable("seasons"),fetchTable("matches"),fetchTable("match_results"),fetchTable("award_results"),
-    sb.from("system_versions").select("*").order("release_date",{ascending:false}),sb.from("profiles").select("*").eq("user_id",currentUser.id).maybeSingle()
-  ]);
-  if(versions.error)throw new Error(`system_versions: ${versions.error.message}`);
-  if(profileRes.error)throw new Error(`profiles: ${profileRes.error.message}`);
-  currentRole=profileRes.data?.role||"viewer";
-  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[]});
-  if(appBooted){initNav();populateSelects();initEntry();showView(currentView==="entry"&&currentRole!=="admin"?"overview":currentView);}
-  document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
+  const db = await apiJson("/api/bootstrap");
+  currentRole="admin";
+  state=buildLiveState({
+    players:db.players||[],
+    seasons:db.seasons||[],
+    matches:db.matches||[],
+    results:db.results||[],
+    awards:db.awards||[],
+    versions:db.versions||[]
+  });
+  if(appBooted){initNav();populateSelects();initEntry();showView(currentView);}
+  document.querySelector("#healthBadge").textContent=`代理健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
-}
-async function enterApp(session){
-  currentUser=session.user;setAuthStatus("正在同步云端数据…",false,true);
-  try{
-    await reloadCloudData();
-    document.querySelector("#authGate").hidden=true;document.querySelector("#appShell").hidden=false;
-    const badge=document.querySelector("#accountBadge");badge.hidden=false;badge.textContent=`${currentUser.email} · ${currentRole==="admin"?"管理员":"只读成员"}`;
-    document.querySelector("#logoutBtn").hidden=false;
-    if(!appBooted)boot();
-  }catch(err){console.error(err);setAuthStatus("云端同步失败："+(err.message||String(err)),true);}
 }
 
 const $ = s => document.querySelector(s);
@@ -356,12 +366,14 @@ $("#saveMatchBtn").addEventListener("click",async()=>{
         return {player_id:p.playerId,score:x?x.score:null,is_absent:!x};
       })
     };
-    const {error}=await sb.rpc("create_match_with_results",{p_payload:payload});
-    if(error) throw error;
+    await apiJson("/api/matches",{
+      method:"POST",
+      body:JSON.stringify({payload})
+    });
     await reloadCloudData();
     clearEntry(); showView("overview"); toast(`${nextId} 已永久保存到云端`);
   }catch(err){console.error(err);toast("保存失败："+(err.message||String(err)));}
-  finally{button.disabled=false;button.textContent="保存到云端数据库";}
+  finally{button.disabled=false;button.textContent="通过代理保存到数据库";}
 });
 function clearEntry(){
   $$(".entry-score").forEach(x=>x.value=""); $("#entryVenue").value="";
@@ -369,7 +381,7 @@ function clearEntry(){
 }
 $("#clearEntryBtn").addEventListener("click",clearEntry);
 $("#resetDemoBtn").addEventListener("click",async()=>{
-  try{await reloadCloudData();toast("已重新同步 Supabase 云端数据");}
+  try{await reloadCloudData();toast("已通过 EdgeOne 代理重新同步数据");}
   catch(err){toast("同步失败："+(err.message||String(err)));}
 });
 
@@ -409,8 +421,30 @@ function showRivalDetail(a,b){
 }
 
 function honorHtml(h){
-  return `<div class="honor-item"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${h.grade}">${h.grade}</span><strong>${h.name}</strong></div><span class="chip">${h.scope}</span></div><small>${h.category||"官方荣誉"} · 获奖值 ${typeof h.value==="number"?Number(h.value).toFixed(Number.isInteger(h.value)?0:2):h.value} · ${h.status}</small></div>`;
+  const key=`${h.ownerPlayerId||""}|${h.scope}|${h.honorId}`;
+  return `<button type="button" class="honor-item honor-clickable" data-honor-key="${escapeHtml(key)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${h.grade}">${h.grade}</span><strong>${escapeHtml(h.name)}</strong></div><span class="chip">${escapeHtml(h.scope)}</span></div><small>${escapeHtml(h.category||"官方荣誉")} · 获奖值 ${typeof h.value==="number"?Number(h.value).toFixed(Number.isInteger(h.value)?0:2):escapeHtml(h.value)} · ${escapeHtml(h.status)}</small><span class="honor-open-hint">点击查看评选规则、完整排名与证据</span></button>`;
 }
+function formatHonorValue(value,unit=""){if(value===null||value===undefined)return "—";if(unit==="%")return `${(Number(value)*100).toFixed(1)}%`;if(typeof value==="number"&&!Number.isInteger(value))return `${value.toFixed(2)}${unit}`;return `${value}${unit}`;}
+function ensureHonorModal(){
+  if($("#honorModalBackdrop"))return;
+  document.body.insertAdjacentHTML("beforeend",`<div class="honor-modal-backdrop" id="honorModalBackdrop" hidden><section class="honor-modal" role="dialog" aria-modal="true" aria-labelledby="honorModalTitle"><button type="button" class="honor-modal-close" id="honorModalClose" aria-label="关闭">×</button><div id="honorModalBody"></div></section></div>`);
+  $("#honorModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="honorModalBackdrop")closeHonorModal();});
+  $("#honorModalClose").addEventListener("click",closeHonorModal);
+}
+function closeHonorModal(){const m=$("#honorModalBackdrop");if(m){m.hidden=true;document.body.classList.remove("modal-open");}}
+function openHonorModal(h){
+  ensureHonorModal(); const d=h.details||{};
+  const ranking=(d.ranking||[]).map(row=>`<div class="${row.player===d.winner||d.winners?.includes(row.player)?"is-winner":""}"><span>#${row.rank}</span><span><strong>${escapeHtml(row.player)}</strong>${row.note?`<small>${escapeHtml(row.note)}</small>`:""}</span><b>${escapeHtml(formatHonorValue(row.value,row.unit||d.unit))}</b></div>`).join("");
+  const formula=(d.formula||[]).map(item=>`<span>${Object.entries(item).map(([k,v])=>`${escapeHtml(k)}: ${escapeHtml(v)}`).join(" · ")}</span>`).join("");
+  const evidence=(d.evidence||[]).map(item=>{
+    if(item.matchId){const extra=item.opponent?` · 对阵 ${escapeHtml(item.opponent)} ${escapeHtml(item.opponentScore)} · 净胜 +${escapeHtml(item.margin)}`:(item.wasAbsent?" · 缺席按0":"");return `<article><div><strong>${escapeHtml(item.matchId)} · ${escapeHtml(item.date)}</strong><span>${escapeHtml(item.matchType)} · ${escapeHtml(item.venue)}${extra}</span></div><b class="${scoreClass(item.score)}">${fmtScore(item.score)}</b></article>`;}
+    return `<article><div><strong>对阵 ${escapeHtml(item.opponent||"—")}</strong><span>${item.meetings?`交手 ${item.meetings} · ${item.wins}-${item.losses}-${item.ties}`:"对位证据"}</span></div><b>${item.rivalryIndex!=null?Number(item.rivalryIndex).toFixed(2):fmtScore(item.netScore||0)}</b></article>`;
+  }).join("");
+  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade ${h.grade}">${escapeHtml(h.grade)}</span><div><p>${escapeHtml(h.scope)} · ${escapeHtml(h.category||"官方荣誉")}</p><h2 id="honorModalTitle">${escapeHtml(h.name)}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header><div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div>${ranking?`<div class="honor-modal-section"><h3>完整排名</h3><div class="honor-ranking-table">${ranking}</div></div>`:""}${formula?`<div class="honor-modal-section"><h3>计算分项</h3><div class="honor-chip-list">${formula}</div></div>`:""}${evidence?`<div class="honor-modal-section"><h3>过程证据</h3><div class="honor-evidence-list">${evidence}</div></div>`:""}<footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)}</footer>`;
+  $("#honorModalBackdrop").hidden=false;document.body.classList.add("modal-open");
+}
+document.addEventListener("click",e=>{const card=e.target.closest("[data-honor-key]");if(!card)return;const [pid,scope,hid]=card.dataset.honorKey.split("|");const h=(state.honors[pid]||[]).find(x=>x.scope===scope&&x.honorId===hid);if(h)openHonorModal(h);});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHonorModal();});
 function renderGoatRows(sel,limit=5){
   const rows=[...state.goat].sort((a,b)=>a.rank-b.rank).slice(0,limit),max=Math.max(...rows.map(x=>x.goatIndex));
   $(sel).innerHTML=rows.map(r=>`<div class="goat-row"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div><div style="display:flex;justify-content:space-between"><strong>${r.player}</strong><span class="muted">${r.honorPoints}荣誉分 · ${r.mvps} MVP</span></div><div class="bar"><i style="width:${r.goatIndex/max*100}%"></i></div></div><b>${r.goatIndex}</b></div>`).join("");
@@ -446,18 +480,6 @@ $("#exportBtn").addEventListener("click",()=>{
 });
 
 
-document.querySelector("#loginBtn").addEventListener("click",async()=>{
-  const email=document.querySelector("#loginEmail").value.trim(),password=document.querySelector("#loginPassword").value;
-  if(!email||!password){setAuthStatus("请输入邮箱和密码",true);return;}
-  const btn=document.querySelector("#loginBtn");btn.disabled=true;btn.textContent="登录中…";setAuthStatus("正在验证账号…");
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
-  btn.disabled=false;btn.textContent="登录系统";
-  if(error){setAuthStatus("登录失败："+error.message,true);return;}
-  await enterApp(data.session);
-});
-document.querySelector("#loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")document.querySelector("#loginBtn").click();});
-document.querySelector("#logoutBtn").addEventListener("click",async()=>{await sb.auth.signOut();location.reload();});
-
 function boot(){
   initNav(); populateSelects(); initEntry();
   $("#versionBadge").textContent=state.version.version;
@@ -465,10 +487,16 @@ function boot(){
 }
 
 async function start(){
-  if(!MOAP_CONFIG.supabaseUrl || !MOAP_CONFIG.supabaseKey){
-    setAuthStatus("缺少 Supabase 配置，请检查 Vercel 环境变量后重新部署。",true);return;
+  try{
+    await reloadCloudData();
+    document.querySelector("#appShell").hidden=false;
+    const badge=document.querySelector("#accountBadge");
+    if(badge){badge.hidden=false;badge.textContent="大陆直达模式 · 可录入";}
+    if(!appBooted)boot();
+  }catch(err){
+    console.error(err);
+    document.querySelector("#appShell").hidden=false;
+    toast("同站代理同步失败："+(err.message||String(err)));
   }
-  const {data:{session}}=await sb.auth.getSession();
-  if(session) await enterApp(session); else showLogin();
 }
 start();
