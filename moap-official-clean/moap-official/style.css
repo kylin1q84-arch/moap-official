@@ -209,3 +209,32 @@ body.modal-open{overflow:hidden}
 .rival-rank-item>span{color:var(--muted);font-size:12px}
 .rival-rank-item>b{font-size:16px}
 @media(max-width:760px){.entry-matchup-matrix{min-width:820px}.entry-matchup-matrix th:first-child,.entry-matchup-matrix td:first-child{min-width:150px}}
+
+/* v1.5 排行榜与聚合荣誉墙 */
+.leaderboard-filters{grid-template-columns:repeat(4,minmax(0,1fr))}
+.board-note{margin:2px 0 14px;padding:11px 13px;border-radius:12px;background:rgba(215,178,91,.07);border:1px solid rgba(215,178,91,.16);color:var(--muted);font-size:12px;line-height:1.65}
+.leaderboard-table-scroll{max-height:68vh;overflow:auto;border:1px solid var(--line2);border-radius:14px}
+.leaderboard-dynamic-table{min-width:920px}
+.leaderboard-dynamic-table thead th{position:sticky;top:0;z-index:3;background:#0b2922;white-space:nowrap}
+.leaderboard-dynamic-table th:first-child,.leaderboard-dynamic-table td:first-child{position:sticky;left:0;z-index:2;background:#0c2a22}
+.leaderboard-dynamic-table th:nth-child(2),.leaderboard-dynamic-table td:nth-child(2){position:sticky;left:46px;z-index:2;background:#0c2a22;min-width:130px}
+.leaderboard-dynamic-table thead th:first-child,.leaderboard-dynamic-table thead th:nth-child(2){z-index:5}
+.leaderboard-dynamic-table td{white-space:nowrap}
+.honor-count-cell{display:grid;gap:2px;text-align:center;min-width:58px}
+.honor-count-cell b{font-size:14px}.honor-count-cell small{color:var(--muted);font-size:10px}
+.honor-group-card{min-height:132px}
+.honor-scope-list{margin-top:9px;color:var(--gold2);font-size:12px;line-height:1.55}
+.honor-season-stack{display:grid;gap:10px}
+.honor-season-detail{border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(148,163,184,.05);overflow:hidden}
+.honor-season-detail summary{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 14px;cursor:pointer;color:#e2e8f0}
+.honor-season-detail summary span:last-child{color:#94a3b8;font-size:12px;text-align:right}
+.honor-season-body{padding:0 14px 15px;border-top:1px solid rgba(255,255,255,.08)}
+.honor-season-body .honor-modal-section:first-child{margin-top:15px}
+.honor-season-body .honor-modal-footer{margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08)}
+select:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:680px){
+  .leaderboard-filters{grid-template-columns:1fr 1fr}
+  .leaderboard-table-scroll{max-height:none}
+  .honor-season-detail summary{align-items:flex-start;flex-direction:column}
+  .honor-season-detail summary span:last-child{text-align:left}
+}
