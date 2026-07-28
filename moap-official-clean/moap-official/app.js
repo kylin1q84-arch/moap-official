@@ -364,7 +364,7 @@ function initEntry(){
   $("#entryPlayers").innerHTML=state.players.map(p=>`<div class="entry-player">
     <input class="entry-check" type="checkbox" id="check-${p.playerId}" data-pid="${p.playerId}" checked>
     <label for="check-${p.playerId}" style="margin:0;color:var(--text)"><span class="player-cell"><span class="avatar">${initials(p.name)}</span>${p.name}</span></label>
-    <input class="entry-score" type="number" step="1" data-score="${p.playerId}" placeholder="比赛总分">
+    <input class="entry-score" type="number" step="1" data-score="${p.playerId}" placeholder="比赛总分（可填0）">
   </div>`).join("");
   renderEntryMatchupMatrix();
   $$(".entry-check, .entry-score").forEach(x=>x.addEventListener("input",()=>{updateEntryMatrixAvailability();validateEntry();}));
@@ -397,10 +397,8 @@ function renderEntryMatchupMatrix(){
       updateMatchupCellStyle(e.target);updateMatchupCellStyle(mirror);validateEntry();
     });
     input.addEventListener("blur",e=>{
-      if(e.target.value!==""&&Number(e.target.value)===0){
-        const from=e.target.dataset.matchupFrom,to=e.target.dataset.matchupTo;
-        e.target.value="";const mirror=$(`[data-matchup-from="${to}"][data-matchup-to="${from}"]`);mirror.value="";
-      }
+      // 0 是合法的对位结果：保留显式输入的 0，不再自动清空。
+      // 保存时 0 分对位不会写入 matchup_transfers，空白与 0 在统计上都按 0 处理。
       updateMatchupCellStyle(e.target);validateEntry();
     });
   });
