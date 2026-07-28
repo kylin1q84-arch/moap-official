@@ -89,7 +89,7 @@
 
       <section class="view" data-view="player">
         <div class="hero">
-          <div><h2>个人档案</h2><p>查看个人趋势、赛季表现、对位关系与官方荣誉。</p></div>
+          <div><h2>个人档案</h2><p>查看个人趋势、赛季表现、新制精准对位与官方荣誉。</p></div>
           <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="card section" style="margin-bottom:16px">
@@ -112,7 +112,7 @@
             <div class="table-scroll"><table><thead><tr><th>赛季</th><th>场次</th><th>积分</th><th>场均</th><th>正分率</th><th>MVP</th><th>最高/最低</th></tr></thead><tbody id="playerSeasonTable"></tbody></table></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>对位关系</h3><small>净分 / 胜率</small></div>
+            <div class="section-head"><h3>对位关系</h3><small>新制精准净分</small></div>
             <div id="playerRivals"></div>
           </div>
         </div>
@@ -150,7 +150,7 @@
             <div id="entryPlayers"></div>
             <div id="entryValidation" class="validation">请选择参赛牌手并填写分数。</div>
             <div style="display:flex;gap:9px;margin-top:13px;flex-wrap:wrap">
-              <button class="btn primary" id="saveMatchBtn" type="button">保存到云端数据库</button>
+              <button class="btn primary" id="saveMatchBtn" type="button">保存比赛与精准对位</button>
               <button class="btn" id="clearEntryBtn" type="button">清空</button>
               <button class="btn" id="resetDemoBtn" type="button">重新同步云端</button>
             </div>
@@ -160,28 +160,41 @@
             <div class="list">
               <div class="honor-item"><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div>
               <div class="honor-item"><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div>
-              <div class="honor-item"><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和对位数据立即重算。</small></div>
+              <div class="honor-item"><strong>精准对位</strong><small>每组对位只需填写任意一格，另一格自动反向生成；每名牌手的对位行合计必须等于本场比赛分。</small></div>
+              <div class="honor-item"><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和新制对位中心立即重算。</small></div>
               <div class="honor-item"><strong>公开模式</strong><small>无需邮箱密码。任何拿到网址的人都可以查看和录入，请避免误操作。</small></div>
             </div>
           </div>
         </div>
+        <div class="card section" style="margin-top:16px">
+          <div class="section-head"><div><h3>本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；只填一侧，镜像格自动生成相反数。</small></div><span class="chip gold">新制必填</span></div>
+          <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
+          <div id="matchupValidation" class="validation">对位行合计必须逐人对应比赛总分。</div>
+        </div>
       </section>
 
       <section class="view" data-view="rival">
-        <div class="hero"><div><h2>对位中心</h2><p>查看两名牌手之间的净分和对位胜率。</p></div></div>
+        <div class="hero"><div><h2>精准对位中心</h2><p>旧版由比赛总分推算的对位数据已停用；这里只统计新制逐对位明细，并在每次录入后实时更新。</p></div></div>
+        <div class="kpis" id="rivalKpis"></div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>对位净分矩阵</h3><small>行牌手相对列牌手</small></div>
+            <div class="section-head"><h3>对位净分矩阵</h3><small>行攻击方 / 列承受方</small></div>
             <div class="matrix-wrap"><table class="matrix" id="netMatrix"></table></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字</small></div>
+            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看逐场证据</small></div>
             <div id="rivalDetail" class="empty">请选择一个对位。</div>
           </div>
         </div>
-        <div class="card section">
-          <div class="section-head"><h3>对位胜率矩阵</h3><small>并列场次不计为胜</small></div>
-          <div class="matrix-wrap"><table class="matrix" id="winMatrix"></table></div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>五人对位汇总</h3><small>规则与上传表格一致</small></div>
+            <div class="table-scroll"><table><thead><tr><th>牌手</th><th>吃分</th><th>被吃分</th><th>总积分</th></tr></thead><tbody id="rivalSummaryTable"></tbody></table></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>新制对位排名</h3><small>无数据时不判定获奖者</small></div>
+            <div class="list" id="rivalRanking"></div>
+          </div>
         </div>
       </section>
 
@@ -208,7 +221,7 @@
         <div class="kpis" id="systemKpis"></div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>健康检查</h3><small>8 / 8 PASS</small></div>
+            <div class="section-head"><h3>健康检查</h3><small>实时检查</small></div>
             <div class="health-grid" id="healthList"></div>
           </div>
           <div class="card section">

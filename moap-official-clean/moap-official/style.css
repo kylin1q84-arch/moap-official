@@ -189,3 +189,23 @@ body.modal-open{overflow:hidden}
 .honor-chip-list{display:flex;flex-wrap:wrap;gap:8px}.honor-chip-list span{padding:8px 10px;border-radius:999px;background:rgba(148,163,184,.12);color:#e2e8f0;font-size:13px}
 .honor-evidence-list{display:grid;gap:8px}.honor-evidence-list article{display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:center;padding:11px 13px;border-radius:12px;background:rgba(148,163,184,.08)}.honor-evidence-list article span{display:block;color:#94a3b8;font-size:12px;margin-top:3px}.honor-evidence-list article>b{font-size:18px}.honor-modal-footer{margin-top:22px;color:#64748b;font-size:12px}
 @media(max-width:560px){.honor-modal{padding:19px;border-radius:18px}.honor-modal-header h2{font-size:21px}.honor-ranking-table>div{grid-template-columns:40px 1fr auto;padding:10px}}
+
+
+/* v1.4 精准逐对位统计 */
+.entry-matchup-matrix{min-width:900px}
+.entry-matchup-matrix th,.entry-matchup-matrix td{min-width:92px}
+.entry-matchup-matrix th:first-child,.entry-matchup-matrix td:first-child{min-width:180px}
+.matchup-input{width:78px;min-width:68px;margin:0 auto;text-align:center;padding:8px 6px;border-radius:9px}
+.matchup-input.pos{background:rgba(85,214,156,.13);border-color:rgba(85,214,156,.42);color:#91e7be;font-weight:750}
+.matchup-input.neg{background:rgba(255,118,118,.13);border-color:rgba(255,118,118,.42);color:#ffaaaa;font-weight:750}
+.matchup-input:disabled{opacity:.22;cursor:not-allowed}
+.matchup-diagonal{background:rgba(255,255,255,.05);color:var(--muted);font-weight:700}
+.entry-matchup-matrix tr.is-absent{opacity:.45}
+.matchup-check{display:inline-flex;margin:3px 7px 3px 0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.045)}
+.matchup-check.pass{color:#9be8c2;background:rgba(85,214,156,.09)}
+.matchup-check.fail{color:#ffaaaa;background:rgba(255,118,118,.09)}
+.matrix-cell.neutral{color:var(--muted);background:rgba(255,255,255,.035)}
+.rival-rank-item{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:10px}
+.rival-rank-item>span{color:var(--muted);font-size:12px}
+.rival-rank-item>b{font-size:16px}
+@media(max-width:760px){.entry-matchup-matrix{min-width:820px}.entry-matchup-matrix th:first-child,.entry-matchup-matrix td:first-child{min-width:150px}}

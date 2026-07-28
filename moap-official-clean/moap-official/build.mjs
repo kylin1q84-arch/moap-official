@@ -39,7 +39,8 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP Honor Vercel Direct build completed successfully.')
+console.log('MOAP Precise Matchup v1.4 build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
+console.log('Precise matchup center: included')
