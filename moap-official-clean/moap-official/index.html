@@ -20,7 +20,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v10.1 LTS Official</span>
+      <span class="badge" id="versionBadge">v1.7 NBA Honor & Form</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +33,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        认证基线：MOAP v10.1 LTS<br>
+        分析引擎：MOAP v1.7 NBA Honor & Form<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -41,7 +41,7 @@
     <main>
       <section class="view active" data-view="overview">
         <div class="hero">
-          <div><h2>联赛总览</h2><p>从 65 场正式记录中，快速查看排名、状态与最新比赛。</p></div>
+          <div><h2>联赛总览</h2><p>实时查看积分、最新比赛、NBA式实力榜与联盟故事线。</p></div>
           <span class="chip gold">CURRENT GOAT · <b id="goatName">罗海泓</b></span>
         </div>
         <div class="kpis" id="overviewKpis"></div>
@@ -57,13 +57,17 @@
         </div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>最近五场状态</h3><small>实际参赛得分合计</small></div>
+            <div class="section-head"><h3>MSL实力榜</h3><small>NBA式近期战力 · 最近5场加权</small></div>
             <div id="recentFormList"></div>
           </div>
           <div class="card section">
             <div class="section-head"><h3>GOAT指数</h3><small>荣誉积分 + MVP + 冠军加成</small></div>
             <div id="goatMini"></div>
           </div>
+        </div>
+        <div class="card section" style="margin-top:16px">
+          <div class="section-head"><h3>联盟故事线</h3><small>数据驱动AI分析 · 不影响官方荣誉</small></div>
+          <div class="storyline-grid" id="overviewStorylines"></div>
         </div>
       </section>
 
@@ -91,6 +95,38 @@
               <thead id="fullLeaderboardHead"></thead>
               <tbody id="fullLeaderboard"></tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="status">
+        <div class="hero">
+          <div><h2>MSL状态中心</h2><p>参考NBA Power Rankings、Stock Watch与球探报告，追踪牌手近期手感、走势和故事线。</p></div>
+          <span class="chip gold">AI DATA SCOUTING</span>
+        </div>
+        <div class="kpis" id="statusKpis"></div>
+        <div class="grid-2 status-main-grid">
+          <div class="card section">
+            <div class="section-head"><h3>MSL实力榜</h3><small>最近5场 · 每场结束自动更新</small></div>
+            <div class="power-list" id="powerRanking"></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>Stock Watch</h3><small>行情上涨 / 下跌 / 观望</small></div>
+            <div class="list" id="stockWatch"></div>
+          </div>
+        </div>
+        <div class="card section" style="margin-bottom:16px">
+          <div class="section-head"><h3>最新比赛 · NBA式赛后报道</h3><small>自动读取最新正式比赛</small></div>
+          <div id="latestAiRecap"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>联盟故事线</h3><small>下一轮值得关注</small></div>
+            <div class="storyline-grid" id="statusStorylines"></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>计算口径</h3><small>可解释、可复核</small></div>
+            <div class="analysis-method" id="statusMethodology"></div>
           </div>
         </div>
       </section>
@@ -123,6 +159,10 @@
             <div class="section-head"><h3>对位关系</h3><small>新制精准净分</small></div>
             <div id="playerRivals"></div>
           </div>
+        </div>
+        <div class="card section" style="margin-bottom:16px">
+          <div class="section-head"><h3>AI Scouting Report</h3><small>NBA式牌手球探报告</small></div>
+          <div id="playerScouting"></div>
         </div>
         <div class="card section">
           <div class="section-head"><h3>官方荣誉墙</h3><small id="honorSummary"></small></div>
@@ -182,7 +222,7 @@
       </section>
 
       <section class="view" data-view="rival">
-        <div class="hero"><div><h2>精准对位中心</h2><p>旧版由比赛总分推算的对位数据已停用；这里只统计新制逐对位明细，并在每次录入后实时更新。</p></div></div>
+        <div class="hero"><div><h2>精准对位中心</h2><p>旧版由比赛总分推算的对位数据已停用；这里只统计新制逐对位明细。仅补录最终总分的历史场次不会被伪造成对位数据。</p></div></div>
         <div class="kpis" id="rivalKpis"></div>
         <div class="grid-2">
           <div class="card section">
@@ -218,8 +258,12 @@
             <div class="split-stats" id="honorStats"></div>
           </div>
         </div>
+        <div class="card section" style="margin-bottom:16px">
+          <div class="section-head"><div><h3>赛季荣誉归属</h3><small>除铁人奖、鸽王外，每项荣誉只能有一名得主；完全同分则显示待定。</small></div><label style="min-width:150px">赛季<select id="honorBoardSeason"></select></label></div>
+          <div class="honor-board-grid" id="honorSeasonBoard"></div>
+        </div>
         <div class="card section">
-          <div class="section-head"><h3>荣誉清单</h3><small id="honorListSummary"></small></div>
+          <div class="section-head"><h3>牌手荣誉清单</h3><small id="honorListSummary"></small></div>
           <div class="honor-grid" id="honorList"></div>
         </div>
       </section>

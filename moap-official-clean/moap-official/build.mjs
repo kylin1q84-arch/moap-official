@@ -10,6 +10,7 @@ const sourceFiles = [
   'style.css',
   'certified-data.js',
   'honor-details.js',
+  'analytics-engine.js',
 ]
 
 await rm(outputDir, { recursive: true, force: true })
@@ -39,8 +40,10 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP Precise Matchup v1.4 build completed successfully.')
+console.log('MOAP v1.7 NBA Honor & Form build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
 console.log('Precise matchup center: included')
+console.log('Unique honor engine: included')
+console.log('NBA-style form center: included')
