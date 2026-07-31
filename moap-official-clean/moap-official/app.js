@@ -1,7 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 import { HONOR_CATALOG } from "./honor-details.js";
-import { calculateHonorSystem, buildNbaStatusCenter } from "./analytics-engine.js";
+import { calculateHonorSystem, buildMslStatusCenter } from "./analytics-engine.js";
 import { MOAP_CONFIG } from "./config.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
@@ -35,7 +35,7 @@ function applyAnalyticsToState(target){
   target.honors=system.honors;
   target.honorBoard=system.board;
   target.honorCatalog=system.catalog;
-  target.statusCenter=buildNbaStatusCenter(target.players,target.matches);
+  target.statusCenter=buildMslStatusCenter(target.players,target.matches);
   target.profiles=target.profiles||{};
   const stats={};
   target.players.forEach(p=>{
@@ -58,7 +58,7 @@ function applyAnalyticsToState(target){
   (target.leaderboard||[]).forEach(row=>{const g=goatBy[row.playerId];if(g){row.goatIndex=g.goatIndex;row.goatRank=g.rank;}});
   if(target.version){
     const top=goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
-    target.version={...target.version,version:"v1.7 NBA Honor & Form",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"Unique honor rules + NBA-style form center",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、行情与NBA式AI球探报告。"};
+    target.version={...target.version,version:"v1.7.1 MSL Honor & Form",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"Unique honor rules + MSL form center",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、牌手行情与赛季综合AI评价。"};
   }
   return target;
 }
@@ -182,8 +182,8 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.7 NBA Honor & Form",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"Unique honor rules + NBA-style form center",formulaIntegrity:"PASS",certification:"LIVE DATA VERIFIED",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、行情与NBA式AI球探报告。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:awardWinners("H004")};
-  const statusCenter=buildNbaStatusCenter(players,matches);
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.7.1 MSL Honor & Form",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"Unique honor rules + MSL form center",formulaIntegrity:"PASS",certification:"LIVE DATA VERIFIED",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、牌手行情与赛季综合AI评价。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:awardWinners("H004")};
+  const statusCenter=buildMslStatusCenter(players,matches);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,statusCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
@@ -305,17 +305,20 @@ function renderStatus(){
     ["行情上升",up?.player||"—",up?`${movementText(up)} · 指数 ${up.indexChange>=0?"+":""}${up.indexChange}`:"暂无"],
     ["最新MVP",mvp?.latest?.isMvp?mvp.player:"—",mvp?.latest?`${mvp.latest.season} 第${mvp.latest.round}局`:"暂无"]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?22:28}px">${escapeHtml(x[1])}</div><div class="kpi-sub">${escapeHtml(x[2])}</div></div>`).join("");
-  $("#powerRanking").innerHTML=rows.map(r=>`<button type="button" class="power-card" data-status-player="${r.playerId}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div class="power-card-main"><div class="power-card-title"><strong>${escapeHtml(r.player)}</strong><span class="stock ${r.report.headline.startsWith("STOCK UP")?"up":r.report.headline.startsWith("STOCK DOWN")?"down":"hold"}">${escapeHtml(r.report.headline.split("｜")[0])}</span></div><div class="power-card-meta"><span>${escapeHtml(r.label)}</span><span>${escapeHtml(r.archetype)}</span><span>近5场 ${fmtScore(r.recentTotal)}</span></div><div class="bar"><i style="width:${Math.max(4,r.powerIndex)}%"></i></div></div><div class="power-score"><b>${r.powerIndex}</b><small>${movementText(r)}</small></div></button>`).join("");
+  $("#powerRanking").innerHTML=rows.map(r=>`<button type="button" class="power-card" data-status-player="${r.playerId}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div class="power-card-main"><div class="power-card-title"><strong>${escapeHtml(r.player)}</strong><span class="stock ${r.report.trendKey==="up"?"up":r.report.trendKey==="down"?"down":"hold"}">${escapeHtml(r.report.headline)}</span></div><div class="power-card-meta"><span>${escapeHtml(r.label)}</span><span>${escapeHtml(r.archetype)}</span><span>近5场 ${fmtScore(r.recentTotal)}</span></div><div class="bar"><i style="width:${Math.max(4,r.powerIndex)}%"></i></div></div><div class="power-score"><b>${r.powerIndex}</b><small>${movementText(r)}</small></div></button>`).join("");
   $("#stockWatch").innerHTML=rows.map(r=>`<button type="button" class="stock-row" data-status-player="${r.playerId}"><div><strong>${escapeHtml(r.player)}</strong><span>${escapeHtml(r.report.headline)}</span></div><b class="${r.indexChange>0?"score-pos":r.indexChange<0?"score-neg":""}">${r.indexChange>0?"+":""}${r.indexChange}</b></button>`).join("");
   const recap=center.gameRecap;
-  $("#latestAiRecap").innerHTML=recap?`<article class="ai-recap"><div class="ai-recap-head"><div><span class="chip gold">GAME RECAP</span><h3>${escapeHtml(recap.title)}</h3><small>${escapeHtml(recap.meta)}</small></div></div><p>${escapeHtml(recap.body)}</p><div class="match-scores">${recap.scores.map(x=>`<span class="score-pill ${x.isMvp?"mvp":""}">${escapeHtml(x.player)} <b class="${scoreClass(x.score)}">${fmtScore(x.score)}</b>${x.isMvp?" · MVP":""}</span>`).join("")}</div></article>`:'<div class="empty">暂无比赛可生成战报</div>';
+  $("#latestAiRecap").innerHTML=recap?`<article class="ai-recap"><div class="ai-recap-head"><div><span class="chip gold">MSL 赛后简报</span><h3>${escapeHtml(recap.title)}</h3><small>${escapeHtml(recap.meta)}</small></div></div><p>${escapeHtml(recap.body)}</p><div class="match-scores">${recap.scores.map(x=>`<span class="score-pill ${x.isMvp?"mvp":""}">${escapeHtml(x.player)} <b class="${scoreClass(x.score)}">${fmtScore(x.score)}</b>${x.isMvp?" · MVP":""}</span>`).join("")}</div></article>`:'<div class="empty">暂无比赛可生成战报</div>';
   $("#statusStorylines").innerHTML=(center.storylines||[]).map(x=>`<div class="storyline-item">${escapeHtml(x)}</div>`).join("");
   $("#statusMethodology").innerHTML=`<p>${escapeHtml(center.methodology||"")}</p><div class="method-bars"><span>近期加权净分 <b>35%</b></span><span>正分率 <b>20%</b></span><span>MVP <b>15%</b></span><span>BGR <b>10%</b></span><span>走势 <b>10%</b></span><span>相对赛季表现 <b>10%</b></span></div><small>AI分析为数据驱动模板，不参与积分、荣誉或GOAT计算。</small>`;
 }
 function renderPlayerScouting(pid){
   const r=state.statusCenter?.rankings?.find(x=>x.playerId===pid),el=$("#playerScouting");if(!el)return;
   if(!r){el.innerHTML='<div class="empty">暂无状态分析</div>';return;}
-  el.innerHTML=`<div class="scouting-report"><header><div><span class="stock ${r.report.headline.startsWith("STOCK UP")?"up":r.report.headline.startsWith("STOCK DOWN")?"down":"hold"}">${escapeHtml(r.report.headline)}</span><h3>${escapeHtml(r.label)} · 实力榜 #${r.rank}</h3><p>${escapeHtml(r.report.summary)}</p></div><div class="scouting-index"><b>${r.powerIndex}</b><small>状态指数</small></div></header><div class="scouting-columns"><section><h4>近期亮点</h4>${r.report.strengths.map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")}</section><section><h4>潜在风险</h4>${r.report.risks.map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")}</section><section><h4>下一场关注</h4><p>${escapeHtml(r.report.next)}</p></section></div><footer>牌手类型：${escapeHtml(r.archetype)} · 最近5场：${r.recent.map(x=>`${x.score>=0?"+":""}${x.score}`).join(" / ")||"暂无"}</footer></div>`;
+  const report=r.report||{};
+  const trendClass=report.trendKey==="up"?"up":report.trendKey==="down"?"down":"hold";
+  const season=r.season||{};
+  el.innerHTML=`<div class="scouting-report"><header><div><span class="stock ${trendClass}">${escapeHtml(report.headline||"持续观望")}</span><h3>${escapeHtml(r.label)} · MSL实力榜 #${r.rank}</h3><p>${escapeHtml(report.summary||"")}</p></div><div class="scouting-index"><b>${r.powerIndex}</b><small>状态指数</small></div></header><div class="season-evaluation"><div class="season-evaluation-head"><div><span>${escapeHtml(season.id||"当前赛季")}</span><h4>本赛季整体评价</h4></div><b>${escapeHtml(report.seasonLabel||"赛季观察中")}</b></div><p>${escapeHtml(report.seasonSummary||"暂无足够赛季数据。")}</p><div class="season-metric-grid"><div><span>总积分排名</span><b>${season.totalRank?`#${season.totalRank}`:"—"}</b></div><div><span>赛季积分</span><b class="${scoreClass(season.total||0)}">${fmtScore(season.total||0)}</b></div><div><span>场均积分</span><b>${fmtAvg(season.average||0)}</b></div><div><span>正分率</span><b>${fmtPct(season.positiveRate||0)}</b></div><div><span>MVP</span><b>${season.mvps||0}次</b></div><div><span>BGR</span><b>${season.bgr||0}</b></div></div><p class="season-outlook">${escapeHtml(report.seasonOutlook||"")}</p></div><div class="scouting-columns"><section><h4>近期亮点</h4>${(report.strengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")}</section><section><h4>潜在风险</h4>${(report.risks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")}</section><section><h4>下一场关注</h4><p>${escapeHtml(report.next||"")}</p></section></div><footer>牌手类型：${escapeHtml(r.archetype)} · 最近5场：${r.recent.map(x=>`${x.score>=0?"+":""}${x.score}`).join(" / ")||"暂无"}</footer></div>`;
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player");});
 
@@ -332,6 +335,16 @@ function bgrBucket(score){
   score=Number(score);
   if(score>=100)return "100";if(score>=90)return "90";if(score>=80)return "80";
   if(score>=70)return "70";if(score>=60)return "60";if(score>=50)return "50";return null;
+}
+function playedResultsForMatch(match){
+  return (match?.results||[]).filter(result=>!result.isAbsent&&result.score!=null);
+}
+function getSoloWinner(match){
+  const rows=playedResultsForMatch(match);
+  const nonNegative=rows.filter(result=>Number(result.score)>=0);
+  if(nonNegative.length!==1)return null;
+  const winner=nonNegative[0];
+  return rows.every(result=>result.playerId===winner.playerId||Number(result.score)<0)?winner:null;
 }
 function playerBoardMetrics(player,scope,type){
   const matches=boardMatches(scope,type),played=[];
@@ -398,7 +411,18 @@ function boardRows(){
 function playerCell(row){return `<div class="player-cell"><span class="avatar">${initials(row.player)}</span>${escapeHtml(row.player)}</div>`;}
 function renderHonorBreakdownCell(item){return `<span class="honor-count-cell"><b>${item.count}</b><small>${item.points}分</small></span>`;}
 function renderLeaderboard(){
-  const kind=$("#boardKind").value,rows=boardRows(),typeSelect=$("#boardType");
+  const typeSelect=$("#boardType");
+  let kind,rows;
+  try{
+    kind=$("#boardKind").value;
+    rows=boardRows();
+  }catch(error){
+    console.error("排行榜渲染失败",error);
+    $("#boardNote").textContent="排行榜读取失败："+(error?.message||String(error));
+    $("#fullLeaderboardHead").innerHTML="";
+    $("#fullLeaderboard").innerHTML='<tr><td class="empty">排行榜暂时无法显示，请刷新页面或检查控制台。</td></tr>';
+    return;
+  }
   const notes={
     total:"正分率按得分≥0计算；缺席不计参赛场次。",
     streak:"连庄沿用官方H006口径：连续实际参赛得分≥0；缺席不增加也不中断，负分中断。连庄总次数只统计长度≥2的连续段。",

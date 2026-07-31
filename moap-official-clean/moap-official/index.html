@@ -20,7 +20,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v1.7 NBA Honor & Form</span>
+      <span class="badge" id="versionBadge">v1.7.1 MSL Honor & Form</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +33,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v1.7 NBA Honor & Form<br>
+        分析引擎：MOAP v1.7.1 MSL Honor & Form<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -41,7 +41,7 @@
     <main>
       <section class="view active" data-view="overview">
         <div class="hero">
-          <div><h2>联赛总览</h2><p>实时查看积分、最新比赛、NBA式实力榜与联盟故事线。</p></div>
+          <div><h2>联赛总览</h2><p>实时查看积分、最新比赛、MSL实力榜与联盟故事线。</p></div>
           <span class="chip gold">CURRENT GOAT · <b id="goatName">罗海泓</b></span>
         </div>
         <div class="kpis" id="overviewKpis"></div>
@@ -57,7 +57,7 @@
         </div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>MSL实力榜</h3><small>NBA式近期战力 · 最近5场加权</small></div>
+            <div class="section-head"><h3>MSL实力榜</h3><small>近期战力 · 最近5场加权</small></div>
             <div id="recentFormList"></div>
           </div>
           <div class="card section">
@@ -101,8 +101,8 @@
 
       <section class="view" data-view="status">
         <div class="hero">
-          <div><h2>MSL状态中心</h2><p>参考NBA Power Rankings、Stock Watch与球探报告，追踪牌手近期手感、走势和故事线。</p></div>
-          <span class="chip gold">AI DATA SCOUTING</span>
+          <div><h2>MSL状态中心</h2><p>围绕MSL近期状态、赛季表现与比赛走势，追踪每位牌手的手感和竞争态势。</p></div>
+          <span class="chip gold">MSL 数据分析</span>
         </div>
         <div class="kpis" id="statusKpis"></div>
         <div class="grid-2 status-main-grid">
@@ -111,12 +111,12 @@
             <div class="power-list" id="powerRanking"></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>Stock Watch</h3><small>行情上涨 / 下跌 / 观望</small></div>
+            <div class="section-head"><h3>牌手行情</h3><small>行情上涨 / 下跌 / 观望</small></div>
             <div class="list" id="stockWatch"></div>
           </div>
         </div>
         <div class="card section" style="margin-bottom:16px">
-          <div class="section-head"><h3>最新比赛 · NBA式赛后报道</h3><small>自动读取最新正式比赛</small></div>
+          <div class="section-head"><h3>最新比赛 · MSL赛后简报</h3><small>自动读取最新正式比赛</small></div>
           <div id="latestAiRecap"></div>
         </div>
         <div class="grid-2">
@@ -161,7 +161,7 @@
           </div>
         </div>
         <div class="card section" style="margin-bottom:16px">
-          <div class="section-head"><h3>AI Scouting Report</h3><small>NBA式牌手球探报告</small></div>
+          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + 本赛季整体评价</small></div>
           <div id="playerScouting"></div>
         </div>
         <div class="card section">

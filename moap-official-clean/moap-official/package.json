@@ -1,6 +1,6 @@
 {
-  "name": "moap-nba-honor-form",
-  "version": "1.7.0",
+  "name": "moap-msl-honor-form",
+  "version": "1.7.1",
   "private": true,
   "type": "module",
   "scripts": {

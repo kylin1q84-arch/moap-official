@@ -40,10 +40,10 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v1.7 NBA Honor & Form build completed successfully.')
+console.log('MOAP v1.7.1 MSL Honor & Form build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
 console.log('Precise matchup center: included')
 console.log('Unique honor engine: included')
-console.log('NBA-style form center: included')
+console.log('MSL form center and season evaluation: included')
