@@ -20,7 +20,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v1.8 MSL Records</span>
+      <span class="badge" id="versionBadge">v1.8.1 MSL Records & GOAT</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +33,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v1.8 MSL Records<br>
+        分析引擎：MOAP v1.8.1 MSL Records & GOAT<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -61,7 +61,7 @@
             <div id="recentFormList"></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>GOAT指数</h3><small>荣誉积分 + MVP + 冠军加成</small></div>
+            <div class="section-head"><h3>GOAT指数</h3><small>荣誉 · 生涯 · 纪录 · 持续性</small></div>
             <div id="goatMini"></div>
           </div>
         </div>
@@ -92,7 +92,7 @@
           <div class="record-summary" id="recordSummary"></div>
           <div class="table-scroll record-table-scroll">
             <table class="record-table">
-              <thead><tr><th>记录名称</th><th>记录类型</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>
+              <thead id="recordTableHead"><tr><th>记录名称</th><th>记录类型</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>
               <tbody id="recordTableBody"></tbody>
             </table>
           </div>

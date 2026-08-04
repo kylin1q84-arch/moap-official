@@ -53,8 +53,17 @@ function rankCandidates(candidates, direction = "desc") {
 function makeRecord({ id, section, name, recordType, rule, unit, direction = "desc", candidates = [], requirePositive = false, forcePlus = false }) {
   let ranking = rankCandidates(candidates, direction);
   if (requirePositive && (!ranking.length || num(ranking[0].value) <= 0)) ranking = [];
-  const holders = ranking.filter(candidate => candidate.rank === 1);
-  const value = holders.length ? holders[0].value : null;
+  const holderCandidates = ranking.filter(candidate => candidate.rank === 1);
+  const holderMap = new Map();
+  for (const candidate of holderCandidates) {
+    const key = section === "season" ? `${candidate.playerId}|${candidate.season}` : candidate.playerId;
+    const existing = holderMap.get(key);
+    if (!existing || String(candidate.createdAt || "9999").localeCompare(String(existing.createdAt || "9999")) < 0) {
+      holderMap.set(key, candidate);
+    }
+  }
+  const holders = [...holderMap.values()];
+  const value = holderCandidates.length ? holderCandidates[0].value : null;
   return {
     id,
     section,
@@ -64,13 +73,19 @@ function makeRecord({ id, section, name, recordType, rule, unit, direction = "de
     unit,
     direction,
     forcePlus,
-    holders: holders.map(candidate => ({ playerId: candidate.playerId, player: candidate.player, season: candidate.season, createdAt: candidate.createdAt })),
-    holderNames: holders.map(candidate => candidate.player),
+    holders: holders.map(candidate => ({
+      playerId: candidate.playerId,
+      player: candidate.player,
+      season: candidate.season,
+      createdAt: candidate.createdAt,
+      evidence: candidate.evidence || []
+    })),
+    holderNames: [...new Set(holders.map(candidate => candidate.player))],
     value,
     displayValue: displayNumber(value, unit, forcePlus),
-    createdAt: holders.length ? [...holders].map(candidate => candidate.createdAt).filter(Boolean).sort()[0] || "—" : "—",
+    createdAt: holderCandidates.length ? holderCandidates.map(candidate => candidate.createdAt).filter(Boolean).sort()[0] || "—" : "—",
     ranking,
-    evidence: holders.flatMap(holder => holder.evidence || [])
+    evidence: holderCandidates.flatMap(holder => holder.evidence || [])
   };
 }
 
@@ -227,6 +242,7 @@ function historicalRecords(players, matches) {
   const pointCandidates = key => stageMap[key].map(stage => ({ ...stage, value: stage.points }));
 
   return [
+    makeRecord({ id:"HIST_SINGLE_HIGH", section:"historical", name:"单场最高积分", recordType:"单场记录", rule:"所有正式比赛中实际参赛牌手的最高单场积分。", unit:"分", direction:"desc", candidates:singleCandidates(() => true) }),
     makeRecord({ id:"HIST_SINGLE_LOW", section:"historical", name:"单场最低积分", recordType:"单场记录", rule:"所有正式比赛中实际参赛牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(() => true) }),
     makeRecord({ id:"HIST_MVP_HIGH", section:"historical", name:"单场MVP最高积分", recordType:"单场记录", rule:"所有获得MVP的正式比赛中，MVP牌手的最高单场积分。", unit:"分", direction:"desc", candidates:singleCandidates(item => item.isMvp) }),
     makeRecord({ id:"HIST_MVP_LOW", section:"historical", name:"单场MVP最低积分", recordType:"单场记录", rule:"所有获得MVP的正式比赛中，MVP牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(item => item.isMvp) }),
@@ -292,6 +308,8 @@ function seasonCandidateRows(players, matches) {
         createdAt: lastDate,
         evidence,
         games: entries.length,
+        scheduledGames: seasonMatches.length,
+        sampleEligible: entries.length >= 3 && entries.length / Math.max(1, seasonMatches.length) >= 0.5,
         total: sum(entries.map(item => item.score)),
         average: mean(entries.map(item => item.score)),
         positiveCount: positive.length,
@@ -337,8 +355,8 @@ function seasonRecords(players, matches) {
   return [
     pointsRecord({ id:"SEASON_TOTAL_HIGH", name:"赛季最高累计积分", rule:"以牌手单赛季最终累计积分为候选，取历史最高值。" }, "total"),
     pointsRecord({ id:"SEASON_TOTAL_LOW", name:"赛季最低累计积分", rule:"以牌手单赛季最终累计积分为候选，取历史最低值。" }, "total", "asc"),
-    makeRecord({ id:"SEASON_AVG_HIGH", section:"season", name:"赛季最高场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最高值。", unit:"分/场", candidates:candidates("average") }),
-    makeRecord({ id:"SEASON_AVG_LOW", section:"season", name:"赛季最低场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最低值。", unit:"分/场", direction:"asc", candidates:candidates("average") }),
+    makeRecord({ id:"SEASON_AVG_HIGH", section:"season", name:"赛季最高场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最高值；须参加对应赛程至少50%，且不少于3场。", unit:"分/场", candidates:candidates("average", row => row.sampleEligible) }),
+    makeRecord({ id:"SEASON_AVG_LOW", section:"season", name:"赛季最低场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最低值；须参加对应赛程至少50%，且不少于3场。", unit:"分/场", direction:"asc", candidates:candidates("average", row => row.sampleEligible) }),
     countRecord({ id:"SEASON_POS_COUNT", name:"赛季最多正分场次", rule:"单赛季得分≥0的场次最多。" }, "positiveCount"),
     countRecord({ id:"SEASON_NEG_COUNT", name:"赛季最多负分场次", rule:"单赛季得分＜0的场次最多。" }, "negativeCount"),
     pointsRecord({ id:"SEASON_POS_TOTAL_HIGH", name:"赛季正分场次最高累计积分", rule:"只累计单赛季正分场次积分，取历史最高值。" }, "positiveTotal", "desc", row => row.positiveCount > 0),
@@ -409,12 +427,18 @@ function careerRows(players, matches) {
       bigWinCount: bigWins.length,
       bigWinTotal: sum(bigWins.map(item => item.score)),
       bigWinEvidence: baseEvidence(bigWins),
-      over50: entries.filter(item => item.score >= 50).length,
-      over60: entries.filter(item => item.score >= 60).length,
-      over70: entries.filter(item => item.score >= 70).length,
-      over80: entries.filter(item => item.score >= 80).length,
-      over90: entries.filter(item => item.score >= 90).length,
-      over100: entries.filter(item => item.score >= 100).length
+      over50: entries.filter(item => item.score >= 50 && item.score < 60).length,
+      over60: entries.filter(item => item.score >= 60 && item.score < 70).length,
+      over70: entries.filter(item => item.score >= 70 && item.score < 80).length,
+      over80: entries.filter(item => item.score >= 80 && item.score < 90).length,
+      over90: entries.filter(item => item.score >= 90 && item.score < 100).length,
+      over100: entries.filter(item => item.score >= 100).length,
+      over50Evidence: baseEvidence(entries.filter(item => item.score >= 50 && item.score < 60)),
+      over60Evidence: baseEvidence(entries.filter(item => item.score >= 60 && item.score < 70)),
+      over70Evidence: baseEvidence(entries.filter(item => item.score >= 70 && item.score < 80)),
+      over80Evidence: baseEvidence(entries.filter(item => item.score >= 80 && item.score < 90)),
+      over90Evidence: baseEvidence(entries.filter(item => item.score >= 90 && item.score < 100)),
+      over100Evidence: baseEvidence(entries.filter(item => item.score >= 100))
     };
   });
 }
@@ -433,7 +457,6 @@ function careerRecords(players, matches) {
   const countRecord = (id, name, rule, key, evidenceKey = "evidence") => makeRecord({ id, section:"career", name, recordType:"生涯记录", rule, unit:"场", candidates:candidates(key, evidenceKey), requirePositive:true });
   const pointsRecord = (id, name, rule, key, direction = "desc", evidenceKey = "evidence", eligibility = () => true) => makeRecord({ id, section:"career", name, recordType:"生涯记录", rule, unit:"分", direction, candidates:candidates(key, evidenceKey, eligibility) });
   return [
-    pointsRecord("CAREER_TOTAL", "生涯最高总积分", "S1至当前全部正式比赛累计积分最高。", "total"),
     countRecord("CAREER_MVP_COUNT", "生涯MVP场次", "生涯获得MVP的场次最多。", "mvpCount", "mvpEvidence"),
     pointsRecord("CAREER_MVP_TOTAL", "生涯MVP场次总积分", "生涯所有MVP场次的本人积分累计最高。", "mvpTotal", "desc", "mvpEvidence", row => row.mvpCount > 0),
     countRecord("CAREER_POS_COUNT", "生涯正分场次", "生涯得分≥0的场次最多。", "positiveCount", "positiveEvidence"),
@@ -445,12 +468,12 @@ function careerRecords(players, matches) {
     pointsRecord("CAREER_SOLO_LOSS_TOTAL", "生涯独输场次总积分", "生涯所有独输场次的本人积分累计最低。", "soloLossTotal", "asc", "soloLossEvidence", row => row.soloLossCount > 0),
     countRecord("CAREER_BIGWIN_COUNT", "生涯大胜场次", "生涯大胜场次最多。", "bigWinCount", "bigWinEvidence"),
     pointsRecord("CAREER_BIGWIN_TOTAL", "生涯大胜场次总积分", "生涯所有大胜场次的本人积分累计最高。", "bigWinTotal", "desc", "bigWinEvidence", row => row.bigWinCount > 0),
-    countRecord("CAREER_50", "生涯单场50+场次", "生涯单场积分≥50的累计场次；高分场次同时计入所有更低门槛。", "over50"),
-    countRecord("CAREER_60", "生涯单场60+场次", "生涯单场积分≥60的累计场次。", "over60"),
-    countRecord("CAREER_70", "生涯单场70+场次", "生涯单场积分≥70的累计场次。", "over70"),
-    countRecord("CAREER_80", "生涯单场80+场次", "生涯单场积分≥80的累计场次。", "over80"),
-    countRecord("CAREER_90", "生涯单场90+场次", "生涯单场积分≥90的累计场次。", "over90"),
-    countRecord("CAREER_100", "生涯单场100+场次", "生涯单场积分≥100的累计场次。", "over100")
+    countRecord("CAREER_50", "生涯50+大场面场次", "生涯单场积分50–59分的累计场次；大场面档位互斥，每场只计入一个档位。", "over50", "over50Evidence"),
+    countRecord("CAREER_60", "生涯60+大场面场次", "生涯单场积分60–69分的累计场次；大场面档位互斥。", "over60", "over60Evidence"),
+    countRecord("CAREER_70", "生涯70+大场面场次", "生涯单场积分70–79分的累计场次；大场面档位互斥。", "over70", "over70Evidence"),
+    countRecord("CAREER_80", "生涯80+大场面场次", "生涯单场积分80–89分的累计场次；大场面档位互斥。", "over80", "over80Evidence"),
+    countRecord("CAREER_90", "生涯90+大场面场次", "生涯单场积分90–99分的累计场次；大场面档位互斥。", "over90", "over90Evidence"),
+    countRecord("CAREER_100", "生涯100+大场面场次", "生涯单场积分≥100分的累计场次；大场面档位互斥。", "over100", "over100Evidence")
   ];
 }
 
@@ -471,6 +494,6 @@ export function buildRecordCenter(players, matches) {
       four: buildView(players, matches, "four"),
       five: buildView(players, matches, "five")
     },
-    methodology: "记录中心全部由正式比赛数据实时重算。历史记录按单场或连续阶段比较；赛季记录以牌手＋赛季为候选；生涯记录使用S1至当前全部正式比赛。记录允许并列保持，不影响官方荣誉评选。"
+    methodology: "记录中心全部由正式比赛数据实时重算。历史记录按单场或连续阶段比较；赛季记录以牌手＋赛季为候选；生涯记录使用S1至当前全部正式比赛。场均类记录须达到对应赛程50%且不少于3场；50+至100+大场面采用互斥档位。记录允许并列保持，不影响官方荣誉评选。"
   };
 }

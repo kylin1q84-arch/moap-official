@@ -53,12 +53,12 @@ function longestBoolean(schedule, predicate, { ignoreAbsent = false } = {}) {
   return best;
 }
 
-function streakMetrics(schedule) {
+function consecutiveStageMetrics(schedule, predicate) {
   let current = [];
   const groups = [];
   for (const item of schedule) {
     if (item.absent) continue;
-    if (item.score >= 0) current.push(item);
+    if (predicate(item)) current.push(item);
     else {
       if (current.length) groups.push(current);
       current = [];
@@ -66,9 +66,16 @@ function streakMetrics(schedule) {
   }
   if (current.length) groups.push(current);
   const maxLength = Math.max(0, ...groups.map(group => group.length));
-  const bestPoints = Math.max(0, ...groups.filter(group => group.length === maxLength).map(group => sum(group.map(item => item.score))));
-  const extensions = sum(groups.map(group => Math.max(0, group.length - 1)));
-  return { maxLength, bestPoints, extensions };
+  const longestGroups = groups.filter(group => group.length === maxLength);
+  const bestPoints = Math.max(0, ...longestGroups.map(group => sum(group.map(item => item.score))));
+  const bestGroup = [...longestGroups].sort((a, b) => sum(b.map(item => item.score)) - sum(a.map(item => item.score)))[0] || [];
+  return { maxLength, bestPoints, bestGroup, groups };
+}
+
+function streakMetrics(schedule) {
+  const stage = consecutiveStageMetrics(schedule, item => item.score >= 0);
+  const extensions = sum(stage.groups.map(group => Math.max(0, group.length - 1)));
+  return { maxLength: stage.maxLength, bestPoints: stage.bestPoints, extensions, bestGroup: stage.bestGroup };
 }
 
 function compareTuple(a, b, criteria) {
@@ -174,6 +181,7 @@ function seasonMetrics(players, matches, season) {
     const bigWins = dominationEntries.filter(entry => entry.isBigWin);
     const dominanceEntries = dominationEntries.filter(entry => entry.qualifies);
     const streak = streakMetrics(schedule);
+    const mvpStage = consecutiveStageMetrics(schedule, item => item.isMvp);
     const cumulative = cumulativeSwing(entries);
 
     rows.push({
@@ -195,7 +203,16 @@ function seasonMetrics(players, matches, season) {
       mvpBgr: sum(mvpEntries.map(entry => bgrValue(entry.score))),
       mvpBest: mvpEntries.length ? Math.max(...mvpEntries.map(entry => entry.score)) : 0,
       mvpRate: entries.length ? mvpEntries.length / entries.length : 0,
-      longestMvp: longestBoolean(schedule, item => !item.absent && item.isMvp, { ignoreAbsent: true }),
+      longestMvp: mvpStage.maxLength,
+      longestMvpPoints: mvpStage.bestPoints,
+      longestMvpEvidence: mvpStage.bestGroup.map(item => ({
+        matchId: item.match.matchId, date: item.match.date, round: item.match.round, season: item.match.season,
+        matchType: item.match.matchType, venue: item.match.venue || "未填写场地", score: item.score, isMvp: item.isMvp
+      })),
+      longestPositiveEvidence: streak.bestGroup.map(item => ({
+        matchId: item.match.matchId, date: item.match.date, round: item.match.round, season: item.match.season,
+        matchType: item.match.matchType, venue: item.match.venue || "未填写场地", score: item.score, isMvp: item.isMvp
+      })),
       four: typeStats(entries, "四人局"),
       five: typeStats(entries, "五人局"),
       soloCount: soloEntries.length,
@@ -227,20 +244,20 @@ function seasonMetrics(players, matches, season) {
 
   addCompositeScores(rows, [
     { target: "championScore", formulaTarget: "championFormula", components: [
-      ["total", 40, "总积分", "分"],
-      ["mvps", 20, "MVP场次", "次"],
-      ["positiveRate", 10, "正分率", "%"],
-      ["longestStreak", 10, "最长连庄", "场"],
-      ["bgr", 10, "BGR指数", "BGR"],
-      ["dominanceTotal", 10, "累计统治分差", "分"]
+      ["total", 30, "总积分", "分"],
+      ["average", 20, "场均积分", "分/场"],
+      ["mvpTotal", 15, "MVP场次累计积分", "分"],
+      ["positiveTotal", 15, "正分场次累计积分", "分"],
+      ["longestMvpPoints", 10, "最长连续MVP阶段积分", "分"],
+      ["longestStreakPoints", 10, "最长连续正分阶段积分", "分"]
     ]},
     { target: "mvpValueScore", formulaTarget: "mvpValueFormula", components: [
       ["mvps", 30, "MVP场次", "次"],
-      ["mvpTotal", 30, "MVP场次累计积分", "分"],
-      ["longestMvp", 15, "最长连续MVP", "场"],
-      ["mvpBgr", 15, "MVP场次BGR", "BGR"],
-      ["mvpBest", 5, "MVP单场最高", "分"],
-      ["mvpRate", 5, "MVP率", "%"]
+      ["mvpRate", 20, "MVP率", "%"],
+      ["mvpTotal", 20, "MVP场次累计积分", "分"],
+      ["longestMvp", 10, "最长连续MVP", "场"],
+      ["longestMvpPoints", 10, "最长连续MVP阶段积分", "分"],
+      ["mvpBgr", 10, "MVP场次BGR", "BGR"]
     ]}
   ]);
 
@@ -302,7 +319,7 @@ function criteriaText(criteria, row) {
 }
 
 function evidenceFor(id, row) {
-  if (id === "H001") return row.dominanceEntries.map(entry => ({ ...entry, margin: Number(entry.margin.toFixed(2)) }));
+  if (id === "H001") return row.longestPositiveEvidence || row.entries;
   if (id === "H003") return row.entries.filter(entry => entry.isMvp);
   if (id === "H010") return row.soloEntries;
   if (id === "H016") return row.bigWins.map(entry => ({ ...entry, margin: Number(entry.margin.toFixed(2)) }));
@@ -363,7 +380,7 @@ function awardObject(result, row) {
       winner: row.player,
       winners: result.winners.map(winner => winner.player),
       officialValue: num(row[primaryKey] ?? 1),
-      calculationStatus: "LIVE_RECALCULATED_V1_8_RULES",
+      calculationStatus: "LIVE_RECALCULATED_V1_8_1_RULES",
       ranking: result.ranking.map(ranked => ({
         playerId: ranked.playerId,
         player: ranked.player,
@@ -392,21 +409,21 @@ function seasonAwards(players, matches, season) {
   push("H001", rows, [
     { key: "championScore", dir: "desc", label: "总冠军综合评分", unit: "综合分" },
     { key: "total", dir: "desc", label: "总积分", unit: "分" },
-    { key: "mvps", dir: "desc", label: "MVP场次", unit: "次" },
-    { key: "positiveRate", dir: "desc", label: "正分率", unit: "%" },
-    { key: "longestStreak", dir: "desc", label: "最长连庄", unit: "场" },
-    { key: "bgr", dir: "desc", label: "BGR指数", unit: "BGR" },
-    { key: "dominanceTotal", dir: "desc", label: "累计统治分差", unit: "分" }
+    { key: "average", dir: "desc", label: "场均积分", unit: "分/场" },
+    { key: "mvpTotal", dir: "desc", label: "MVP场次累计积分", unit: "分" },
+    { key: "positiveTotal", dir: "desc", label: "正分场次累计积分", unit: "分" },
+    { key: "longestMvpPoints", dir: "desc", label: "最长连续MVP阶段积分", unit: "分" },
+    { key: "longestStreakPoints", dir: "desc", label: "最长连续正分阶段积分", unit: "分" }
   ], { eligibility: row => row.games > 0 });
 
   push("H003", rows, [
     { key: "mvpValueScore", dir: "desc", label: "最有价值牌手综合评分", unit: "综合分" },
     { key: "mvps", dir: "desc", label: "MVP场次", unit: "次" },
+    { key: "mvpRate", dir: "desc", label: "MVP率", unit: "%" },
     { key: "mvpTotal", dir: "desc", label: "MVP场次累计积分", unit: "分" },
     { key: "longestMvp", dir: "desc", label: "最长连续MVP", unit: "场" },
-    { key: "mvpBgr", dir: "desc", label: "MVP场次BGR", unit: "BGR" },
-    { key: "mvpBest", dir: "desc", label: "MVP单场最高", unit: "分" },
-    { key: "mvpRate", dir: "desc", label: "MVP率", unit: "%" }
+    { key: "longestMvpPoints", dir: "desc", label: "最长连续MVP阶段积分", unit: "分" },
+    { key: "mvpBgr", dir: "desc", label: "MVP场次BGR", unit: "BGR" }
   ], { eligibility: row => row.games > 0, requirePositive: true });
 
   const four = flattenFor(rows, { typeTotal: "four.total", typeMvps: "four.mvps", typeRate: "four.positiveRate", typeGames: "four.games" });

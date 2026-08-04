@@ -298,3 +298,36 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .record-evidence-list{display:grid;gap:8px}.record-evidence-list article{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035)}.record-evidence-list article span{display:block;margin-top:4px;color:var(--muted);font-size:10px}.record-evidence-list article>div:last-child{text-align:right}.record-evidence-list article>div:last-child b{display:block;font-size:17px}.record-evidence-list article>div:last-child small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.record-modal-footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line2);color:var(--muted);font-size:11px}
 @media(max-width:760px){.record-toolbar,.record-summary{align-items:stretch;flex-direction:column}.record-summary small{text-align:left}.record-info-grid{grid-template-columns:repeat(2,1fr)}.record-modal{padding:19px;border-radius:17px}.record-modal-header{flex-direction:column}.record-modal-header h2{font-size:22px}.record-ranking-row{grid-template-columns:36px 1fr 100px}.record-ranking-row time{display:none}}
 @media(max-width:480px){.record-tab,.record-type{padding:8px 10px;font-size:11px}.record-info-grid{grid-template-columns:1fr 1fr}.record-evidence-list article{grid-template-columns:1fr}.record-evidence-list article>div:last-child{text-align:left}}
+
+/* v1.8.1 Record Center + GOAT model */
+.record-ranking-row.no-time{grid-template-columns:45px 1fr 130px}
+.record-info-grid.record-info-historical{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.record-info-grid.record-info-season{grid-template-columns:repeat(3,minmax(0,1fr))}
+.record-info-grid.record-info-career{grid-template-columns:repeat(2,minmax(0,1fr))}
+.goat-row-v2{grid-template-columns:44px 1fr 72px}
+.goat-row-title{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.goat-row-title .muted{font-size:10px}
+.goat-breakdown-mini{display:flex;gap:9px;flex-wrap:wrap;margin:5px 0 7px;color:var(--muted);font-size:9px}
+.goat-score-v2{text-align:right}.goat-score-v2 b{display:block;color:var(--gold2);font-size:18px}.goat-score-v2 small{display:block;margin-top:3px;font-size:10px}
+.goat-evaluation{margin-top:17px;padding:16px;border:1px solid rgba(215,178,91,.30);border-radius:15px;background:linear-gradient(135deg,rgba(215,178,91,.10),rgba(119,185,255,.035))}
+.goat-evaluation-head{display:grid;grid-template-columns:1fr 104px;gap:15px;align-items:start}
+.goat-evaluation-head>div:first-child>span{font-size:11px;color:var(--muted)}
+.goat-evaluation-head h4{margin:4px 0 8px;color:var(--gold2);font-size:17px}
+.goat-evaluation-head>div:first-child>b{display:inline-flex;padding:6px 9px;border-radius:999px;background:rgba(215,178,91,.14);color:var(--gold2);font-size:12px}
+.goat-rating{text-align:center;padding:12px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid rgba(215,178,91,.20)}
+.goat-rating strong{display:block;font-size:35px;line-height:1;color:var(--gold2)}
+.goat-rating small{display:block;margin-top:4px;font-size:8px;letter-spacing:1.25px;color:var(--muted)}
+.goat-rating span{display:block;margin-top:6px;font-size:10px;color:#dce6e2}
+.goat-evaluation>p{margin:13px 0;color:#dce6e2;line-height:1.75;font-size:13px}
+.goat-component-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0}
+.goat-component-grid>div{padding:10px;border-radius:11px;background:rgba(0,0,0,.16)}
+.goat-component-grid span{display:block;color:var(--muted);font-size:10px}.goat-component-grid b{display:block;margin:5px 0 7px;font-size:15px}.goat-component-grid b small{color:var(--muted);font-size:9px}
+.goat-component-grid i{display:block;height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.goat-component-grid em{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.goat-change-reason{display:grid;grid-template-columns:58px 1fr;gap:11px;align-items:center;padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.035)}
+.goat-change-reason b{font-size:18px;text-align:center}.goat-change-reason span{font-size:12px;line-height:1.6;color:#dce6e2}
+.goat-fact-list{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:11px}.goat-fact-list span{padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);font-size:11px;color:#dce6e2}
+.goat-outlook{padding-top:11px;border-top:1px solid var(--line2)}.goat-method-note{display:block;color:var(--muted);line-height:1.6}
+.status-fail{color:#ff8b8b;font-weight:800}.health-item.health-fail{border-color:rgba(255,94,94,.35);background:rgba(255,94,94,.045)}
+.health-evidence{font-size:11px;margin-top:4px}.health-details{display:grid;gap:4px;margin-top:8px}.health-details span{display:block;padding:5px 7px;border-radius:7px;background:rgba(255,94,94,.07);color:#ffb0b0;font-size:10px}
+@media(max-width:760px){.record-ranking-row.no-time{grid-template-columns:36px 1fr 100px}.record-info-grid.record-info-season{grid-template-columns:1fr 1fr}.goat-component-grid{grid-template-columns:repeat(2,1fr)}.goat-fact-list{grid-template-columns:1fr}}
+@media(max-width:560px){.goat-evaluation-head{grid-template-columns:1fr}.goat-rating{display:flex;align-items:center;justify-content:center;gap:9px}.goat-rating strong{font-size:28px}.goat-rating small,.goat-rating span{margin:0}.goat-change-reason{grid-template-columns:1fr}.goat-change-reason b{text-align:left}.record-info-grid.record-info-season,.record-info-grid.record-info-career{grid-template-columns:1fr}}

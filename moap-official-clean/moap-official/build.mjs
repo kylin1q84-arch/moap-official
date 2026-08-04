@@ -12,6 +12,8 @@ const sourceFiles = [
   'honor-details.js',
   'analytics-engine.js',
   'records-engine.js',
+  'goat-engine.js',
+  'data-validation.js',
 ]
 
 await rm(outputDir, { recursive: true, force: true })
@@ -41,7 +43,7 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v1.8 MSL Records build completed successfully.')
+console.log('MOAP v1.8.1 MSL Records, Honors & GOAT build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
@@ -49,3 +51,4 @@ console.log('Precise matchup center: included')
 console.log('Unique honor engine: included')
 console.log('MSL form center and S1-current career evaluation: included')
 console.log('Historical, season and career record center: included')
+console.log('Fixed GOAT model and data validation: included')
