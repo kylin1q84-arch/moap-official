@@ -2,6 +2,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 import { HONOR_CATALOG } from "./honor-details.js";
 import { calculateHonorSystem, buildMslStatusCenter } from "./analytics-engine.js";
+import { buildRecordCenter } from "./records-engine.js";
 import { MOAP_CONFIG } from "./config.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
@@ -10,7 +11,7 @@ let currentPlayer = "P001";
 let matchLimit = 15;
 
 const NAV = [
-  ["overview","总览","◈"],["leaderboard","排行榜","榜"],["status","状态中心","势"],["player","个人档案","人"],
+  ["overview","总览","◈"],["records","记录中心","录"],["status","状态中心","势"],["player","个人档案","人"],
   ["matches","比赛中心","局"],["entry","录入比赛","＋"],["rival","对位中心","对"],
   ["honors","荣誉中心","冠"],["system","系统审计","审"]
 ];
@@ -36,6 +37,7 @@ function applyAnalyticsToState(target){
   target.honorBoard=system.board;
   target.honorCatalog=system.catalog;
   target.statusCenter=buildMslStatusCenter(target.players,target.matches,target.honors);
+  target.recordCenter=buildRecordCenter(target.players,target.matches);
   target.profiles=target.profiles||{};
   const stats={};
   target.players.forEach(p=>{
@@ -58,15 +60,17 @@ function applyAnalyticsToState(target){
   (target.leaderboard||[]).forEach(row=>{const g=goatBy[row.playerId];if(g){row.goatIndex=g.goatIndex;row.goatRank=g.rank;}});
   if(target.version){
     const top=goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
-    target.version={...target.version,version:"v1.7.2 MSL Career OVR",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"MSL form + full-career player evaluation",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、牌手行情、当前赛季评价及S1–S3生涯综合评分。"};
+    target.version={...target.version,version:"v1.8 MSL Records",releaseStage:"Official Feature Release",releaseDate:"2026-08-04",currentStatus:"MSL record center + revised honor system",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",note:"荣誉体系已升级为两项A级综合评分制；排行榜已替换为记录中心，覆盖历史、赛季与生涯记录。"};
   }
   return target;
 }
 applyAnalyticsToState(state);
 
-const sb = createClient(MOAP_CONFIG.supabaseUrl, MOAP_CONFIG.supabaseKey, {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-});
+const sb = MOAP_CONFIG.supabaseUrl && MOAP_CONFIG.supabaseKey
+  ? createClient(MOAP_CONFIG.supabaseUrl, MOAP_CONFIG.supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    })
+  : null;
 let currentRole="admin",appBooted=false;
 
 function setAuthStatus(message,isError=false,isOk=false){
@@ -81,7 +85,7 @@ function clearLegacyRivalState(target){
   target.rivalNet=net;
   target.rivalHistory=history;
   target.rivalSummary=(target.players||[]).map(p=>({playerId:p.playerId,player:p.name||p.player,eat:0,eaten:0,total:0}));
-  target.rivalryMeta={startDate:null,trackedMatches:0,entries:0,scoreOnlyMatches:0,mode:"PRECISE_PAIRWISE_ONLY"};
+  target.rivalryMeta={startDate:null,trackedMatches:0,entries:0,mode:"PRECISE_PAIRWISE_ONLY"};
   delete target.rivalWinRate;
   return target;
 }
@@ -154,8 +158,7 @@ function buildLiveState(db){
   });
   const trackedMatchIds=[...new Set(matchupRows.map(x=>x.matchId))];
   const trackedDates=trackedMatchIds.map(id=>matchById[id]?.date).filter(Boolean).sort();
-  const scoreOnlyMatches=matches.filter(m=>/\[(?:NO_PRECISE_MATCHUP|BACKFILL_2026-07-30_SCORE_ONLY)\]/.test(String(m.notes||""))).length;
-  const rivalryMeta={startDate:trackedDates[0]||null,trackedMatches:trackedMatchIds.length,entries:matchupRows.length,scoreOnlyMatches,mode:"PRECISE_PAIRWISE_ONLY"};
+  const rivalryMeta={startDate:trackedDates[0]||null,trackedMatches:trackedMatchIds.length,entries:matchupRows.length,mode:"PRECISE_PAIRWISE_ONLY"};
 
   const checks=[];
   const pushCheck=(id,item,found,evidence)=>checks.push({id,item,found,target:"0",result:found===0?"PASS":"FAIL",evidence});
@@ -182,9 +185,10 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.7.2 MSL Career OVR",releaseStage:"Official Feature Release",releaseDate:"2026-07-31",currentStatus:"MSL form + full-career player evaluation",formulaIntegrity:"PASS",certification:"LIVE DATA VERIFIED",note:"荣誉唯一性规则已启用；铁人奖、鸽王允许并列。新增MSL实力榜、牌手行情、当前赛季评价及S1–S3生涯综合评分。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:awardWinners("H004")};
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.8 MSL Records",releaseStage:"Official Feature Release",releaseDate:"2026-08-04",currentStatus:"MSL record center + revised honor system",formulaIntegrity:"PASS",certification:"LIVE DATA VERIFIED",note:"两项A级荣誉改为综合评分制；排行榜替换为历史、赛季、生涯三大记录中心。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
-  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,statusCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
+  const recordCenter=buildRecordCenter(players,matches);
+  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
 async function fetchTable(table,columns="*"){
@@ -244,7 +248,7 @@ function showView(id){
   $$("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));
   window.scrollTo({top:0,behavior:"smooth"});
   if(id==="overview") renderOverview();
-  if(id==="leaderboard") renderLeaderboard();
+  if(id==="records") renderRecords();
   if(id==="status") renderStatus();
   if(id==="player") renderPlayer();
   if(id==="matches") renderMatches(true);
@@ -326,142 +330,64 @@ function renderPlayerScouting(pid){
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player");});
 
-function boardMatches(scope,type){
-  return (state.matches||[]).filter(m=>(scope==="career"||m.season===scope)&&(type==="all"||m.matchType===type));
+let recordSection="historical";
+let recordType="all";
+
+function formatRecordValue(record,value=record?.value){
+  if(value==null||!Number.isFinite(Number(value)))return "—";
+  const number=Number(value),unit=record?.unit||"";
+  const prefix=record?.forcePlus&&number>0?"+":"";
+  if(unit==="分/场")return `${prefix}${number.toFixed(2)} 分/场`;
+  if(unit==="%")return `${(number*100).toFixed(2)}%`;
+  return `${prefix}${number.toFixed(Number.isInteger(number)?0:2)}${unit?` ${unit}`:""}`;
 }
-function streakLengths(values,predicate){
-  const lengths=[];let current=0;
-  values.forEach(value=>{if(predicate(value)){current++;}else if(current){lengths.push(current);current=0;}});
-  if(current)lengths.push(current);
-  return lengths;
+function recordHolderText(record){return record?.holderNames?.length?record.holderNames.join(" / "):"暂无记录";}
+function renderRecords(){
+  const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);
+  const records=center.views?.[recordType]?.[recordSection]||[];
+  $$('[data-record-section]').forEach(button=>button.classList.toggle('active',button.dataset.recordSection===recordSection));
+  $$('[data-record-type]').forEach(button=>button.classList.toggle('active',button.dataset.recordType===recordType));
+  const sectionNames={historical:"历史记录",season:"赛季记录",career:"生涯记录"};
+  const typeNames={all:"全部比赛",four:"四人局",five:"五人局"};
+  $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
+  $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td><span class="chip">${escapeHtml(record.recordType)}</span></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="btn record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看详情</button></td></tr>`).join("")||'<tr><td colspan="6" class="empty">暂无记录。</td></tr>';
 }
-function bgrBucket(score){
-  score=Number(score);
-  if(score>=100)return "100";if(score>=90)return "90";if(score>=80)return "80";
-  if(score>=70)return "70";if(score>=60)return "60";if(score>=50)return "50";return null;
+function currentRecordById(recordId){
+  return state.recordCenter?.views?.[recordType]?.[recordSection]?.find(record=>record.id===recordId)||null;
 }
-function playedResultsForMatch(match){
-  return (match?.results||[]).filter(result=>!result.isAbsent&&result.score!=null);
+function ensureRecordModal(){
+  if($("#recordModalBackdrop"))return;
+  document.body.insertAdjacentHTML("beforeend",`<div class="record-modal-backdrop" id="recordModalBackdrop" hidden><section class="record-modal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle"><button type="button" class="record-modal-close" id="recordModalClose" aria-label="关闭">×</button><div id="recordModalBody"></div></section></div>`);
+  $("#recordModalBackdrop").addEventListener("mousedown",event=>{if(event.target.id==="recordModalBackdrop")closeRecordModal();});
+  $("#recordModalClose").addEventListener("click",closeRecordModal);
 }
-function getSoloWinner(match){
-  const rows=playedResultsForMatch(match);
-  const nonNegative=rows.filter(result=>Number(result.score)>=0);
-  if(nonNegative.length!==1)return null;
-  const winner=nonNegative[0];
-  return rows.every(result=>result.playerId===winner.playerId||Number(result.score)<0)?winner:null;
+function closeRecordModal(){const modal=$("#recordModalBackdrop");if(modal){modal.hidden=true;document.body.classList.remove("modal-open");}}
+function recordRankingNote(row){
+  const parts=[];
+  if(row.season&&row.season!=="CAREER")parts.push(row.season);
+  if(row.length)parts.push(`连续${row.length}场`);
+  if(row.startDate&&row.endDate)parts.push(`${row.startDate} 至 ${row.endDate}`);
+  if(row.matchId)parts.push(row.matchId);
+  return parts.join(" · ");
 }
-function playerBoardMetrics(player,scope,type){
-  const matches=boardMatches(scope,type),played=[];
-  matches.forEach(match=>{const result=(match.results||[]).find(r=>r.playerId===player.playerId&&!r.isAbsent&&r.score!=null);if(result)played.push({match,result});});
-  const scores=played.map(x=>Number(x.result.score)),games=scores.length,totalScore=scores.reduce((a,b)=>a+b,0);
-  const positiveGames=scores.filter(x=>x>=0).length;
-  const positiveStreaks=streakLengths(scores,x=>x>=0).filter(x=>x>=2);
-  const bgrStreaks=streakLengths(scores,x=>x>=50);
-  const mvpFlags=played.map(x=>!!x.result.isMvp),mvpStreaks=streakLengths(mvpFlags,Boolean);
-  const buckets={"100":0,"90":0,"80":0,"70":0,"60":0,"50":0};
-  scores.forEach(score=>{const bucket=bgrBucket(score);if(bucket)buckets[bucket]++;});
-  const soloEvents=[];
-  matches.forEach(match=>{
-    const winner=getSoloWinner(match);if(!winner||winner.playerId!==player.playerId)return;
-    const sorted=playedResultsForMatch(match).sort((a,b)=>Number(b.score)-Number(a.score));
-    const second=sorted.find(r=>r.playerId!==player.playerId);
-    soloEvents.push({matchId:match.matchId,score:Number(winner.score),margin:second?Number(winner.score)-Number(second.score):0});
-  });
-  const selectedHonors=(state.honors?.[player.playerId]||[]).filter(h=>HONOR_BOARD_IDS.has(h.honorId)&&(scope==="career"||h.scope===scope));
-  const honorBreakdown={};HONOR_BOARD_ITEMS.forEach(([id])=>honorBreakdown[id]={count:0,points:0});
-  selectedHonors.forEach(h=>{const item=honorBreakdown[h.honorId];if(item){item.count++;item.points+=Number(h.points||0);}});
-  return {
-    playerId:player.playerId,player:player.name,games,totalScore,averageScore:games?totalScore/games:0,
-    positiveGames,positiveRate:games?positiveGames/games:0,best:scores.length?Math.max(...scores):null,worst:scores.length?Math.min(...scores):null,
-    streakCount:positiveStreaks.length,longestStreak:positiveStreaks.length?Math.max(...positiveStreaks):0,averageStreak:positiveStreaks.length?average(positiveStreaks):0,
-    bgrIndex:scores.reduce((sum,score)=>sum+bgrValue(score),0),bgrBuckets:buckets,longestBgrStreak:bgrStreaks.length?Math.max(...bgrStreaks):0,
-    mvps:mvpFlags.filter(Boolean).length,longestMvpStreak:mvpStreaks.length?Math.max(...mvpStreaks):0,mvpRate:games?mvpFlags.filter(Boolean).length/games:0,
-    soloWins:soloEvents.length,soloRate:games?soloEvents.length/games:0,highestSolo:soloEvents.length?Math.max(...soloEvents.map(x=>x.score)):null,maxSoloLead:soloEvents.length?Math.max(...soloEvents.map(x=>x.margin)):null,
-    honorBreakdown,totalHonorPoints:selectedHonors.reduce((sum,h)=>sum+Number(h.points||0),0),honorAwardCount:selectedHonors.length
-  };
+function renderRecordEvidence(evidence){
+  if(!evidence?.length)return '<div class="empty">暂无可展示的比赛明细。</div>';
+  let cumulative=0;
+  return evidence.map(item=>{cumulative+=Number(item.score||0);const margin=item.dominanceMargin!=null?` · 统治分差 ${Number(item.dominanceMargin)>=0?"+":""}${Number(item.dominanceMargin).toFixed(2)}`:"";return `<article><div><strong>${escapeHtml(item.season||"")} 第${escapeHtml(item.round??"—")}局 · ${escapeHtml(item.date||"—")}</strong><span>${escapeHtml(item.matchType||"—")} · ${escapeHtml(item.venue||"未填写场地")}${escapeHtml(margin)}</span></div><div><b class="${scoreClass(item.score)}">${fmtScore(item.score)}</b><small>过程累计 ${fmtScore(cumulative)}</small></div></article>`;}).join("");
 }
-function boardPrimary(kind,row){
-  if(kind==="streak")return row.longestStreak;
-  if(kind==="bgr")return row.bgrIndex;
-  if(kind==="mvp")return row.mvps;
-  if(kind==="solo")return row.soloWins;
-  if(kind==="honor")return row.totalHonorPoints;
-  return row.totalScore;
+function openRecordModal(recordId){
+  const record=currentRecordById(recordId);if(!record)return;
+  ensureRecordModal();
+  const ranking=(record.ranking||[]).slice(0,10).map(row=>`<div class="record-ranking-row ${row.rank===1?"is-holder":""}"><span>#${row.rank}</span><div><strong>${escapeHtml(row.player)}</strong><small>${escapeHtml(recordRankingNote(row))}</small></div><b>${escapeHtml(formatRecordValue(record,row.value))}</b><time>${escapeHtml(row.createdAt||"—")}</time></div>`).join("")||'<div class="empty">暂无历史排名。</div>';
+  const holder=record.ranking?.find(row=>row.rank===1);
+  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><div><p>${escapeHtml(record.recordType)} · ${recordType==="all"?"全部比赛":recordType==="four"?"四人局":"五人局"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></div><span class="record-holder-badge">MSL RECORD</span></header><section class="record-modal-section"><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid"><div><span>保持者</span><b>${escapeHtml(recordHolderText(record))}</b></div><div><span>当前记录</span><b>${escapeHtml(record.displayValue)}</b></div><div><span>创造时间</span><b>${escapeHtml(record.createdAt||"—")}</b></div><div><span>记录类型</span><b>${escapeHtml(record.recordType)}</b></div></div></section><section class="record-modal-section"><h3>历史排名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(holder?.evidence||record.evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 允许并列保持</footer>`;
+  $("#recordModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
-function boardComparator(kind){
-  const compare=(a,b)=>{
-    const fields={
-      total:[["totalScore",-1],["averageScore",-1],["positiveRate",-1],["best",-1]],
-      streak:[["longestStreak",-1],["streakCount",-1],["averageStreak",-1],["games",-1]],
-      bgr:[["bgrIndex",-1],["b100",-1],["b90",-1],["b80",-1],["longestBgrStreak",-1]],
-      mvp:[["mvps",-1],["mvpRate",-1],["longestMvpStreak",-1],["games",-1]],
-      solo:[["soloWins",-1],["soloRate",-1],["maxSoloLead",-1],["highestSolo",-1]],
-      honor:[["totalHonorPoints",-1],["honorAwardCount",-1],["games",-1]]
-    }[kind]||[];
-    const aa={...a,b100:a.bgrBuckets?.["100"]||0,b90:a.bgrBuckets?.["90"]||0,b80:a.bgrBuckets?.["80"]||0};
-    const bb={...b,b100:b.bgrBuckets?.["100"]||0,b90:b.bgrBuckets?.["90"]||0,b80:b.bgrBuckets?.["80"]||0};
-    for(const [field,direction] of fields){const av=Number(aa[field]??-Infinity),bv=Number(bb[field]??-Infinity);if(av!==bv)return direction*(av-bv);}
-    return a.playerId.localeCompare(b.playerId);
-  };return compare;
-}
-function boardRows(){
-  const scope=$("#boardScope").value,kind=$("#boardKind").value,search=$("#boardSearch").value.trim();
-  let type=$("#boardType").value;
-  if(kind==="honor")type="all";
-  let rows=state.players.map(player=>playerBoardMetrics(player,scope,type)).filter(row=>!search||row.player.includes(search));
-  rows.sort(boardComparator(kind));
-  return competitionRankBy(rows,row=>boardPrimary(kind,row));
-}
-function playerCell(row){return `<div class="player-cell"><span class="avatar">${initials(row.player)}</span>${escapeHtml(row.player)}</div>`;}
-function renderHonorBreakdownCell(item){return `<span class="honor-count-cell"><b>${item.count}</b><small>${item.points}分</small></span>`;}
-function renderLeaderboard(){
-  const typeSelect=$("#boardType");
-  let kind,rows;
-  try{
-    kind=$("#boardKind").value;
-    rows=boardRows();
-  }catch(error){
-    console.error("排行榜渲染失败",error);
-    $("#boardNote").textContent="排行榜读取失败："+(error?.message||String(error));
-    $("#fullLeaderboardHead").innerHTML="";
-    $("#fullLeaderboard").innerHTML='<tr><td class="empty">排行榜暂时无法显示，请刷新页面或检查控制台。</td></tr>';
-    return;
-  }
-  const notes={
-    total:"正分率按得分≥0计算；缺席不计参赛场次。",
-    streak:"连庄沿用官方H006口径：连续实际参赛得分≥0；缺席不增加也不中断，负分中断。连庄总次数只统计长度≥2的连续段。",
-    bgr:"BGR采用互斥档位：50–59/60–69/70–79/80–89/90–99/100+，权重1/2/3/5/8/12；连续大场面指连续实际参赛得分≥50。",
-    mvp:"共同MVP双方均计1次；最长连续MVP按个人实际参赛序列计算，缺席不增加也不中断。",
-    solo:"独赢：本人积分≥0且同场其他所有实际参赛牌手均<0；最大领先分差=独赢者积分−当场第二高积分。",
-    honor:"荣誉分按19项正式荣誉汇总；已删除MVP之王和二十MVP先生。荣誉无法按比赛类型拆分，因此此榜固定使用全部比赛类型。"
-  };
-  $("#boardNote").textContent=notes[kind];
-  if(kind==="honor"){typeSelect.value="all";typeSelect.disabled=true;}else typeSelect.disabled=false;
-  let headers=[],rowHtml;
-  if(kind==="total"){
-    headers=["排名","牌手","总积分","参赛场次","场均积分","正分率","正分场次","最高单场","最低单场"];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td class="${scoreClass(row.totalScore)}">${fmtScore(row.totalScore)}</td><td>${row.games}</td><td>${fmtAvg(row.averageScore)}</td><td>${fmtPct(row.positiveRate)}</td><td>${row.positiveGames}</td><td class="${scoreClass(row.best??0)}">${row.best==null?"—":fmtScore(row.best)}</td><td class="${scoreClass(row.worst??0)}">${row.worst==null?"—":fmtScore(row.worst)}</td></tr>`;
-  }else if(kind==="streak"){
-    headers=["排名","牌手","连庄总次数","最长连庄纪录","平均连庄长度","参赛场次"];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td>${row.streakCount}</td><td>${row.longestStreak}场</td><td>${row.averageStreak?row.averageStreak.toFixed(2)+"场":"0场"}</td><td>${row.games}</td></tr>`;
-  }else if(kind==="bgr"){
-    headers=["排名","牌手","BGR指数","100+次数","90–99次数","80–89次数","70–79次数","60–69次数","50–59次数","最长连续大场面","参赛场次"];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td><b>${row.bgrIndex}</b></td><td>${row.bgrBuckets["100"]}</td><td>${row.bgrBuckets["90"]}</td><td>${row.bgrBuckets["80"]}</td><td>${row.bgrBuckets["70"]}</td><td>${row.bgrBuckets["60"]}</td><td>${row.bgrBuckets["50"]}</td><td>${row.longestBgrStreak}场</td><td>${row.games}</td></tr>`;
-  }else if(kind==="mvp"){
-    headers=["排名","牌手","MVP次数","最长连续MVP","MVP率","参赛场次"];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td>${row.mvps}</td><td>${row.longestMvpStreak}场</td><td>${fmtPct(row.mvpRate)}</td><td>${row.games}</td></tr>`;
-  }else if(kind==="solo"){
-    headers=["排名","牌手","独赢次数","独赢率","最高独赢积分","最大领先分差","参赛场次"];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td>${row.soloWins}</td><td>${fmtPct(row.soloRate)}</td><td class="${scoreClass(row.highestSolo??0)}">${row.highestSolo==null?"—":fmtScore(row.highestSolo)}</td><td>${row.maxSoloLead==null?"—":"+"+row.maxSoloLead}</td><td>${row.games}</td></tr>`;
-  }else{
-    headers=["排名","牌手","荣誉总分",...HONOR_BOARD_ITEMS.map(([,name])=>name)];
-    rowHtml=row=>`<tr><td><span class="rank ${row.rank===1?"top":""}">${row.rank}</span></td><td>${playerCell(row)}</td><td><b>${row.totalHonorPoints}</b></td>${HONOR_BOARD_ITEMS.map(([id])=>`<td>${renderHonorBreakdownCell(row.honorBreakdown[id])}</td>`).join("")}</tr>`;
-  }
-  $("#fullLeaderboardHead").innerHTML=`<tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr>`;
-  $("#fullLeaderboard").innerHTML=rows.map(rowHtml).join("")||'<tr><td colspan="30" class="empty">没有匹配的牌手。</td></tr>';
-}
-["boardScope","boardKind","boardType"].forEach(id=>document.addEventListener("change",e=>{if(e.target.id===id)renderLeaderboard()}));
-document.addEventListener("input",e=>{if(e.target.id==="boardSearch")renderLeaderboard()});
+document.addEventListener("click",event=>{
+  const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){recordSection=sectionButton.dataset.recordSection;renderRecords();return;}
+  const typeButton=event.target.closest("[data-record-type]");if(typeButton){recordType=typeButton.dataset.recordType;renderRecords();return;}
+  const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}
+});
 
 function populateSelects(){
   const opts=state.players.map(p=>`<option value="${p.playerId}">${p.name}</option>`).join("");
@@ -469,7 +395,6 @@ function populateSelects(){
   $("#matchPlayer").innerHTML='<option value="all">全部牌手</option>'+opts;
   const seasons=(state.seasons||[]).map(s=>s.id);
   const boardSeasons=seasons.filter(id=>(state.matches||[]).some(m=>m.season===id));
-  $("#boardScope").innerHTML='<option value="career">生涯全部</option>'+boardSeasons.map(s=>`<option value="${s}">${s}</option>`).join("");
   $("#matchSeason").innerHTML='<option value="all">全部赛季</option>'+seasons.map(s=>`<option value="${s}">${s}</option>`).join("");
   $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.status==="active"?"selected":""}>${s.id}${s.status==="active"?"（进行中）":""}</option>`).join("");
   const honorSeason=$("#honorBoardSeason");if(honorSeason){const previous=honorSeason.value;honorSeason.innerHTML=boardSeasons.map(s=>`<option value="${s}">${s}</option>`).join("");honorSeason.value=boardSeasons.includes(previous)?previous:(boardSeasons.at(-1)||"");}
@@ -532,9 +457,7 @@ $("#playerSelect").addEventListener("change",e=>{currentPlayer=e.target.value;re
 
 function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score);
-  const scoreOnly=/\[(?:NO_PRECISE_MATCHUP|BACKFILL_2026-07-30_SCORE_ONLY)\]/.test(String(m.notes||""));
-  return `<article class="card match-card"><div class="match-meta"><div><strong>${m.season} 第${m.round}局 · ${m.matchType}</strong><div><small>${m.date} · ${escapeHtml(m.venue||"未填写场地")}</small></div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">${scoreOnly?'<span class="chip gold">总分补录 · 无精准对位</span>':""}<span class="chip">${m.matchId}</span></div></div>
-  <div class="match-scores">${played.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${r.player} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div>${scoreOnly?'<div class="validation" style="margin-top:10px">本场只补录最终积分，不进入精准对位矩阵；精准对位从下一场开始统计。</div>':""}</article>`;
+  return `<article class="card match-card"><div class="match-meta"><div><strong>${m.season} 第${m.round}局 · ${m.matchType}</strong><div><small>${m.date} · ${escapeHtml(m.venue||"未填写场地")}</small></div></div><span class="chip">${m.matchId}</span></div><div class="match-scores">${played.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${r.player} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></article>`;
 }
 function filteredMatches(){
   const season=$("#matchSeason").value, player=$("#matchPlayer").value, type=$("#matchType").value, q=$("#matchQuery").value.trim().toLowerCase();
@@ -716,18 +639,17 @@ function extremePlayers(rows,key,mode="max"){
 function renderRival(){
   renderMatrix($("#netMatrix"),state.rivalNet,true);
   $$('[data-rival-a]').forEach(b=>b.addEventListener("click",()=>showRivalDetail(b.dataset.rivalA,b.dataset.rivalB)));
-  const meta=state.rivalryMeta||{startDate:null,trackedMatches:0,entries:0,scoreOnlyMatches:0};
+  const meta=state.rivalryMeta||{startDate:null,trackedMatches:0,entries:0};
   $("#rivalKpis").innerHTML=[
     ["统计起点",meta.startDate||"等待首场","旧比赛不参与推算"],
     ["已记录比赛",meta.trackedMatches+" 场","仅含精准对位明细"],
     ["有效对位",meta.entries+" 条","每条代表一组实际吃分"],
-    ["总分补录",(meta.scoreOnlyMatches||0)+" 场","只计总积分，不进入对位"],
     ["统计口径","新制精准","行攻击方 / 列承受方"]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   const rows=[...(state.rivalSummary||[])];
   $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell"><span class="avatar">${initials(r.player)}</span>${escapeHtml(r.player)}</div></td><td class="score-pos">${fmtScore(r.eat)}</td><td class="score-neg">${r.eaten?"-"+r.eaten:"0"}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td></tr>`).join("");
   if(!meta.entries){
-    $("#rivalRanking").innerHTML='<div class="empty">旧版推算数据已清除。录入第一场带精准对位明细的新比赛后，这里会自动生成排名。</div>';
+    $("#rivalRanking").innerHTML='<div class="empty">录入带精准对位明细的比赛后，这里会自动生成排名。</div>';
     $("#rivalDetail").className="empty";$("#rivalDetail").textContent="暂无新制对位记录。";
     return;
   }
@@ -743,7 +665,7 @@ function showRivalDetail(a,b){
   const net=Number(state.rivalNet?.[a]?.[b]||0),history=state.rivalHistory?.[a]?.[b]||[];
   $("#rivalDetail").className="";
   const list=history.length?history.map(item=>`<div class="score-row"><div class="left"><span class="chip">${escapeHtml(item.matchId)}</span><span>${escapeHtml(item.date)} · ${escapeHtml(item.venue)}</span></div><b class="${scoreClass(item.net)}">${fmtScore(item.net)}</b></div>`).join(""):'<div class="empty">两人之间暂时没有非零对位记录。</div>';
-  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} vs ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">新制精准对位 · 不含旧比赛推算</div></div></div>
+  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} vs ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">精准对位统计</div></div></div>
     <div class="kpis" style="grid-template-columns:1fr 1fr;margin-top:16px"><div class="mini-stat"><span>${escapeHtml(a)}净分</span><strong class="${scoreClass(net)}">${fmtScore(net)}</strong></div><div class="mini-stat"><span>有分记录</span><strong>${history.length} 场</strong></div></div>
     <div class="validation ${net>0?"ok":net<0?"bad":""}">${net>0?a+"当前对位占优":net<0?b+"当前对位占优":"双方当前持平"}。每笔数据来自录入比赛时的逐对位矩阵。</div>
     <div class="score-list" style="margin-top:12px">${list}</div>`;
@@ -823,12 +745,10 @@ function renderHonorSeasonBoard(){
 }
 function renderHonors(){
   renderGoatRows("#goatRanking");
-  const pid=$("#honorPlayer").value||currentPlayer, p=state.profiles[pid], honors=state.honors[pid]||[];
+  const pid=$("#honorPlayer").value||currentPlayer, p=state.profiles[pid];
   $("#honorStats").innerHTML=[
     ["荣誉排名","#"+p.honorRank],["荣誉总数",p.honorCount],["A级荣誉",p.gradeA],["B级荣誉",p.gradeB],["荣誉积分",p.honorPoints],["GOAT指数",state.goat.find(x=>x.playerId===pid).goatIndex]
   ].map(x=>`<div class="mini-stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
-  $("#honorListSummary").textContent=`当前显示 ${honors.length} 项档案记录`;
-  $("#honorList").innerHTML=honors.map(honorHtml).join("")||'<div class="empty">暂无荣誉记录</div>';
   renderHonorSeasonBoard();
 }
 $("#honorPlayer").addEventListener("change",renderHonors);
@@ -842,8 +762,8 @@ function renderSystem(){
   $("#healthList").innerHTML=state.healthChecks.map(h=>`<div class="health-item"><div><strong>${h.item}</strong><div class="muted" style="font-size:11px;margin-top:4px">${h.id} · ${h.evidence}</div></div><span class="status-pass">${h.result}</span></div>`).join("");
   const v=state.version;
   $("#versionInfo").innerHTML=[
-    ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],["MSL赛季MVP",v.seasonMvp],
-    ["得分王",v.scoringKing],["v1.7更新",v.note]
+    ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],["年度最有价值牌手",v.seasonMvp],
+    ["记录中心","历史 / 赛季 / 生涯"],["v1.8更新",v.note]
   ].map(x=>`<div class="honor-item"><strong>${x[0]}</strong><small>${x[1]}</small></div>`).join("");
 }
 

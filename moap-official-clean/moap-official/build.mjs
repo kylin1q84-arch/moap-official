@@ -11,6 +11,7 @@ const sourceFiles = [
   'certified-data.js',
   'honor-details.js',
   'analytics-engine.js',
+  'records-engine.js',
 ]
 
 await rm(outputDir, { recursive: true, force: true })
@@ -40,10 +41,11 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v1.7.2 MSL Career OVR build completed successfully.')
+console.log('MOAP v1.8 MSL Records build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
 console.log('Precise matchup center: included')
 console.log('Unique honor engine: included')
-console.log('MSL form center and current-season and full-career evaluation: included')
+console.log('MSL form center and S1-current career evaluation: included')
+console.log('Historical, season and career record center: included')

@@ -20,7 +20,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v1.7.2 MSL Career OVR</span>
+      <span class="badge" id="versionBadge">v1.8 MSL Records</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +33,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v1.7.2 MSL Career OVR<br>
+        分析引擎：MOAP v1.8 MSL Records<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -71,29 +71,29 @@
         </div>
       </section>
 
-      <section class="view" data-view="leaderboard">
+      <section class="view" data-view="records">
         <div class="hero">
-          <div><h2>排行榜</h2><p>六类榜单统一使用云端比赛与荣誉数据，并支持赛季、比赛类型和牌手筛选。</p></div>
+          <div><h2>记录中心</h2><p>查询MSL历史、赛季与生涯纪录，点击任意记录查看历史排名与比赛过程。</p></div>
+          <span class="chip gold">MSL RECORD BOOK</span>
         </div>
-        <div class="card section">
-          <div class="form-row leaderboard-filters">
-            <label>榜单类型<select id="boardKind">
-              <option value="total">总积分榜</option>
-              <option value="streak">连庄榜</option>
-              <option value="bgr">大场面榜（BGR）</option>
-              <option value="mvp">MVP榜</option>
-              <option value="solo">独赢榜</option>
-              <option value="honor">荣誉分榜</option>
-            </select></label>
-            <label>统计范围<select id="boardScope"><option value="career">生涯全部</option></select></label>
-            <label>比赛类型<select id="boardType"><option value="all">全部</option><option value="四人局">四人局</option><option value="五人局">五人局</option></select></label>
-            <label>搜索牌手<input id="boardSearch" placeholder="输入姓名"></label>
+        <div class="card section record-center-card">
+          <div class="record-toolbar">
+            <div class="record-section-tabs" role="tablist" aria-label="记录板块">
+              <button type="button" class="record-tab active" data-record-section="historical">历史记录</button>
+              <button type="button" class="record-tab" data-record-section="season">赛季记录</button>
+              <button type="button" class="record-tab" data-record-section="career">生涯记录</button>
+            </div>
+            <div class="record-type-tabs" role="tablist" aria-label="比赛类型">
+              <button type="button" class="record-type active" data-record-type="all">全部</button>
+              <button type="button" class="record-type" data-record-type="four">四人局</button>
+              <button type="button" class="record-type" data-record-type="five">五人局</button>
+            </div>
           </div>
-          <div class="board-note" id="boardNote"></div>
-          <div class="table-scroll leaderboard-table-scroll">
-            <table class="leaderboard-dynamic-table">
-              <thead id="fullLeaderboardHead"></thead>
-              <tbody id="fullLeaderboard"></tbody>
+          <div class="record-summary" id="recordSummary"></div>
+          <div class="table-scroll record-table-scroll">
+            <table class="record-table">
+              <thead><tr><th>记录名称</th><th>记录类型</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>
+              <tbody id="recordTableBody"></tbody>
             </table>
           </div>
         </div>
@@ -161,7 +161,7 @@
           </div>
         </div>
         <div class="card section" style="margin-bottom:16px">
-          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + 本赛季整体评价</small></div>
+          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + 当前赛季 + S1至今生涯评价</small></div>
           <div id="playerScouting"></div>
         </div>
         <div class="card section">
@@ -222,7 +222,7 @@
       </section>
 
       <section class="view" data-view="rival">
-        <div class="hero"><div><h2>精准对位中心</h2><p>旧版由比赛总分推算的对位数据已停用；这里只统计新制逐对位明细。仅补录最终总分的历史场次不会被伪造成对位数据。</p></div></div>
+        <div class="hero"><div><h2>精准对位中心</h2><p>统计逐场录入的精准对位明细，查看牌手之间的吃分关系与净分变化。</p></div></div>
         <div class="kpis" id="rivalKpis"></div>
         <div class="grid-2">
           <div class="card section">
@@ -247,7 +247,7 @@
       </section>
 
       <section class="view" data-view="honors">
-        <div class="hero"><div><h2>荣誉中心</h2><p>GOAT指数、荣誉排名与五人官方荣誉档案。</p></div></div>
+        <div class="hero"><div><h2>荣誉中心</h2><p>查看GOAT指数、荣誉排名与各赛季官方荣誉归属。</p></div></div>
         <div class="grid-2">
           <div class="card section">
             <div class="section-head"><h3>GOAT官方排名</h3><small>当前认证结果</small></div>
@@ -261,10 +261,6 @@
         <div class="card section" style="margin-bottom:16px">
           <div class="section-head"><div><h3>赛季荣誉归属</h3><small>除铁人奖、鸽王外，每项荣誉只能有一名得主；完全同分则显示待定。</small></div><label style="min-width:150px">赛季<select id="honorBoardSeason"></select></label></div>
           <div class="honor-board-grid" id="honorSeasonBoard"></div>
-        </div>
-        <div class="card section">
-          <div class="section-head"><h3>牌手荣誉清单</h3><small id="honorListSummary"></small></div>
-          <div class="honor-grid" id="honorList"></div>
         </div>
       </section>
 

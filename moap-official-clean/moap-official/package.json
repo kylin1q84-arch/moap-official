@@ -1,6 +1,6 @@
 {
-  "name": "moap-msl-honor-form",
-  "version": "1.7.2",
+  "name": "moap-msl-record-center",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
   "scripts": {
