@@ -93,14 +93,20 @@ export function validateMoapData(players = [], matches = [], matchups = []) {
 
   const matchupFormatErrors = [];
   const matchupUnknownMatch = [];
+  const matchupDuplicateCells = [];
+  const matchupCompletenessErrors = [];
   const matchupByMatch = {};
   const matchById = Object.fromEntries(matches.map(match => [match.matchId, match]));
+  const seenMatchupCells = new Set();
   for (const row of matchups || []) {
-    if (!row.matchId || !playerIds.has(row.fromPlayerId) || !playerIds.has(row.toPlayerId) || row.fromPlayerId === row.toPlayerId || !Number.isInteger(Number(row.points)) || Number(row.points) <= 0) {
+    if (!row.matchId || !playerIds.has(row.fromPlayerId) || !playerIds.has(row.toPlayerId) || row.fromPlayerId === row.toPlayerId || !Number.isInteger(Number(row.points))) {
       matchupFormatErrors.push(row.id || `${row.matchId || "无场次"}:${row.fromPlayerId || "?"}->${row.toPlayerId || "?"}`);
       continue;
     }
     if (!matchById[row.matchId]) matchupUnknownMatch.push(row.matchId);
+    const cellKey = `${row.matchId}|${row.fromPlayerId}|${row.toPlayerId}`;
+    if (seenMatchupCells.has(cellKey)) matchupDuplicateCells.push(cellKey);
+    seenMatchupCells.add(cellKey);
     (matchupByMatch[row.matchId] ??= []).push(row);
   }
 
@@ -108,13 +114,16 @@ export function validateMoapData(players = [], matches = [], matchups = []) {
   for (const [matchId, rows] of Object.entries(matchupByMatch)) {
     const match = matchById[matchId];
     if (!match) continue;
+    const active = played(match);
+    const activeIds = new Set(active.map(result => result.playerId));
+    const expectedCells = active.length * Math.max(0, active.length - 1);
+    const actualCells = rows.filter(row => activeIds.has(row.fromPlayerId) && activeIds.has(row.toPlayerId)).length;
+    if (actualCells !== expectedCells) matchupCompletenessErrors.push(`${matchId}：方向格${actualCells}/${expectedCells}`);
+
     const nets = Object.fromEntries(players.map(player => [player.playerId, 0]));
-    for (const row of rows) {
-      nets[row.fromPlayerId] += num(row.points);
-      nets[row.toPlayerId] -= num(row.points);
-    }
-    for (const result of played(match)) {
-      if (num(nets[result.playerId]) !== num(result.score)) matchupBalanceErrors.push(`${matchId}：${result.player || result.playerId} 对位${nets[result.playerId]} / 总分${result.score}`);
+    for (const row of rows) nets[row.fromPlayerId] += num(row.points);
+    for (const result of active) {
+      if (num(nets[result.playerId]) !== num(result.score)) matchupBalanceErrors.push(`${matchId}：${result.player || result.playerId} 对位行和${nets[result.playerId]} / 总分${result.score}`);
     }
   }
 
@@ -128,8 +137,9 @@ export function validateMoapData(players = [], matches = [], matchups = []) {
     makeCheck("DV007", "成绩牌手合法且不重复", [...resultPlayerErrors, ...duplicateResultPlayers], "match.results.playerId"),
     makeCheck("DV008", "参赛成绩为有效数字", invalidScores, "非缺席成绩不可为空"),
     makeCheck("DV009", "赛季轮次日期顺序", dateOrderErrors, "同赛季后续轮次日期不得倒退"),
-    makeCheck("DV010", "精准对位格式合法", [...matchupFormatErrors, ...matchupUnknownMatch], "matchup_transfers"),
-    makeCheck("DV011", "精准对位合计对应比赛总分", matchupBalanceErrors, "有对位记录的场次逐人核对")
+    makeCheck("DV010", "精准对位方向格格式合法", [...matchupFormatErrors, ...matchupUnknownMatch, ...matchupDuplicateCells], "matchup_transfers：方向格可为正/负/0，A→B 与 B→A 独立"),
+    makeCheck("DV011", "精准对位行和对应比赛总分", matchupBalanceErrors, "只累计该牌手作为行方向(from_player_id)的所有格"),
+    makeCheck("DV012", "精准对位方向矩阵完整", matchupCompletenessErrors, "五人局20格 / 四人局12格；0也必须有明确记录")
   ];
   const passCount = checks.filter(check => check.result === "PASS").length;
   return {

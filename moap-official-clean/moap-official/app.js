@@ -72,7 +72,7 @@ function applyAnalyticsToState(target){
   const top=target.goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
   const seasonIds=[...new Set(orderedMatches.map(match=>match.season))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const awardWinners=id=>seasonIds.map(season=>{const row=target.honorBoard.find(item=>item.scope===season&&item.honorId===id);return row?.winners?.length?`${season} ${row.winners.join("/")}`:null;}).filter(Boolean).join("；")||"暂无";
-  target.version={...(target.version||{}),version:"v1.8.1 MSL Records & GOAT",releaseStage:"Official Feature Release",releaseDate:"2026-08-04",currentStatus:"record center correction + AI GOAT model",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"记录中心采用互斥大场面档位与前5历史排名；两项A级荣誉公式更新，B级荣誉10分（铁人奖5分）；GOAT指数改为荣誉、生涯、纪录、持续性四维模型。"};
+  target.version={...(target.version||{}),version:"v1.8.2 Directional Matchup Matrix",releaseStage:"Official Feature Release",releaseDate:"2026-08-07",currentStatus:"directional precise matchup matrix fix",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"精准对位改为双向独立记录：每个方向单独填写，允许正/负/0，不再自动镜像或互相反推；吃分、被吃分与净积分均由原始方向格逐笔汇总。"};
   return target;
 }
 applyAnalyticsToState(state);
@@ -96,7 +96,7 @@ function clearLegacyRivalState(target){
   target.rivalNet=net;
   target.rivalHistory=history;
   target.rivalSummary=(target.players||[]).map(p=>({playerId:p.playerId,player:p.name||p.player,eat:0,eaten:0,total:0}));
-  target.rivalryMeta={startDate:null,trackedMatches:0,entries:0,mode:"PRECISE_PAIRWISE_ONLY"};
+  target.rivalryMeta={startDate:null,trackedMatches:0,entries:0,mode:"DIRECTIONAL_CELL_MATRIX"};
   delete target.rivalWinRate;
   return target;
 }
@@ -149,11 +149,13 @@ function buildLiveState(db){
   const seasonStats={};seasonIds.forEach(s=>seasonStats[s]=players.map(p=>{const c=metrics(p.playerId,s);return {playerId:p.playerId,player:p.name,games:c.games,total:c.total,average:c.average,positiveRate:c.positiveRate,mvps:c.mvps,best:c.best,worst:c.worst,fourAverage:c.fourAverage,fiveAverage:c.fiveAverage,bgr:c.bgr};}));
   const profiles={};players.forEach(p=>{const c=metrics(p.playerId),h=honorStats[p.playerId];profiles[p.playerId]={name:p.name,games:c.games,total:c.total,average:c.average,positiveRate:c.positiveRate,mvps:c.mvps,absences:c.absences,best:c.best,worst:c.worst,honorRank:honorRank[p.playerId],...h};});
 
-  // 精准对位只读取 matchup_transfers。历史比赛总分不再推算任何对位关系。
+  // 精准对位采用“方向格独立记录”：
+  // A→B 与 B→A 是两条独立数据，不要求互为相反数，也绝不通过一侧反推另一侧。
+  // points 可为正、负或 0；每名牌手一行所有方向格的合计必须等于该场比赛总分。
   const matchupRows=(db.matchups||[]).map(x=>({
     id:x.id,matchId:x.match_id,fromPlayerId:x.from_player_id,toPlayerId:x.to_player_id,
     points:Number(x.points),createdAt:x.created_at||null
-  })).filter(x=>Number.isFinite(x.points)&&x.points>0&&nameBy[x.fromPlayerId]&&nameBy[x.toPlayerId]&&x.fromPlayerId!==x.toPlayerId);
+  })).filter(x=>Number.isFinite(x.points)&&nameBy[x.fromPlayerId]&&nameBy[x.toPlayerId]&&x.fromPlayerId!==x.toPlayerId);
   const matchById=Object.fromEntries(matches.map(m=>[m.matchId,m]));
   const rivalNet={},rivalHistory={};
   players.forEach(a=>{rivalNet[a.name]={};rivalHistory[a.name]={};players.forEach(b=>{
@@ -162,19 +164,27 @@ function buildLiveState(db){
   });});
   matchupRows.forEach(t=>{
     const from=nameBy[t.fromPlayerId],to=nameBy[t.toPlayerId],points=Number(t.points),m=matchById[t.matchId];
-    rivalNet[from][to]+=points;rivalNet[to][from]-=points;
+    rivalNet[from][to]+=points;
     const base={matchId:t.matchId,date:m?.date||"—",season:m?.season||"—",round:m?.round??"—",matchType:m?.matchType||"—",venue:m?.venue||"未填写场地",points};
     rivalHistory[from][to].push({...base,net:points});
-    rivalHistory[to][from].push({...base,net:-points});
   });
   Object.values(rivalHistory).forEach(row=>Object.values(row).forEach(items=>items.sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.matchId).localeCompare(String(a.matchId)))));
   const rivalSummary=players.map(p=>{
-    const values=players.filter(o=>o.playerId!==p.playerId).map(o=>Number(rivalNet[p.name][o.name]||0));
-    return {playerId:p.playerId,player:p.name,eat:values.filter(v=>v>0).reduce((a,b)=>a+b,0),eaten:-values.filter(v=>v<0).reduce((a,b)=>a+b,0),total:values.reduce((a,b)=>a+b,0)};
+    const rows=matchupRows.filter(t=>t.fromPlayerId===p.playerId);
+    const eat=rows.filter(t=>Number(t.points)>0).reduce((sum,t)=>sum+Number(t.points),0);
+    const eaten=rows.filter(t=>Number(t.points)<0).reduce((sum,t)=>sum+Math.abs(Number(t.points)),0);
+    const total=rows.reduce((sum,t)=>sum+Number(t.points),0);
+    return {playerId:p.playerId,player:p.name,eat,eaten,total};
   });
   const trackedMatchIds=[...new Set(matchupRows.map(x=>x.matchId))];
   const trackedDates=trackedMatchIds.map(id=>matchById[id]?.date).filter(Boolean).sort();
-  const rivalryMeta={startDate:trackedDates[0]||null,trackedMatches:trackedMatchIds.length,entries:matchupRows.length,mode:"PRECISE_PAIRWISE_ONLY"};
+  const rivalryMeta={
+    startDate:trackedDates[0]||null,
+    trackedMatches:trackedMatchIds.length,
+    entries:matchupRows.length,
+    nonZeroEntries:matchupRows.filter(x=>Number(x.points)!==0).length,
+    mode:"DIRECTIONAL_CELL_MATRIX"
+  };
 
   const checks=[];
   const pushCheck=(id,item,found,evidence)=>checks.push({id,item,found,target:"0",result:found===0?"PASS":"FAIL",evidence,details:[]});
@@ -190,7 +200,7 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.8.1 MSL Records & GOAT",releaseStage:"Official Feature Release",releaseDate:"2026-08-04",currentStatus:"record center correction + AI GOAT model",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"记录中心采用互斥大场面档位与前5历史排名；两项A级荣誉公式更新，B级荣誉10分（铁人奖5分）；GOAT指数改为荣誉、生涯、纪录、持续性四维模型。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v1.8.2 Directional Matchup Matrix",releaseStage:"Official Feature Release",releaseDate:"2026-08-07",currentStatus:"directional precise matchup matrix fix",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"精准对位改为双向独立记录：每个方向单独填写，允许正/负/0，不再自动镜像或互相反推；吃分、被吃分与净积分均由原始方向格逐笔汇总。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
@@ -231,6 +241,11 @@ const fmtPct = n => n == null ? "—" : (Number(n)*100).toFixed(2)+"%";
 const scoreClass = n => Number(n) >= 0 ? "score-pos" : "score-neg";
 const initials = name => name.slice(-2);
 const escapeHtml = str => String(str ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const matchupPlayerNameHtml = name => {
+  const text=String(name??"");
+  const compact=[...text].length===2?" two-char":"";
+  return `<span class="matchup-player-name${compact}">${escapeHtml(text)}</span>`;
+};
 
 function toast(msg){
   const el=$("#toast"); el.textContent=msg; el.classList.add("show");
@@ -501,7 +516,7 @@ function renderPlayer(){
   const name=p.name;
   $("#playerRivals").innerHTML=state.players.filter(x=>x.playerId!==pid).map(o=>{
     const net=state.rivalNet[name][o.name], records=(state.rivalHistory?.[name]?.[o.name]||[]).length;
-    return `<div class="goat-row"><span class="avatar">${initials(o.name)}</span><div><strong>${o.name}</strong><div class="muted" style="font-size:11px;margin-top:4px">新制精准对位 · ${records} 场有分记录</div></div><b class="${scoreClass(net)}">${fmtScore(net)}</b></div>`
+    return `<div class="goat-row"><span class="avatar">${initials(o.name)}</span><div><strong>${o.name}</strong><div class="muted" style="font-size:11px;margin-top:4px">精准对位 · ${records} 场方向记录</div></div><b class="${scoreClass(net)}">${fmtScore(net)}</b></div>`
   }).join("");
   renderPlayerScouting(pid);
   const honors=state.honors[pid]||[],groups=groupPlayerHonors(honors);
@@ -555,25 +570,21 @@ function renderEntryMatchupMatrix(){
   const ps=state.players;
   let html=`<thead><tr><th>攻击方（吃分） ↓</th>${ps.map(p=>`<th>${escapeHtml(p.name)}</th>`).join("")}<th>行合计</th><th>比赛分</th></tr></thead><tbody>`;
   ps.forEach(a=>{
-    html+=`<tr data-matchup-row="${a.playerId}"><td><div class="player-cell"><span class="avatar">${initials(a.name)}</span>${escapeHtml(a.name)}</div></td>`;
+    html+=`<tr data-matchup-row="${a.playerId}"><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a.name)}</span>${matchupPlayerNameHtml(a.name)}</div></td>`;
     ps.forEach(b=>{
       if(a.playerId===b.playerId)html+=`<td class="matchup-diagonal">—</td>`;
-      else html+=`<td><input class="matchup-input" type="number" step="1" inputmode="numeric" data-matchup-from="${a.playerId}" data-matchup-to="${b.playerId}" aria-label="${escapeHtml(a.name)} 对 ${escapeHtml(b.name)} 的对位分"></td>`;
+      else html+=`<td><input class="matchup-input" type="number" step="1" inputmode="numeric" data-matchup-from="${a.playerId}" data-matchup-to="${b.playerId}" aria-label="${escapeHtml(a.name)} 对 ${escapeHtml(b.name)} 的独立方向对位分"></td>`;
     });
     html+=`<td><strong data-row-total="${a.playerId}">0</strong></td><td><strong data-entry-score-view="${a.playerId}">—</strong></td></tr>`;
   });
   $("#entryMatchupMatrix").innerHTML=html+"</tbody>";
   $$(".matchup-input").forEach(input=>{
     input.addEventListener("input",e=>{
-      const from=e.target.dataset.matchupFrom,to=e.target.dataset.matchupTo,raw=e.target.value.trim();
-      const mirror=$(`[data-matchup-from="${to}"][data-matchup-to="${from}"]`);
-      if(raw==="")mirror.value="";
-      else if(Number.isFinite(Number(raw)))mirror.value=String(-Number(raw));
-      updateMatchupCellStyle(e.target);updateMatchupCellStyle(mirror);validateEntry();
+      // 每个方向格完全独立：不再自动修改反向格。
+      updateMatchupCellStyle(e.target);validateEntry();
     });
     input.addEventListener("blur",e=>{
-      // 0 是合法的对位结果：保留显式输入的 0，不再自动清空。
-      // 保存时 0 分对位不会写入 matchup_transfers，空白与 0 在统计上都按 0 处理。
+      // 0 是合法且需要明确填写的对位结果。
       updateMatchupCellStyle(e.target);validateEntry();
     });
   });
@@ -600,17 +611,21 @@ function entryData(){
   });
 }
 function entryMatchupData(){
-  const ps=state.players,nets=Object.fromEntries(ps.map(p=>[p.playerId,0])),matchups=[];let valid=true;
-  for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
-    const a=ps[i],b=ps[j],ab=$(`[data-matchup-from="${a.playerId}"][data-matchup-to="${b.playerId}"]`),ba=$(`[data-matchup-from="${b.playerId}"][data-matchup-to="${a.playerId}"]`);
-    const raw=ab?.value.trim()||"",mirrorRaw=ba?.value.trim()||"";
-    const v=raw===""?0:Number(raw),mirror=mirrorRaw===""?0:Number(mirrorRaw);
-    if(!Number.isInteger(v)||!Number.isInteger(mirror)||mirror!==-v)valid=false;
-    nets[a.playerId]+=v;nets[b.playerId]-=v;
-    if(v>0)matchups.push({from_player_id:a.playerId,to_player_id:b.playerId,points:v});
-    if(v<0)matchups.push({from_player_id:b.playerId,to_player_id:a.playerId,points:-v});
-  }
-  return {valid,nets,matchups};
+  const ps=state.players,nets=Object.fromEntries(ps.map(p=>[p.playerId,0])),matchups=[];
+  const selected=new Set(ps.filter(p=>$("#check-"+p.playerId)?.checked).map(p=>p.playerId));
+  let valid=true,complete=true;
+  ps.forEach(a=>ps.forEach(b=>{
+    if(a.playerId===b.playerId||!selected.has(a.playerId)||!selected.has(b.playerId))return;
+    const input=$(`[data-matchup-from="${a.playerId}"][data-matchup-to="${b.playerId}"]`);
+    const raw=input?.value.trim()??"";
+    if(raw===""){complete=false;valid=false;return;}
+    const value=Number(raw);
+    if(!Number.isInteger(value)){valid=false;return;}
+    nets[a.playerId]+=value;
+    // 0 也保存：这样数据库能明确区分“已填写0”和“没有录入这个方向格”。
+    matchups.push({from_player_id:a.playerId,to_player_id:b.playerId,points:value});
+  }));
+  return {valid,complete,nets,matchups};
 }
 function validateEntry(){
   const type=$("#entryType").value,required=type==="四人局"?4:5,allRows=entryData(),rows=allRows.filter(x=>x.selected);
@@ -625,12 +640,12 @@ function validateEntry(){
     const ok=!x.selected?rowTotal===0:(x.raw!==""&&Number.isInteger(x.score)&&rowTotal===x.score);
     return {...x,rowTotal,ok};
   });
-  const matchupOk=matchup.valid&&comparisons.every(x=>x.ok);
+  const matchupOk=matchup.valid&&matchup.complete&&comparisons.every(x=>x.ok);
   const ok=basicOk&&matchupOk;
   const el=$("#entryValidation");el.className="validation "+(ok?"ok":"bad");
-  el.textContent=`比赛人数 ${rows.length}/${required} · 比赛分合计 ${sum>0?"+":""}${sum} · 对位行和 ${matchupOk?"全部匹配":"存在不一致"} · ${ok?"可以保存":"请完成校验"}`;
+  el.textContent=`比赛人数 ${rows.length}/${required} · 比赛分合计 ${sum>0?"+":""}${sum} · 方向矩阵 ${matchup.complete?"已完整填写":"有未填写格"} · 对位行和 ${matchupOk?"全部匹配":"存在不一致"} · ${ok?"可以保存":"请完成校验"}`;
   $("#matchupValidation").className="validation "+(matchupOk?"ok":"bad");
-  $("#matchupValidation").innerHTML=comparisons.map(x=>`<span class="matchup-check ${x.ok?"pass":"fail"}">${escapeHtml(x.player)}：对位 ${fmtScore(x.rowTotal)} / 比赛 ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span>`).join("");
+  $("#matchupValidation").innerHTML=`<span class="matchup-check ${matchup.complete?"pass":"fail"}">${matchup.complete?"所有方向格均已填写":"每个参赛牌手之间的两个方向格都要分别填写（0也要填）"}</span>`+comparisons.map(x=>`<span class="matchup-check ${x.ok?"pass":"fail"}">${escapeHtml(x.player)}：对位行和 ${fmtScore(x.rowTotal)} / 比赛 ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span>`).join("");
   return ok;
 }
 $("#saveMatchBtn").addEventListener("click",async()=>{
@@ -646,7 +661,7 @@ $("#saveMatchBtn").addEventListener("click",async()=>{
     const nextId="MSL"+String(Math.max(...numeric,0)+1).padStart(4,"0");
     const payload={
       id:nextId,season_id:season,round:nextRound,match_date:date,match_type:$("#entryType").value,
-      venue:$("#entryVenue").value||"未填写场地",notes:"MOAP云端网页录入 · 精准对位新制",
+      venue:$("#entryVenue").value||"未填写场地",notes:"MOAP云端网页录入 · 精准对位方向矩阵",
       results:state.players.map(p=>{
         const x=selected.find(s=>s.playerId===p.playerId);
         return {player_id:p.playerId,score:x?x.score:null,is_absent:!x};
@@ -674,7 +689,7 @@ function renderMatrix(target,dataMatrix,clickable=false){
   const names=state.players.map(p=>p.name);
   let html=`<thead><tr><th>攻击方（吃分） ↓</th>${names.map(n=>`<th>${escapeHtml(n)}</th>`).join("")}</tr></thead><tbody>`;
   names.forEach(a=>{
-    html+=`<tr><td><div class="player-cell"><span class="avatar">${initials(a)}</span>${escapeHtml(a)}</div></td>`;
+    html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a)}</span>${matchupPlayerNameHtml(a)}</div></td>`;
     names.forEach(b=>{
       if(a===b)html+=`<td class="matchup-diagonal">—</td>`;
       else{
@@ -698,13 +713,13 @@ function renderRival(){
   $("#rivalKpis").innerHTML=[
     ["统计起点",meta.startDate||"等待首场","旧比赛不参与推算"],
     ["已记录比赛",meta.trackedMatches+" 场","仅含精准对位明细"],
-    ["有效对位",meta.entries+" 条","每条代表一组实际吃分"],
-    ["统计口径","新制精准","行攻击方 / 列承受方"]
+    ["矩阵方向格",meta.entries+" 条",`${meta.nonZeroEntries??0} 条非零`],
+    ["统计口径","方向独立","A→B 与 B→A 不互相反推"]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   const rows=[...(state.rivalSummary||[])];
-  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell"><span class="avatar">${initials(r.player)}</span>${escapeHtml(r.player)}</div></td><td class="score-pos">${fmtScore(r.eat)}</td><td class="score-neg">${r.eaten?"-"+r.eaten:"0"}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td></tr>`).join("");
+  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(r.player)}</span>${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtScore(r.eat)}</td><td class="score-neg">${r.eaten?"-"+r.eaten:"0"}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td></tr>`).join("");
   if(!meta.entries){
-    $("#rivalRanking").innerHTML='<div class="empty">录入带精准对位明细的比赛后，这里会自动生成排名。</div>';
+    $("#rivalRanking").innerHTML='<div class="empty">录入完整的精准对位方向矩阵后，这里会自动生成排名。</div>';
     $("#rivalDetail").className="empty";$("#rivalDetail").textContent="暂无新制对位记录。";
     return;
   }
@@ -717,13 +732,26 @@ function renderRival(){
   ].map(x=>`<div class="honor-item rival-rank-item"><span>${x[0]}</span><strong>${escapeHtml(x[1])}</strong><b class="${x[2].startsWith("-")?"score-neg":"score-pos"}">${x[2]}</b></div>`).join("");
 }
 function showRivalDetail(a,b){
-  const net=Number(state.rivalNet?.[a]?.[b]||0),history=state.rivalHistory?.[a]?.[b]||[];
+  const forward=Number(state.rivalNet?.[a]?.[b]||0),reverse=Number(state.rivalNet?.[b]?.[a]||0);
+  const history=state.rivalHistory?.[a]?.[b]||[],reverseHistory=state.rivalHistory?.[b]?.[a]||[];
+  const summarize=items=>({
+    eat:items.filter(item=>Number(item.net)>0).reduce((sum,item)=>sum+Number(item.net),0),
+    eaten:items.filter(item=>Number(item.net)<0).reduce((sum,item)=>sum+Math.abs(Number(item.net)),0),
+    net:items.reduce((sum,item)=>sum+Number(item.net),0)
+  });
+  const f=summarize(history),r=summarize(reverseHistory);
   $("#rivalDetail").className="";
-  const list=history.length?history.map(item=>`<div class="score-row"><div class="left"><span class="chip">${escapeHtml(item.matchId)}</span><span>${escapeHtml(item.date)} · ${escapeHtml(item.venue)}</span></div><b class="${scoreClass(item.net)}">${fmtScore(item.net)}</b></div>`).join(""):'<div class="empty">两人之间暂时没有非零对位记录。</div>';
-  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} vs ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">精准对位统计</div></div></div>
-    <div class="kpis" style="grid-template-columns:1fr 1fr;margin-top:16px"><div class="mini-stat"><span>${escapeHtml(a)}净分</span><strong class="${scoreClass(net)}">${fmtScore(net)}</strong></div><div class="mini-stat"><span>有分记录</span><strong>${history.length} 场</strong></div></div>
-    <div class="validation ${net>0?"ok":net<0?"bad":""}">${net>0?a+"当前对位占优":net<0?b+"当前对位占优":"双方当前持平"}。每笔数据来自录入比赛时的逐对位矩阵。</div>
-    <div class="score-list" style="margin-top:12px">${list}</div>`;
+  const list=history.length?history.map(item=>`<div class="score-row"><div class="left"><span class="chip">${escapeHtml(item.matchId)}</span><span>${escapeHtml(item.date)} · ${escapeHtml(item.venue)}</span></div><b class="${scoreClass(item.net)}">${fmtScore(item.net)}</b></div>`).join(""):'<div class="empty">这个方向暂时没有对位记录。</div>';
+  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">精准对位方向记录</div></div></div>
+    <div class="kpis rival-detail-kpis" style="margin-top:16px">
+      <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtScore(forward)}</strong></div>
+      <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtScore(f.eat)} / ${f.eaten?`-${f.eaten}`:"0"}</strong></div>
+      <div class="mini-stat"><span>${escapeHtml(b)}→${escapeHtml(a)} 净积分</span><strong class="${scoreClass(reverse)}">${fmtScore(reverse)}</strong></div>
+      <div class="mini-stat"><span>反向吃分 / 被吃分</span><strong>${fmtScore(r.eat)} / ${r.eaten?`-${r.eaten}`:"0"}</strong></div>
+    </div>
+    <div class="validation">两个方向完全独立记录，不要求互为相反数。矩阵中的每个值都直接来自对应方向格，不通过另一侧计算。</div>
+    <div class="section-head" style="margin-top:14px"><h3>${escapeHtml(a)} → ${escapeHtml(b)} 明细</h3><small>${history.length} 场记录</small></div>
+    <div class="score-list">${list}</div>`;
 }
 
 function scopeOrder(scope){if(scope==="CAREER")return 999;const n=Number(String(scope).replace(/\D/g,""));return Number.isFinite(n)?n:500;}
@@ -826,7 +854,7 @@ function renderSystem(){
   const v=state.version;
   $("#versionInfo").innerHTML=[
     ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],["年度最有价值牌手",v.seasonMvp],
-    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v1.8.1更新",v.note]
+    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v1.8.2更新",v.note]
   ].map(x=>`<div class="honor-item"><strong>${x[0]}</strong><small>${x[1]}</small></div>`).join("");
 }
 
