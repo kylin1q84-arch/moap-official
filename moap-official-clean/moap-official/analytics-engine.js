@@ -220,6 +220,7 @@ function seasonMetrics(players, matches, season) {
       soloAverage: mean(soloEntries.map(entry => entry.score)),
       soloEntries,
       bgr: sum(scores.map(bgrValue)),
+      bigStageCount: entries.filter(entry => entry.score >= 50).length,
       longestBigStage: longestBoolean(schedule, item => !item.absent && item.score >= 50, { ignoreAbsent: true }),
       bigWinCount: bigWins.length,
       bigWinDominanceTotal: sum(bigWins.map(entry => entry.margin)),
@@ -296,6 +297,71 @@ function addCompositeScores(rows, definitions) {
   }
 }
 
+
+export function buildCurrentSeasonRatings(players, matches) {
+  const ordered = sortedMatches(matches || []);
+  const latestSeason = [...new Set(ordered.map(match => match.season).filter(Boolean))]
+    .sort((a, b) => seasonNumber(a) - seasonNumber(b)).at(-1);
+  if (!latestSeason) return { season: null, rows: [], methodology: "暂无当前赛季数据。" };
+
+  const base = seasonMetrics(players, ordered, latestSeason);
+  const active = base.rows.filter(row => row.games > 0);
+  if (!active.length) return { season: latestSeason, rows: [], methodology: "当前赛季暂无有效参赛数据。" };
+
+  const scale = (key, inverse = false) => {
+    const values = active.map(row => num(row[key]));
+    const low = Math.min(...values), high = Math.max(...values);
+    return row => {
+      if (eq(high, low)) return 0.5;
+      const value = (num(row[key]) - low) / (high - low);
+      return inverse ? 1 - value : value;
+    };
+  };
+
+  const nTotal = scale("total"), nAverage = scale("average"), nPositiveRate = scale("positiveRate"), nPositiveAverage = scale("positiveAverage");
+  const nMvps = scale("mvps"), nMvpRate = scale("mvpRate"), nMvpTotal = scale("mvpTotal");
+  const nBgr = scale("bgr"), nBigStageCount = scale("bigStageCount"), nBest = scale("best");
+  const nVolatility = scale("volatility", true), nPositiveStreak = scale("longestStreak"), nCrash = scale("crashCount", true);
+
+  let rows = active.map(row => {
+    const scoring = 100 * (nTotal(row) * 0.50 + nAverage(row) * 0.50);
+    const quality = 100 * (nPositiveRate(row) * 0.60 + nPositiveAverage(row) * 0.40);
+    const mvpImpact = 100 * (nMvps(row) * 0.40 + nMvpRate(row) * 0.30 + nMvpTotal(row) * 0.30);
+    const bigStage = 100 * (nBgr(row) * 0.40 + nBigStageCount(row) * 0.30 + nBest(row) * 0.30);
+    const stability = 100 * (nVolatility(row) * 0.45 + nPositiveStreak(row) * 0.35 + nCrash(row) * 0.20);
+    const composite = scoring * 0.30 + quality * 0.25 + mvpImpact * 0.20 + bigStage * 0.15 + stability * 0.10;
+    const rating = Math.round(50 + 49 * composite / 100);
+    return {
+      ...row,
+      season: latestSeason,
+      dimensionScores: {
+        scoring: Number(scoring.toFixed(1)),
+        quality: Number(quality.toFixed(1)),
+        mvpImpact: Number(mvpImpact.toFixed(1)),
+        bigStage: Number(bigStage.toFixed(1)),
+        stability: Number(stability.toFixed(1))
+      },
+      composite: Number(composite.toFixed(2)),
+      rating,
+      ratingLabel: seasonRatingLabel(rating)
+    };
+  });
+
+  rows.sort((a, b) => b.composite - a.composite || b.total - a.total || b.average - a.average || String(a.playerId).localeCompare(String(b.playerId)));
+  let rank = 0, previous = null;
+  rows = rows.map((row, index) => {
+    if (previous == null || !eq(row.composite, previous)) rank = index + 1;
+    previous = row.composite;
+    return { ...row, rank };
+  });
+
+  return {
+    season: latestSeason,
+    rows,
+    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋大场面能力15%（BGR、50+场次、单场最高）＋稳定性10%（波动、连续正分、极端负分）。各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
+  };
+}
+
 function getPath(object, path) {
   return String(path).split(".").reduce((value, key) => value?.[key], object);
 }
@@ -356,14 +422,74 @@ function evaluateAward(scope, id, rows, criteria, { eligibility = () => true, re
   };
 }
 
+
+function awardProcessFormula(honorId, row, criteria = []) {
+  if (honorId === "H001") return row.championFormula || [];
+  if (honorId === "H003") return row.mvpValueFormula || [];
+  const f=(指标,计算,结果)=>({指标,计算,结果});
+  if (honorId === "H007") return [
+    f("参赛场次", "统计本赛季所有非缺席正式比赛", formatMetric(row.games,"场")),
+    f("最长连续参赛", "按赛程连续出席统计；缺席会中断", formatMetric(row.longestParticipation,"场"))
+  ];
+  if (honorId === "H008") return [
+    f("BGR指数", "50–59/60–69/70–79/80–89/90–99/100+分别计1/2/3/5/8/12后累计", formatMetric(row.bgr,"BGR")),
+    f("单场最高", "取本赛季所有实际参赛场次最高积分", formatMetric(row.best,"分")),
+    f("最长连续大场面", "按个人实际参赛序列统计连续50+；缺席不增加也不中断", formatMetric(row.longestBigStage,"场"))
+  ];
+  if (honorId === "H016") return [
+    f("大胜场次", "本人单场积分－其他实际参赛牌手平均积分≥100，每场最多计1次", formatMetric(row.bigWinCount,"场")),
+    f("累计统治分差", "所有大胜场次的（本人积分－其他牌手平均积分）累计", formatMetric(row.bigWinDominanceTotal,"分")),
+    f("最大统治分差", "取所有大胜场次中统治分差最大值", formatMetric(row.maxDominanceMargin,"分"))
+  ];
+  if (honorId === "H010") return [
+    f("独赢场次", "本人积分≥0且其他实际参赛牌手全部＜0，满足一次计1场", formatMetric(row.soloCount,"场")),
+    f("独赢累计积分", "所有独赢场次本人积分求和", formatMetric(row.soloTotal,"分")),
+    f("独赢场均", row.soloCount?`${formatMetric(row.soloTotal,"分")} ÷ ${formatMetric(row.soloCount,"场")}`:"无独赢场次", formatMetric(row.soloAverage,"分/场"))
+  ];
+  if (honorId === "H006") return [
+    f("最长连庄", "得分≥0延续；缺席不增加也不中断；负分中断", formatMetric(row.longestStreak,"场")),
+    f("最长连庄阶段积分", "最长连续正分阶段内所有场次积分求和；同长度取积分最高段", formatMetric(row.longestStreakPoints,"分")),
+    f("连庄总次数", "每段连续正分从第2场开始，每延续1场计1次", formatMetric(row.streakExtensions,"次"))
+  ];
+  if (honorId === "H005") return [
+    f("正分率", `${formatMetric(row.entries.filter(e=>e.score>=0).length,"场")} ÷ ${formatMetric(row.games,"场")}`, formatMetric(row.positiveRate,"%")),
+    f("正分累计积分", "所有得分≥0场次积分求和", formatMetric(row.positiveTotal,"分")),
+    f("正分场均", row.entries.filter(e=>e.score>=0).length?`${formatMetric(row.positiveTotal,"分")} ÷ ${formatMetric(row.entries.filter(e=>e.score>=0).length,"场")}`:"无正分场次", formatMetric(row.positiveAverage,"分/场"))
+  ];
+  if (honorId === "H011" || honorId === "H012") {
+    const label=honorId==="H011"?"四人局":"五人局";
+    return [
+      f(`${label}总积分`, `本赛季所有${label}实际参赛积分求和`, formatMetric(row.typeTotal,"分")),
+      f(`${label}MVP`, `本赛季${label}MVP标记场次累计`, formatMetric(row.typeMvps,"次")),
+      f(`${label}正分率`, `本赛季${label}正分场次 ÷ ${label}实际参赛场次`, formatMetric(row.typeRate,"%"))
+    ];
+  }
+  if (honorId === "H019") return [
+    f("参赛场次", "统计本赛季所有非缺席正式比赛", formatMetric(row.games,"场")),
+    f("最长连续缺席", "按完整赛程统计连续缺席最长阶段", formatMetric(row.longestAbsence,"场"))
+  ];
+  if (honorId === "H021") return [
+    f("≤-40场次", "统计本人单场积分≤-40的比赛场数", formatMetric(row.crashCount,"场")),
+    f("翻车累计积分", "所有≤-40场次本人积分求和", formatMetric(row.crashTotal,"分")),
+    f("最低单场", "所有≤-40场次中取最低积分", formatMetric(row.crashWorst,"分"))
+  ];
+  if (honorId === "H017") return [
+    f("总积分", "本赛季所有实际参赛积分求和", formatMetric(row.total,"分")),
+    f("正分率", `${formatMetric(row.entries.filter(e=>e.score>=0).length,"场")} ÷ ${formatMetric(row.games,"场")}`, formatMetric(row.positiveRate,"%")),
+    f("单场最低", "取本赛季所有实际参赛场次最低积分", formatMetric(row.worst,"分"))
+  ];
+  if (honorId === "H018") return [
+    f("累计积分最大波动幅度", `${formatMetric(row.cumulativeHigh, "分")} - (${formatMetric(row.cumulativeLow, "分")})`, formatMetric(row.cumulativeSwing, "分")),
+    f("单场最高/最低积分差", `${formatMetric(row.best, "分")} - (${formatMetric(row.worst, "分")})`, formatMetric(row.singleRange, "分")),
+    f("累计积分正负转换次数", "按赛季累计积分曲线逐轮统计；累计分回到0不单独计转换", formatMetric(row.cumulativeSignChanges, "次"))
+  ];
+  return criteriaText(criteria || [], row).map(item => ({ 指标: item.指标, 计算: "按该项官方指标统计", 结果: item.数值 }));
+}
+
 function awardObject(result, row) {
   const catalog = result.catalog;
   const primaryKey = result.criteria?.[0]?.key;
-  const formula = catalog.honorId === "H001"
-    ? row.championFormula
-    : catalog.honorId === "H003"
-      ? row.mvpValueFormula
-      : criteriaText(result.criteria || [], row);
+  const formula = awardProcessFormula(catalog.honorId, row, result.criteria || []);
   return {
     ownerPlayerId: row.playerId,
     scope: result.scope,
@@ -380,7 +506,7 @@ function awardObject(result, row) {
       winner: row.player,
       winners: result.winners.map(winner => winner.player),
       officialValue: num(row[primaryKey] ?? 1),
-      calculationStatus: "LIVE_RECALCULATED_V1_8_1_RULES",
+      calculationStatus: "LIVE_RECALCULATED_V1_9_RULES",
       ranking: result.ranking.map(ranked => ({
         playerId: ranked.playerId,
         player: ranked.player,
@@ -602,15 +728,16 @@ function computePower(players,matches){
 function statusLabel(r){if(r.recent.length<3)return '🕒 样本不足';const last3=r.recent.slice(-3).map(x=>x.score);if(r.latest?.isMvp&&r.powerIndex>=55)return '👑 MVP状态';if(last3.length===3&&last3.every(x=>x>=0))return '🎯 连续正分';if(last3.length===3&&last3[0]<last3[1]&&last3[1]<last3[2])return r.powerIndex>=45?'🚀 强势上升':'📈 回暖中';if(last3.length===3&&last3[0]>last3[1]&&last3[1]>last3[2])return r.powerIndex>=55?'🎢 高开低走':'📉 状态下滑';if(r.recent.filter(x=>x.score>=50).length>=2)return '⚡ 大场面模式';if(r.recentStd>=35)return '🌊 表现起伏';if(r.powerIndex>=85)return '🔥 炙手可热';if(r.powerIndex>=70)return '🔥 手感火热';if(r.powerIndex>=55)return '✅ 状态稳定';if(r.powerIndex>=45)return '➖ 状态平平';if(r.powerIndex>=30)return '🌧 状态低迷';return '🧊 深陷低谷';}
 function archetypes(rows){const avgRank=[...rows].sort((a,b)=>b.seasonAverage-a.seasonAverage).map(x=>x.playerId),posRank=[...rows].sort((a,b)=>b.recentPositive-a.recentPositive).map(x=>x.playerId),bgrRank=[...rows].sort((a,b)=>b.recentBgr-a.recentBgr).map(x=>x.playerId),volRank=[...rows].sort((a,b)=>b.recentStd-a.recentStd).map(x=>x.playerId);return Object.fromEntries(rows.map(r=>{let t='稳定轮换';if(avgRank.indexOf(r.playerId)<2&&posRank.indexOf(r.playerId)<2&&r.recentMvp>0)t='全能型核心';else if(avgRank[0]===r.playerId)t='得分型牌手';else if(posRank[0]===r.playerId)t='稳定型牌手';else if(bgrRank[0]===r.playerId&&r.recentBgr>0)t='大场面牌手';else if(volRank[0]===r.playerId&&r.recentStd>25)t='高波动攻击手';return [r.playerId,t];}));}
 function seasonAssessment(r){
-  const s=r.season||{};
+  const s=r.season||{}, perf=r.seasonPerformance||{};
   if(!s.games)return {label:'赛季样本不足',summary:`${r.player}在当前赛季暂无有效参赛记录。`,outlook:'需要更多正式比赛后才能形成完整的赛季定位。'};
-  let label='中游竞争者',outlook='当前赛季仍有提升空间，后续关键在于提高正分延续性。';
-  if(s.totalRank===1){label='赛季领跑者';outlook='目前掌握积分榜主动权，需要继续保持稳定输出并控制低分场次。';}
-  else if(s.totalRank===2){label='争冠集团';outlook='与榜首仍处于可追赶范围，连续正分或一场大胜都可能改变争冠格局。';}
-  else if(s.totalRank===3){label='中游核心';outlook='整体处于中游位置，需要通过稳定正分和MVP表现向前两名施压。';}
-  else if(s.total<0){label='赛季追赶者';outlook='赛季累计积分仍为负，首要任务是缩小负分并建立连续正分阶段。';}
-  else {label='上升追赶者';outlook='目前尚未进入领先集团，但保持正分可以逐步缩小积分差距。';}
-  const summary=`${s.id}已出战${s.games}场，累计${s.total>=0?'+':''}${s.total}分，积分排名第${s.totalRank}；场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP，BGR指数${s.bgr}。`;
+  let label=perf.ratingLabel||'中游竞争者';
+  if(perf.rank===1)label=`${perf.ratingLabel||'高水平赛季'} · 赛季综合第1`;
+  else if(perf.rank===2)label=`${perf.ratingLabel||'高水平赛季'} · 争冠集团`;
+  const dims=perf.dimensionScores||{};
+  const weak=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,大场面能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
+  const strong=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,大场面能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
+  const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，联盟第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP，BGR指数${s.bgr}。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
+  const outlook=weak?`当前最需要提升的是${weak[0]}（${Number(weak[1]).toFixed(1)}）；赛季OVR只跟随${s.id}数据变化，不受历史赛季成绩影响。`:'继续积累当前赛季正式比赛样本。';
   return {label,summary,outlook};
 }
 function careerAssessment(r){
@@ -654,11 +781,12 @@ function reportFor(r,all){
 export function buildMslStatusCenter(players,matches,honors={}){
   const current=computePower(players,matches),previous=computePower(players,sortedMatches(matches).slice(0,-1));
   const prevBy=Object.fromEntries(previous.map(x=>[x.playerId,x])),careerBy=careerMetrics(players,matches,honors);
-  let rows=current.map(r=>{const prev=prevBy[r.playerId];return {...r,career:careerBy[r.playerId],movement:prev?prev.rank-r.rank:0,indexChange:prev?r.powerIndex-prev.powerIndex:0};});
+  const seasonRatingSystem=buildCurrentSeasonRatings(players,matches),seasonRatingBy=Object.fromEntries(seasonRatingSystem.rows.map(x=>[x.playerId,x]));
+  let rows=current.map(r=>{const prev=prevBy[r.playerId];return {...r,career:careerBy[r.playerId],seasonPerformance:seasonRatingBy[r.playerId]||null,movement:prev?prev.rank-r.rank:0,indexChange:prev?r.powerIndex-prev.powerIndex:0};});
   const types=archetypes(rows);rows=rows.map(r=>({...r,label:statusLabel(r),archetype:types[r.playerId]}));rows=rows.map(r=>({...r,report:reportFor(r,rows)}));
   const hottest=rows[0],coldest=rows.at(-1),riser=[...rows].sort((a,b)=>b.movement-a.movement||b.indexChange-a.indexChange)[0],volatile=[...rows].sort((a,b)=>b.recentStd-a.recentStd)[0],overall=[...rows].sort((a,b)=>b.career.overallRating-a.career.overallRating||a.playerId.localeCompare(b.playerId))[0];
   const latest=sortedMatches(matches).at(-1);let gameRecap=null;
   if(latest){const pp=played(latest).sort((a,b)=>num(b.score)-num(a.score)),top=pp[0],second=pp[1],bottom=pp.at(-1);gameRecap={title:`${top?.player||'本场赢家'}领跑最新一轮，${bottom?.player||'末位牌手'}承压`,meta:`${latest.season} 第${latest.round}局 · ${latest.date} · ${latest.venue||'未填写场地'}`,body:`${top?.player||'—'}以${top?`${num(top.score)>=0?'+':''}${num(top.score)}`:'—'}取得全场最高分${top?.isMvp?'并拿下MVP':''}，领先第二名${top&&second?num(top.score)-num(second.score):0}分；全场最大分差${top&&bottom?num(top.score)-num(bottom.score):0}分。`,scores:pp.map(x=>({player:x.player,score:num(x.score),isMvp:!!x.isMvp}))};}
   const storylines=[`🔥 当前最火热：${hottest.player}，状态指数${hottest.powerIndex}。`,`🧊 当前最低迷：${coldest.player}，状态指数${coldest.powerIndex}。`,`🏅 生涯综合评分最高：${overall.player}，OVR ${overall.career.overallRating}。`,`📈 行情上升最快：${riser.player}，${riser.movement>0?`实力榜上升${riser.movement}位`:`指数变化${riser.indexChange>=0?'+':''}${riser.indexChange}`}。`,`🌊 近期波动最大：${volatile.player}，波动指数${volatile.recentStd.toFixed(1)}。`];
-  return {rankings:rows,storylines,gameRecap,methodology:'状态指数：最近5场加权净分35% + 正分率20% + MVP15% + BGR10% + 走势10% + 相对当前赛季表现10%。生涯综合评分（OVR）：S1至当前全部赛季累计积分25% + 生涯场均20% + 生涯正分率15% + MVP率15% + 场均BGR10% + 官方荣誉积分15%，按联盟相对表现换算为50–99分。两套评分均不影响官方积分、荣誉或GOAT计算。'};
+  return {rankings:rows,storylines,gameRecap,currentSeasonRating:seasonRatingSystem,methodology:`状态指数：最近5场加权净分35% + 正分率20% + MVP15% + BGR10% + 走势10% + 相对当前赛季表现10%。${seasonRatingSystem.methodology} 生涯综合评分（OVR）：S1至当前全部赛季累计积分25% + 生涯场均20% + 生涯正分率15% + MVP率15% + 场均BGR10% + 官方荣誉积分15%。近期、赛季、生涯三套评价互相独立，均不改变官方积分和荣誉。`};
 }

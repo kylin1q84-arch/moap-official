@@ -1,6 +1,6 @@
 {
-  "name": "moap-msl-record-honor-goat",
-  "version": "1.8.2",
+  "name": "moap-msl-season-performance",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "scripts": {

@@ -20,7 +20,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v1.8.2 Directional Matchup Matrix</span>
+      <span class="badge" id="versionBadge">v1.9.0 Season Performance</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +33,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v1.8.2 Directional Matchup Matrix<br>
+        分析引擎：MOAP v1.9.0 Season Performance<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -47,7 +47,7 @@
         <div class="kpis" id="overviewKpis"></div>
         <div class="grid-2">
           <div class="card section">
-            <div class="section-head"><h3>生涯积分榜</h3><small>按总积分排序</small></div>
+            <div class="section-head overview-leaderboard-head"><div><h3 id="overviewLeaderboardTitle">生涯积分榜</h3><small id="overviewLeaderboardMeta">按总积分排序</small></div><label class="inline-filter">赛季<select id="overviewSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label></div>
             <div class="table-scroll"><table><thead><tr><th>排名</th><th>牌手</th><th>积分</th><th>场均</th><th>MVP</th><th>正分率</th></tr></thead><tbody id="overviewLeaderboard"></tbody></table></div>
           </div>
           <div class="card section">
@@ -136,9 +136,13 @@
           <div><h2>个人档案</h2><p>查看个人趋势、赛季表现、新制精准对位与官方荣誉。</p></div>
           <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
         </div>
-        <div class="card section" style="margin-bottom:16px">
+        <div class="card section player-profile-hero" style="margin-bottom:16px">
           <div class="player-head" id="playerHeader"></div>
           <div class="kpis" id="playerKpis" style="margin-top:16px;margin-bottom:0"></div>
+        </div>
+        <div class="card section current-season-performance-card" style="margin-bottom:16px">
+          <div class="section-head"><div><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
+          <div id="currentSeasonPerformance"></div>
         </div>
         <div class="grid-2">
           <div class="card section">
@@ -161,7 +165,7 @@
           </div>
         </div>
         <div class="card section" style="margin-bottom:16px">
-          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + 当前赛季 + S1至今生涯评价</small></div>
+          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + S1至今生涯评价</small></div>
           <div id="playerScouting"></div>
         </div>
         <div class="card section">

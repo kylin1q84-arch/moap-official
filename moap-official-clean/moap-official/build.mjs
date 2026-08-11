@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rm, stat, writeFile } from 'node:fs/promises'
+import { copyFile, cp, mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -31,6 +31,14 @@ for (const filename of sourceFiles) {
   await copyFile(sourcePath, outputPath)
 }
 
+try {
+  const assetsPath = join(projectRoot, 'assets')
+  const info = await stat(assetsPath)
+  if (info.isDirectory()) await cp(assetsPath, join(outputDir, 'assets'), { recursive: true })
+} catch {
+  // 头像资源尚未提供时允许正常构建；后续只需添加 assets/players/*.png。
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 
@@ -43,7 +51,7 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v1.8.2 Directional Precise Matchup Matrix build completed successfully.')
+console.log('MOAP v1.9.0 Season Performance build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
@@ -52,3 +60,5 @@ console.log('Unique honor engine: included')
 console.log('MSL form center and S1-current career evaluation: included')
 console.log('Historical, season and career record center: included')
 console.log('Fixed GOAT model and data validation: included')
+
+console.log('Current-season OVR, match detail matrix, honor process evidence and portrait reservation: included')
