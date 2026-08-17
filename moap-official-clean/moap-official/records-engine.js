@@ -21,6 +21,11 @@ function resultFor(match, playerId) {
   return (match.results || []).find(result => result.playerId === playerId);
 }
 
+function bgrValue(score) {
+  score = num(score);
+  return score >= 100 ? 12 : score >= 90 ? 8 : score >= 80 ? 5 : score >= 70 ? 3 : score >= 60 ? 2 : score >= 50 ? 1 : 0;
+}
+
 function displayNumber(value, unit, forcePlus = false) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
   const number = Number(value);
@@ -34,15 +39,12 @@ function displayNumber(value, unit, forcePlus = false) {
 function rankCandidates(candidates, direction = "desc") {
   const filtered = candidates.filter(candidate => candidate && Number.isFinite(Number(candidate.value)));
   filtered.sort((a, b) => {
-    const av = num(a.value);
-    const bv = num(b.value);
+    const av = num(a.value), bv = num(b.value);
     if (!eq(av, bv)) return direction === "asc" ? av - bv : bv - av;
     return String(a.createdAt || "9999").localeCompare(String(b.createdAt || "9999")) ||
-      String(a.playerId || "").localeCompare(String(b.playerId || "")) ||
-      String(a.season || "").localeCompare(String(b.season || ""), undefined, { numeric: true });
+      String(a.playerId || "").localeCompare(String(b.playerId || ""));
   });
-  let rank = 0;
-  let previous = null;
+  let rank = 0, previous = null;
   return filtered.map((candidate, index) => {
     if (previous == null || !eq(candidate.value, previous)) rank = index + 1;
     previous = candidate.value;
@@ -50,29 +52,19 @@ function rankCandidates(candidates, direction = "desc") {
   });
 }
 
-function makeRecord({ id, section, name, recordType, rule, unit, direction = "desc", candidates = [], requirePositive = false, forcePlus = false }) {
+function makeRecord({ id, section, name, rule, unit, direction = "desc", candidates = [], requirePositive = false, forcePlus = false }) {
   let ranking = rankCandidates(candidates, direction);
   if (requirePositive && (!ranking.length || num(ranking[0].value) <= 0)) ranking = [];
   const holderCandidates = ranking.filter(candidate => candidate.rank === 1);
   const holderMap = new Map();
   for (const candidate of holderCandidates) {
-    const key = section === "season" ? `${candidate.playerId}|${candidate.season}` : candidate.playerId;
-    const existing = holderMap.get(key);
-    if (!existing || String(candidate.createdAt || "9999").localeCompare(String(existing.createdAt || "9999")) < 0) {
-      holderMap.set(key, candidate);
-    }
+    const existing = holderMap.get(candidate.playerId);
+    if (!existing || String(candidate.createdAt || "9999").localeCompare(String(existing.createdAt || "9999")) < 0) holderMap.set(candidate.playerId, candidate);
   }
   const holders = [...holderMap.values()];
   const value = holderCandidates.length ? holderCandidates[0].value : null;
   return {
-    id,
-    section,
-    name,
-    recordType,
-    rule,
-    unit,
-    direction,
-    forcePlus,
+    id, section, name, rule, unit, direction, forcePlus,
     holders: holders.map(candidate => ({
       playerId: candidate.playerId,
       player: candidate.player,
@@ -110,11 +102,9 @@ function classifyMatch(match) {
   const nonNegative = rows.filter(result => num(result.score) >= 0);
   const negative = rows.filter(result => num(result.score) < 0);
   const soloWinnerId = nonNegative.length === 1 && rows.every(result => result.playerId === nonNegative[0].playerId || num(result.score) < 0)
-    ? nonNegative[0].playerId
-    : null;
+    ? nonNegative[0].playerId : null;
   const soloLoserId = negative.length === 1 && rows.every(result => result.playerId === negative[0].playerId || num(result.score) >= 0)
-    ? negative[0].playerId
-    : null;
+    ? negative[0].playerId : null;
   const metrics = Object.fromEntries(rows.map(result => {
     const opponents = rows.filter(other => other.playerId !== result.playerId);
     const opponentAverage = opponents.length ? mean(opponents.map(other => other.score)) : 0;
@@ -123,7 +113,7 @@ function classifyMatch(match) {
       isSoloWin: result.playerId === soloWinnerId,
       isSoloLoss: result.playerId === soloLoserId,
       isBigWin: opponents.length > 0 && dominanceMargin >= 100,
-      isBigStage: num(result.score) >= 50,
+      isExplosion: num(result.score) >= 50,
       opponentAverage,
       dominanceMargin
     }];
@@ -131,10 +121,13 @@ function classifyMatch(match) {
   return { rows, metrics };
 }
 
-function filterMatches(matches, type) {
-  if (type === "four") return sortedMatches(matches).filter(match => match.matchType === "四人局");
-  if (type === "five") return sortedMatches(matches).filter(match => match.matchType === "五人局");
-  return sortedMatches(matches);
+function selectMatches(matches, { season = "all", type = "all" } = {}) {
+  return sortedMatches(matches).filter(match => {
+    if (season !== "all" && match.season !== season) return false;
+    if (type === "four" && match.matchType !== "四人局") return false;
+    if (type === "five" && match.matchType !== "五人局") return false;
+    return true;
+  });
 }
 
 function playerSchedule(players, matches) {
@@ -154,7 +147,7 @@ function playerSchedule(players, matches) {
       isSoloWin: !!flags.isSoloWin,
       isSoloLoss: !!flags.isSoloLoss,
       isBigWin: !!flags.isBigWin,
-      isBigStage: !!flags.isBigStage,
+      isExplosion: !!flags.isExplosion,
       dominanceMargin: num(flags.dominanceMargin),
       opponentAverage: num(flags.opponentAverage)
     };
@@ -183,7 +176,6 @@ function buildStages(schedule, predicate, { ignoreAbsent = true } = {}) {
     });
     current = [];
   };
-
   for (const item of schedule) {
     if (item.absent && ignoreAbsent) continue;
     if (!item.absent && predicate(item)) current.push(item);
@@ -193,10 +185,10 @@ function buildStages(schedule, predicate, { ignoreAbsent = true } = {}) {
   return stages;
 }
 
-function historicalRecords(players, matches) {
+function singleRecords(players, matches) {
   const schedules = playerSchedule(players, matches);
-  const allEvents = Object.values(schedules).flat().filter(item => !item.absent);
-  const singleCandidates = predicate => allEvents.filter(predicate).map(item => ({
+  const events = Object.values(schedules).flat().filter(item => !item.absent);
+  const candidates = predicate => events.filter(predicate).map(item => ({
     playerId: item.playerId,
     player: item.player,
     value: item.score,
@@ -204,13 +196,9 @@ function historicalRecords(players, matches) {
     season: item.match.season,
     matchId: item.match.matchId,
     matchType: item.match.matchType,
-    evidence: [matchEvidence(item.match, item.result, {
-      dominanceMargin: item.dominanceMargin,
-      opponentAverage: item.opponentAverage
-    })]
+    evidence: [matchEvidence(item.match, item.result, { dominanceMargin: item.dominanceMargin, opponentAverage: item.opponentAverage })]
   }));
-
-  const dominanceCandidates = allEvents.map(item => ({
+  const dominance = events.map(item => ({
     playerId: item.playerId,
     player: item.player,
     value: item.dominanceMargin,
@@ -218,282 +206,177 @@ function historicalRecords(players, matches) {
     season: item.match.season,
     matchId: item.match.matchId,
     matchType: item.match.matchType,
-    evidence: [matchEvidence(item.match, item.result, {
-      dominanceMargin: item.dominanceMargin,
-      opponentAverage: item.opponentAverage
-    })]
+    evidence: [matchEvidence(item.match, item.result, { dominanceMargin: item.dominanceMargin, opponentAverage: item.opponentAverage })]
   }));
+  return [
+    makeRecord({ id:"HIST_SINGLE_HIGH", section:"single", name:"单场最高积分", rule:"所选范围内实际参赛牌手的最高单场积分。", unit:"分", candidates:candidates(() => true) }),
+    makeRecord({ id:"HIST_SINGLE_LOW", section:"single", name:"单场最低积分", rule:"所选范围内实际参赛牌手的最低单场积分。", unit:"分", direction:"asc", candidates:candidates(() => true) }),
+    makeRecord({ id:"HIST_MVP_HIGH", section:"single", name:"单场MVP最高积分", rule:"获得MVP的比赛中，MVP牌手的最高单场积分。", unit:"分", candidates:candidates(item => item.isMvp) }),
+    makeRecord({ id:"HIST_MVP_LOW", section:"single", name:"单场MVP最低积分", rule:"获得MVP的比赛中，MVP牌手的最低单场积分。", unit:"分", direction:"asc", candidates:candidates(item => item.isMvp) }),
+    makeRecord({ id:"HIST_SOLO_HIGH", section:"single", name:"单场独赢最高积分", rule:"独赢场次中的最高积分；独赢要求本人积分≥0且其他实际参赛牌手均＜0。", unit:"分", candidates:candidates(item => item.isSoloWin) }),
+    makeRecord({ id:"HIST_SOLO_LOW", section:"single", name:"单场独赢最低积分", rule:"独赢场次中的最低积分。", unit:"分", direction:"asc", candidates:candidates(item => item.isSoloWin) }),
+    makeRecord({ id:"HIST_MAX_LEAD", section:"single", name:"单场最大领先分差", rule:"单场本人积分－同场其他实际参赛牌手平均积分，取最高值。", unit:"分", forcePlus:true, candidates:dominance })
+  ];
+}
 
-  const stageMap = {};
+function continuousRecords(players, matches) {
+  const schedules = playerSchedule(players, matches);
   const stageDefinitions = {
     positive: item => item.score >= 0,
     negative: item => item.score < 0,
     mvp: item => item.isMvp,
     solo: item => item.isSoloWin,
-    bigwin: item => item.isBigWin,
-    bigstage: item => item.isBigStage
+    explosion: item => item.isExplosion
   };
+  const stages = {};
   for (const [key, predicate] of Object.entries(stageDefinitions)) {
-    stageMap[key] = Object.values(schedules).flatMap(schedule => buildStages(schedule, predicate, { ignoreAbsent: true }));
+    stages[key] = Object.values(schedules).flatMap(schedule => buildStages(schedule, predicate, { ignoreAbsent: true }));
   }
-  stageMap.participation = Object.values(schedules).flatMap(schedule => buildStages(schedule, () => true, { ignoreAbsent: false }));
-
-  const lengthCandidates = key => stageMap[key].map(stage => ({ ...stage, value: stage.length }));
-  const pointCandidates = key => stageMap[key].map(stage => ({ ...stage, value: stage.points }));
-
+  stages.participation = Object.values(schedules).flatMap(schedule => buildStages(schedule, () => true, { ignoreAbsent: false }));
+  const lengthCandidates = key => stages[key].map(stage => ({ ...stage, value: stage.length }));
+  const pointCandidates = key => stages[key].map(stage => ({ ...stage, value: stage.points }));
   return [
-    makeRecord({ id:"HIST_SINGLE_HIGH", section:"historical", name:"单场最高积分", recordType:"单场记录", rule:"所有正式比赛中实际参赛牌手的最高单场积分。", unit:"分", direction:"desc", candidates:singleCandidates(() => true) }),
-    makeRecord({ id:"HIST_SINGLE_LOW", section:"historical", name:"单场最低积分", recordType:"单场记录", rule:"所有正式比赛中实际参赛牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(() => true) }),
-    makeRecord({ id:"HIST_MVP_HIGH", section:"historical", name:"单场MVP最高积分", recordType:"单场记录", rule:"所有获得MVP的正式比赛中，MVP牌手的最高单场积分。", unit:"分", direction:"desc", candidates:singleCandidates(item => item.isMvp) }),
-    makeRecord({ id:"HIST_MVP_LOW", section:"historical", name:"单场MVP最低积分", recordType:"单场记录", rule:"所有获得MVP的正式比赛中，MVP牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(item => item.isMvp) }),
-    makeRecord({ id:"HIST_SOLO_HIGH", section:"historical", name:"单场独赢最高积分", recordType:"单场记录", rule:"独赢场次中牌手的最高单场积分；独赢要求本人积分≥0且其他实际参赛牌手均＜0。", unit:"分", direction:"desc", candidates:singleCandidates(item => item.isSoloWin) }),
-    makeRecord({ id:"HIST_SOLO_LOW", section:"historical", name:"单场独赢最低积分", recordType:"单场记录", rule:"独赢场次中牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(item => item.isSoloWin) }),
-    makeRecord({ id:"HIST_BIGWIN_HIGH", section:"historical", name:"单场大胜最高积分", recordType:"单场记录", rule:"大胜场次中牌手的最高单场积分；大胜要求本人积分减其他实际参赛牌手平均积分≥100。", unit:"分", direction:"desc", candidates:singleCandidates(item => item.isBigWin) }),
-    makeRecord({ id:"HIST_BIGWIN_LOW", section:"historical", name:"单场大胜最低积分", recordType:"单场记录", rule:"大胜场次中牌手的最低单场积分。", unit:"分", direction:"asc", candidates:singleCandidates(item => item.isBigWin) }),
-    makeRecord({ id:"HIST_MAX_LEAD", section:"historical", name:"单场最大领先分差", recordType:"单场记录", rule:"单场本人积分－同场其他实际参赛牌手平均积分，取历史最高值。", unit:"分", direction:"desc", forcePlus:true, candidates:dominanceCandidates }),
-
-    makeRecord({ id:"HIST_POS_STREAK", section:"historical", name:"最长连续正分场次", recordType:"连续记录", rule:"按个人实际参赛序列统计得分≥0的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("positive") }),
-    makeRecord({ id:"HIST_NEG_STREAK", section:"historical", name:"最长连续负分场次", recordType:"连续记录", rule:"按个人实际参赛序列统计得分＜0的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("negative") }),
-    makeRecord({ id:"HIST_POS_STAGE_POINTS", section:"historical", name:"最长连续正分阶段积分", recordType:"连续记录", rule:"所有连续正分阶段中累计积分最高的一段；详情同时展示阶段长度和逐场过程。", unit:"分", candidates:pointCandidates("positive") }),
-    makeRecord({ id:"HIST_NEG_STAGE_POINTS", section:"historical", name:"最长连续负分阶段积分", recordType:"连续记录", rule:"所有连续负分阶段中累计积分最低的一段；详情同时展示阶段长度和逐场过程。", unit:"分", direction:"asc", candidates:pointCandidates("negative") }),
-    makeRecord({ id:"HIST_MVP_STREAK", section:"historical", name:"最长连续MVP场次", recordType:"连续记录", rule:"按个人实际参赛序列统计连续获得MVP的最长场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("mvp") }),
-    makeRecord({ id:"HIST_MVP_STAGE_POINTS", section:"historical", name:"最长连续MVP阶段积分", recordType:"连续记录", rule:"所有连续MVP阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("mvp") }),
-    makeRecord({ id:"HIST_SOLO_STREAK", section:"historical", name:"最长连续独赢场次", recordType:"连续记录", rule:"按个人实际参赛序列统计连续独赢的最长场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("solo") }),
-    makeRecord({ id:"HIST_SOLO_STAGE_POINTS", section:"historical", name:"最长连续独赢阶段积分", recordType:"连续记录", rule:"所有连续独赢阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("solo") }),
-    makeRecord({ id:"HIST_BIGWIN_STREAK", section:"historical", name:"最长连续大胜场次", recordType:"连续记录", rule:"按个人实际参赛序列统计连续大胜的最长场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("bigwin") }),
-    makeRecord({ id:"HIST_BIGWIN_STAGE_POINTS", section:"historical", name:"最长连续大胜阶段积分", recordType:"连续记录", rule:"所有连续大胜阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("bigwin") }),
-    makeRecord({ id:"HIST_BIG_STAGE_STREAK", section:"historical", name:"最长连续大场面场次", recordType:"连续记录", rule:"按个人实际参赛序列统计单场积分≥50的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("bigstage") }),
-    makeRecord({ id:"HIST_BIG_STAGE_POINTS", section:"historical", name:"最长连续大场面阶段积分", recordType:"连续记录", rule:"所有连续大场面阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("bigstage") }),
-    makeRecord({ id:"HIST_PARTICIPATION_STREAK", section:"historical", name:"最长连续参赛场次", recordType:"连续记录", rule:"连续出席正式比赛的最长场次；缺席会中断。", unit:"场", candidates:lengthCandidates("participation") })
+    makeRecord({ id:"HIST_POS_STREAK", section:"continuous", name:"最长连续正分场次", rule:"按个人实际参赛序列统计得分≥0的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("positive") }),
+    makeRecord({ id:"HIST_NEG_STREAK", section:"continuous", name:"最长连续负分场次", rule:"按个人实际参赛序列统计得分＜0的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("negative") }),
+    makeRecord({ id:"HIST_POS_STAGE_POINTS", section:"continuous", name:"最长连续正分阶段积分", rule:"所有连续正分阶段中累计积分最高的一段；详情同时展示阶段长度和逐场过程。", unit:"分", candidates:pointCandidates("positive") }),
+    makeRecord({ id:"HIST_NEG_STAGE_POINTS", section:"continuous", name:"最长连续负分阶段积分", rule:"所有连续负分阶段中累计积分最低的一段；详情同时展示阶段长度和逐场过程。", unit:"分", direction:"asc", candidates:pointCandidates("negative") }),
+    makeRecord({ id:"HIST_MVP_STREAK", section:"continuous", name:"最长连续MVP场次", rule:"按个人实际参赛序列统计连续获得MVP的最长场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("mvp") }),
+    makeRecord({ id:"HIST_MVP_STAGE_POINTS", section:"continuous", name:"最长连续MVP阶段积分", rule:"所有连续MVP阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("mvp") }),
+    makeRecord({ id:"HIST_SOLO_STREAK", section:"continuous", name:"最长连续独赢场次", rule:"按个人实际参赛序列统计连续独赢的最长场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("solo") }),
+    makeRecord({ id:"HIST_SOLO_STAGE_POINTS", section:"continuous", name:"最长连续独赢阶段积分", rule:"所有连续独赢阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("solo") }),
+    makeRecord({ id:"HIST_BIG_STAGE_STREAK", section:"continuous", name:"最长连续爆发场次", rule:"按个人实际参赛序列统计单场积分≥50的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("explosion") }),
+    makeRecord({ id:"HIST_BIG_STAGE_POINTS", section:"continuous", name:"最长连续爆发阶段积分", rule:"所有连续爆发阶段中累计积分最高的一段；爆发定义为单场积分≥50。", unit:"分", candidates:pointCandidates("explosion") }),
+    makeRecord({ id:"HIST_PARTICIPATION_STREAK", section:"continuous", name:"最长连续参赛场次", rule:"连续出席正式比赛的最长场次；缺席会中断。", unit:"场", candidates:lengthCandidates("participation") })
   ];
 }
 
-function seasonCandidateRows(players, matches) {
-  const seasons = [...new Set(matches.map(match => match.season))].filter(Boolean).sort((a, b) => seasonNumber(a) - seasonNumber(b));
-  const rows = [];
-  for (const season of seasons) {
-    const seasonMatches = matches.filter(match => match.season === season);
-    const schedules = playerSchedule(players, seasonMatches);
-    const playerRows = [];
-
-    for (const player of players.filter(item => seasonNumber(item.joinSeason) <= seasonNumber(season))) {
-      const schedule = schedules[player.playerId] || [];
-      const entries = schedule.filter(item => !item.absent);
-      if (!entries.length) continue;
-      const positive = entries.filter(item => item.score >= 0);
-      const negative = entries.filter(item => item.score < 0);
-      const mvp = entries.filter(item => item.isMvp);
-      const solo = entries.filter(item => item.isSoloWin);
-      const bigwin = entries.filter(item => item.isBigWin);
-      const stages = {
-        positive: buildStages(schedule, item => item.score >= 0),
-        negative: buildStages(schedule, item => item.score < 0),
-        mvp: buildStages(schedule, item => item.isMvp),
-        solo: buildStages(schedule, item => item.isSoloWin),
-        bigwin: buildStages(schedule, item => item.isBigWin),
-        bigstage: buildStages(schedule, item => item.isBigStage)
-      };
-      const longest = key => Math.max(0, ...stages[key].map(stage => stage.length));
-      const maxPoints = key => Math.max(0, ...stages[key].map(stage => stage.points));
-      const minPoints = key => Math.min(0, ...stages[key].map(stage => stage.points));
-      const lastDate = entries.at(-1).match.date;
-      const evidence = entries.map(item => matchEvidence(item.match, item.result, {
-        dominanceMargin: item.dominanceMargin,
-        opponentAverage: item.opponentAverage
-      }));
-      playerRows.push({
-        playerId: player.playerId,
-        player: player.name,
-        season,
-        createdAt: lastDate,
-        evidence,
-        games: entries.length,
-        scheduledGames: seasonMatches.length,
-        sampleEligible: entries.length >= 3 && entries.length / Math.max(1, seasonMatches.length) >= 0.5,
-        total: sum(entries.map(item => item.score)),
-        average: mean(entries.map(item => item.score)),
-        positiveCount: positive.length,
-        negativeCount: negative.length,
-        positiveTotal: sum(positive.map(item => item.score)),
-        negativeTotal: sum(negative.map(item => item.score)),
-        mvpCount: mvp.length,
-        mvpTotal: sum(mvp.map(item => item.score)),
-        soloCount: solo.length,
-        soloTotal: sum(solo.map(item => item.score)),
-        bigWinCount: bigwin.length,
-        bigWinTotal: sum(bigwin.map(item => item.score)),
-        positiveStreak: longest("positive"),
-        negativeStreak: longest("negative"),
-        positiveStagePoints: maxPoints("positive"),
-        negativeStagePoints: minPoints("negative"),
-        mvpStreak: longest("mvp"),
-        mvpStagePoints: maxPoints("mvp"),
-        soloStreak: longest("solo"),
-        soloStagePoints: maxPoints("solo"),
-        bigWinStreak: longest("bigwin"),
-        bigWinStagePoints: maxPoints("bigwin"),
-        bigStageStreak: longest("bigstage"),
-        bigStagePoints: maxPoints("bigstage")
-      });
-    }
-
-    for (const row of playerRows) {
-      const opponents = playerRows.filter(other => other.playerId !== row.playerId);
-      row.seasonLead = row.total - (opponents.length ? mean(opponents.map(other => other.total)) : 0);
-    }
-    rows.push(...playerRows);
-  }
-  return rows;
+function buildRecordView(players, matches, season, type) {
+  const selected = selectMatches(matches, { season, type });
+  return {
+    single: singleRecords(players, selected),
+    continuous: continuousRecords(players, selected)
+  };
 }
 
-function seasonRecords(players, matches) {
-  const rows = seasonCandidateRows(players, matches);
-  const candidates = (key, eligibility = () => true) => rows.filter(eligibility).map(row => ({ ...row, value: row[key] }));
-  const countRecord = (config, key) => makeRecord({ ...config, section:"season", recordType:"赛季记录", unit:"场", candidates:candidates(key), requirePositive:true });
-  const pointsRecord = (config, key, direction = "desc", eligibility = () => true) => makeRecord({ ...config, section:"season", recordType:"赛季记录", unit:"分", direction, candidates:candidates(key, eligibility) });
-
-  return [
-    pointsRecord({ id:"SEASON_TOTAL_HIGH", name:"赛季最高累计积分", rule:"以牌手单赛季最终累计积分为候选，取历史最高值。" }, "total"),
-    pointsRecord({ id:"SEASON_TOTAL_LOW", name:"赛季最低累计积分", rule:"以牌手单赛季最终累计积分为候选，取历史最低值。" }, "total", "asc"),
-    makeRecord({ id:"SEASON_AVG_HIGH", section:"season", name:"赛季最高场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最高值；须参加对应赛程至少50%，且不少于3场。", unit:"分/场", candidates:candidates("average", row => row.sampleEligible) }),
-    makeRecord({ id:"SEASON_AVG_LOW", section:"season", name:"赛季最低场均积分", recordType:"赛季记录", rule:"单赛季总积分÷实际参赛场次，取历史最低值；须参加对应赛程至少50%，且不少于3场。", unit:"分/场", direction:"asc", candidates:candidates("average", row => row.sampleEligible) }),
-    countRecord({ id:"SEASON_POS_COUNT", name:"赛季最多正分场次", rule:"单赛季得分≥0的场次最多。" }, "positiveCount"),
-    countRecord({ id:"SEASON_NEG_COUNT", name:"赛季最多负分场次", rule:"单赛季得分＜0的场次最多。" }, "negativeCount"),
-    pointsRecord({ id:"SEASON_POS_TOTAL_HIGH", name:"赛季正分场次最高累计积分", rule:"只累计单赛季正分场次积分，取历史最高值。" }, "positiveTotal", "desc", row => row.positiveCount > 0),
-    pointsRecord({ id:"SEASON_NEG_TOTAL_HIGH", name:"赛季负分场次最高累计积分", rule:"只累计单赛季负分场次积分，取数值最高者。" }, "negativeTotal", "desc", row => row.negativeCount > 0),
-    pointsRecord({ id:"SEASON_POS_TOTAL_LOW", name:"赛季正分场次最低累计积分", rule:"只累计单赛季正分场次积分，取数值最低者。" }, "positiveTotal", "asc", row => row.positiveCount > 0),
-    pointsRecord({ id:"SEASON_NEG_TOTAL_LOW", name:"赛季负分场次最低累计积分", rule:"只累计单赛季负分场次积分，取数值最低者。" }, "negativeTotal", "asc", row => row.negativeCount > 0),
-    countRecord({ id:"SEASON_MVP_COUNT", name:"赛季最多MVP场次", rule:"单赛季获得MVP的场次最多。" }, "mvpCount"),
-    pointsRecord({ id:"SEASON_MVP_TOTAL_HIGH", name:"赛季MVP场次最高累计积分", rule:"只累计获得MVP的场次积分，取历史最高值。" }, "mvpTotal", "desc", row => row.mvpCount > 0),
-    pointsRecord({ id:"SEASON_MVP_TOTAL_LOW", name:"赛季MVP场次最低累计积分", rule:"只累计获得MVP的场次积分，取历史最低值。" }, "mvpTotal", "asc", row => row.mvpCount > 0),
-    countRecord({ id:"SEASON_SOLO_COUNT", name:"赛季最多独赢场次", rule:"单赛季独赢场次最多。" }, "soloCount"),
-    pointsRecord({ id:"SEASON_SOLO_TOTAL_HIGH", name:"赛季独赢场次最高累计积分", rule:"只累计单赛季独赢场次积分，取历史最高值。" }, "soloTotal", "desc", row => row.soloCount > 0),
-    pointsRecord({ id:"SEASON_SOLO_TOTAL_LOW", name:"赛季独赢场次最低累计积分", rule:"只累计单赛季独赢场次积分，取历史最低值。" }, "soloTotal", "asc", row => row.soloCount > 0),
-    countRecord({ id:"SEASON_BIGWIN_COUNT", name:"赛季最多大胜场次", rule:"单赛季大胜场次最多；大胜要求本人积分减其他牌手平均积分≥100。" }, "bigWinCount"),
-    pointsRecord({ id:"SEASON_BIGWIN_TOTAL_HIGH", name:"赛季大胜场次最高累计积分", rule:"只累计单赛季大胜场次的本人积分，取历史最高值。" }, "bigWinTotal", "desc", row => row.bigWinCount > 0),
-    pointsRecord({ id:"SEASON_BIGWIN_TOTAL_LOW", name:"赛季大胜场次最低累计积分", rule:"只累计单赛季大胜场次的本人积分，取历史最低值。" }, "bigWinTotal", "asc", row => row.bigWinCount > 0),
-    countRecord({ id:"SEASON_POS_STREAK", name:"赛季最长连续正分场次", rule:"单赛季个人实际参赛序列中最长连续正分场次。" }, "positiveStreak"),
-    countRecord({ id:"SEASON_NEG_STREAK", name:"赛季最长连续负分场次", rule:"单赛季个人实际参赛序列中最长连续负分场次。" }, "negativeStreak"),
-    pointsRecord({ id:"SEASON_POS_STAGE_POINTS", name:"赛季最长连续正分阶段积分", rule:"单赛季连续正分阶段累计积分最高值。" }, "positiveStagePoints"),
-    pointsRecord({ id:"SEASON_NEG_STAGE_POINTS", name:"赛季最长连续负分阶段积分", rule:"单赛季连续负分阶段累计积分最低值。" }, "negativeStagePoints", "asc"),
-    countRecord({ id:"SEASON_MVP_STREAK", name:"赛季最长连续MVP场次", rule:"单赛季最长连续MVP场次。" }, "mvpStreak"),
-    pointsRecord({ id:"SEASON_MVP_STAGE_POINTS", name:"赛季最长连续MVP阶段积分", rule:"单赛季连续MVP阶段累计积分最高值。" }, "mvpStagePoints", "desc", row => row.mvpCount > 0),
-    countRecord({ id:"SEASON_SOLO_STREAK", name:"赛季最长连续独赢场次", rule:"单赛季最长连续独赢场次。" }, "soloStreak"),
-    pointsRecord({ id:"SEASON_SOLO_STAGE_POINTS", name:"赛季最长连续独赢阶段积分", rule:"单赛季连续独赢阶段累计积分最高值。" }, "soloStagePoints", "desc", row => row.soloCount > 0),
-    countRecord({ id:"SEASON_BIGWIN_STREAK", name:"赛季最长连续大胜场次", rule:"单赛季最长连续大胜场次。" }, "bigWinStreak"),
-    pointsRecord({ id:"SEASON_BIGWIN_STAGE_POINTS", name:"赛季最长连续大胜阶段积分", rule:"单赛季连续大胜阶段累计积分最高值。" }, "bigWinStagePoints", "desc", row => row.bigWinCount > 0),
-    countRecord({ id:"SEASON_BIG_STAGE_STREAK", name:"赛季最长连续大场面场次", rule:"单赛季最长连续50+场次。" }, "bigStageStreak"),
-    pointsRecord({ id:"SEASON_BIG_STAGE_POINTS", name:"赛季最长连续大场面阶段积分", rule:"单赛季连续50+阶段累计积分最高值。" }, "bigStagePoints", "desc", row => row.bigStageStreak > 0),
-    makeRecord({ id:"SEASON_MAX_LEAD", section:"season", name:"赛季最大领先分差", recordType:"赛季记录", rule:"赛季本人最终积分－同赛季其他实际参赛牌手最终积分平均值。", unit:"分", forcePlus:true, candidates:candidates("seasonLead") })
-  ];
+function rankedRows(rows, comparator, sameRank) {
+  const sorted = [...rows].sort(comparator);
+  let rank = 0, previous = null;
+  return sorted.map((row, index) => {
+    if (previous == null || !sameRank(row, previous)) rank = index + 1;
+    previous = row;
+    return { ...row, rank };
+  });
 }
 
-function careerRows(players, matches) {
-  const schedules = playerSchedule(players, matches);
+function summaryRows(players, matches, season, type) {
+  const selected = selectMatches(matches, { season, type });
+  const schedules = playerSchedule(players, selected);
   return players.map(player => {
     const entries = (schedules[player.playerId] || []).filter(item => !item.absent);
+    if (!entries.length) return null;
+    const mvp = entries.filter(item => item.isMvp);
     const positive = entries.filter(item => item.score >= 0);
     const negative = entries.filter(item => item.score < 0);
-    const mvp = entries.filter(item => item.isMvp);
-    const soloWins = entries.filter(item => item.isSoloWin);
-    const soloLosses = entries.filter(item => item.isSoloLoss);
-    const bigWins = entries.filter(item => item.isBigWin);
-    const latest = entries.at(-1);
-    const baseEvidence = items => items.map(item => matchEvidence(item.match, item.result, {
-      dominanceMargin: item.dominanceMargin,
-      opponentAverage: item.opponentAverage
-    }));
+    const soloWin = entries.filter(item => item.isSoloWin);
+    const soloLoss = entries.filter(item => item.isSoloLoss);
+    const make = items => ({
+      count: items.length,
+      points: sum(items.map(item => item.score)),
+      average: mean(items.map(item => item.score)),
+      rate: entries.length ? items.length / entries.length : 0
+    });
     return {
       playerId: player.playerId,
       player: player.name,
-      createdAt: latest?.match.date || "—",
-      season: "CAREER",
-      evidence: baseEvidence(entries),
+      games: entries.length,
       total: sum(entries.map(item => item.score)),
-      mvpCount: mvp.length,
-      mvpTotal: sum(mvp.map(item => item.score)),
-      mvpEvidence: baseEvidence(mvp),
-      positiveCount: positive.length,
-      positiveTotal: sum(positive.map(item => item.score)),
-      positiveEvidence: baseEvidence(positive),
-      negativeCount: negative.length,
-      negativeEvidence: baseEvidence(negative),
-      soloWinCount: soloWins.length,
-      soloLossCount: soloLosses.length,
-      soloWinTotal: sum(soloWins.map(item => item.score)),
-      soloLossTotal: sum(soloLosses.map(item => item.score)),
-      soloWinEvidence: baseEvidence(soloWins),
-      soloLossEvidence: baseEvidence(soloLosses),
-      bigWinCount: bigWins.length,
-      bigWinTotal: sum(bigWins.map(item => item.score)),
-      bigWinEvidence: baseEvidence(bigWins),
-      over50: entries.filter(item => item.score >= 50 && item.score < 60).length,
-      over60: entries.filter(item => item.score >= 60 && item.score < 70).length,
-      over70: entries.filter(item => item.score >= 70 && item.score < 80).length,
-      over80: entries.filter(item => item.score >= 80 && item.score < 90).length,
-      over90: entries.filter(item => item.score >= 90 && item.score < 100).length,
-      over100: entries.filter(item => item.score >= 100).length,
-      over50Evidence: baseEvidence(entries.filter(item => item.score >= 50 && item.score < 60)),
-      over60Evidence: baseEvidence(entries.filter(item => item.score >= 60 && item.score < 70)),
-      over70Evidence: baseEvidence(entries.filter(item => item.score >= 70 && item.score < 80)),
-      over80Evidence: baseEvidence(entries.filter(item => item.score >= 80 && item.score < 90)),
-      over90Evidence: baseEvidence(entries.filter(item => item.score >= 90 && item.score < 100)),
-      over100Evidence: baseEvidence(entries.filter(item => item.score >= 100))
+      average: mean(entries.map(item => item.score)),
+      mvp: make(mvp),
+      positive: make(positive),
+      negative: make(negative),
+      soloWin: make(soloWin),
+      soloLoss: make(soloLoss),
+      entries
     };
-  });
+  }).filter(Boolean);
 }
 
-function careerRecords(players, matches) {
-  const rows = careerRows(players, matches);
-  const candidates = (key, evidenceKey = "evidence", eligibility = () => true) => rows.filter(eligibility).map(row => {
-    const evidence = row[evidenceKey] || row.evidence || [];
+export function buildDataLeaderboard(players, matches, { season = "all", type = "all", metric = "points" } = {}) {
+  const rows = summaryRows(players, matches, season, type);
+  const cmpText = (a, b) => String(a.playerId).localeCompare(String(b.playerId));
+  let comparator, sameRank;
+  if (metric === "mvp") {
+    comparator = (a,b)=>b.mvp.count-a.mvp.count || b.mvp.rate-a.mvp.rate || b.mvp.points-a.mvp.points || cmpText(a,b);
+    sameRank = (a,b)=>a.mvp.count===b.mvp.count && eq(a.mvp.rate,b.mvp.rate) && eq(a.mvp.points,b.mvp.points);
+  } else if (metric === "positive") {
+    comparator = (a,b)=>b.positive.count-a.positive.count || b.positive.rate-a.positive.rate || b.positive.points-a.positive.points || cmpText(a,b);
+    sameRank = (a,b)=>a.positive.count===b.positive.count && eq(a.positive.rate,b.positive.rate) && eq(a.positive.points,b.positive.points);
+  } else if (metric === "negative") {
+    comparator = (a,b)=>b.negative.count-a.negative.count || b.negative.rate-a.negative.rate || a.negative.points-b.negative.points || cmpText(a,b);
+    sameRank = (a,b)=>a.negative.count===b.negative.count && eq(a.negative.rate,b.negative.rate) && eq(a.negative.points,b.negative.points);
+  } else if (metric === "soloWin") {
+    comparator = (a,b)=>b.soloWin.count-a.soloWin.count || b.soloWin.rate-a.soloWin.rate || b.soloWin.points-a.soloWin.points || cmpText(a,b);
+    sameRank = (a,b)=>a.soloWin.count===b.soloWin.count && eq(a.soloWin.rate,b.soloWin.rate) && eq(a.soloWin.points,b.soloWin.points);
+  } else if (metric === "soloLoss") {
+    comparator = (a,b)=>b.soloLoss.count-a.soloLoss.count || b.soloLoss.rate-a.soloLoss.rate || a.soloLoss.points-b.soloLoss.points || cmpText(a,b);
+    sameRank = (a,b)=>a.soloLoss.count===b.soloLoss.count && eq(a.soloLoss.rate,b.soloLoss.rate) && eq(a.soloLoss.points,b.soloLoss.points);
+  } else {
+    comparator = (a,b)=>b.total-a.total || b.average-a.average || cmpText(a,b);
+    sameRank = (a,b)=>eq(a.total,b.total) && eq(a.average,b.average);
+  }
+  return rankedRows(rows, comparator, sameRank);
+}
+
+export function buildExplosionLeaderboard(players, matches, { season = "all", type = "all" } = {}) {
+  const selected = selectMatches(matches, { season, type });
+  const schedules = playerSchedule(players, selected);
+  const rows = players.map(player => {
+    const entries = (schedules[player.playerId] || []).filter(item => !item.absent);
+    if (!entries.length) return null;
+    const explosions = entries.filter(item => item.score >= 50);
+    const bins = { over50:0, over60:0, over70:0, over80:0, over90:0, over100:0 };
+    for (const item of explosions) {
+      const score = item.score;
+      if (score >= 100) bins.over100 += 1;
+      else if (score >= 90) bins.over90 += 1;
+      else if (score >= 80) bins.over80 += 1;
+      else if (score >= 70) bins.over70 += 1;
+      else if (score >= 60) bins.over60 += 1;
+      else bins.over50 += 1;
+    }
     return {
-      ...row,
-      value: row[key],
-      evidence,
-      createdAt: evidence.at(-1)?.date || row.createdAt
+      playerId: player.playerId,
+      player: player.name,
+      games: entries.length,
+      explosionCount: explosions.length,
+      explosionPoints: sum(explosions.map(item => item.score)),
+      explosionAverage: mean(explosions.map(item => item.score)),
+      explosionRate: entries.length ? explosions.length / entries.length : 0,
+      bgr: sum(explosions.map(item => bgrValue(item.score))),
+      ...bins
     };
-  });
-  const countRecord = (id, name, rule, key, evidenceKey = "evidence") => makeRecord({ id, section:"career", name, recordType:"生涯记录", rule, unit:"场", candidates:candidates(key, evidenceKey), requirePositive:true });
-  const pointsRecord = (id, name, rule, key, direction = "desc", evidenceKey = "evidence", eligibility = () => true) => makeRecord({ id, section:"career", name, recordType:"生涯记录", rule, unit:"分", direction, candidates:candidates(key, evidenceKey, eligibility) });
-  return [
-    countRecord("CAREER_MVP_COUNT", "生涯MVP场次", "生涯获得MVP的场次最多。", "mvpCount", "mvpEvidence"),
-    pointsRecord("CAREER_MVP_TOTAL", "生涯MVP场次总积分", "生涯所有MVP场次的本人积分累计最高。", "mvpTotal", "desc", "mvpEvidence", row => row.mvpCount > 0),
-    countRecord("CAREER_POS_COUNT", "生涯正分场次", "生涯得分≥0的场次最多。", "positiveCount", "positiveEvidence"),
-    pointsRecord("CAREER_POS_TOTAL", "生涯正分场次总积分", "生涯所有正分场次的本人积分累计最高。", "positiveTotal", "desc", "positiveEvidence", row => row.positiveCount > 0),
-    countRecord("CAREER_NEG_COUNT", "生涯负分场次", "生涯得分＜0的场次最多。", "negativeCount", "negativeEvidence"),
-    countRecord("CAREER_SOLO_WIN_COUNT", "生涯独赢场次", "生涯独赢场次最多。", "soloWinCount", "soloWinEvidence"),
-    countRecord("CAREER_SOLO_LOSS_COUNT", "生涯独输场次", "独输指本人＜0且其他实际参赛牌手均≥0；统计生涯独输场次最多。", "soloLossCount", "soloLossEvidence"),
-    pointsRecord("CAREER_SOLO_WIN_TOTAL", "生涯独赢场次总积分", "生涯所有独赢场次的本人积分累计最高。", "soloWinTotal", "desc", "soloWinEvidence", row => row.soloWinCount > 0),
-    pointsRecord("CAREER_SOLO_LOSS_TOTAL", "生涯独输场次总积分", "生涯所有独输场次的本人积分累计最低。", "soloLossTotal", "asc", "soloLossEvidence", row => row.soloLossCount > 0),
-    countRecord("CAREER_BIGWIN_COUNT", "生涯大胜场次", "生涯大胜场次最多。", "bigWinCount", "bigWinEvidence"),
-    pointsRecord("CAREER_BIGWIN_TOTAL", "生涯大胜场次总积分", "生涯所有大胜场次的本人积分累计最高。", "bigWinTotal", "desc", "bigWinEvidence", row => row.bigWinCount > 0),
-    countRecord("CAREER_50", "生涯50+大场面场次", "生涯单场积分50–59分的累计场次；大场面档位互斥，每场只计入一个档位。", "over50", "over50Evidence"),
-    countRecord("CAREER_60", "生涯60+大场面场次", "生涯单场积分60–69分的累计场次；大场面档位互斥。", "over60", "over60Evidence"),
-    countRecord("CAREER_70", "生涯70+大场面场次", "生涯单场积分70–79分的累计场次；大场面档位互斥。", "over70", "over70Evidence"),
-    countRecord("CAREER_80", "生涯80+大场面场次", "生涯单场积分80–89分的累计场次；大场面档位互斥。", "over80", "over80Evidence"),
-    countRecord("CAREER_90", "生涯90+大场面场次", "生涯单场积分90–99分的累计场次；大场面档位互斥。", "over90", "over90Evidence"),
-    countRecord("CAREER_100", "生涯100+大场面场次", "生涯单场积分≥100分的累计场次；大场面档位互斥。", "over100", "over100Evidence")
-  ];
-}
-
-function buildView(players, matches, type) {
-  const selectedMatches = filterMatches(matches, type);
-  return {
-    historical: historicalRecords(players, selectedMatches),
-    season: seasonRecords(players, selectedMatches),
-    career: careerRecords(players, selectedMatches)
-  };
+  }).filter(Boolean);
+  return rankedRows(rows,
+    (a,b)=>b.explosionCount-a.explosionCount || b.bgr-a.bgr || b.explosionPoints-a.explosionPoints || b.explosionAverage-a.explosionAverage || String(a.playerId).localeCompare(String(b.playerId)),
+    (a,b)=>a.explosionCount===b.explosionCount && a.bgr===b.bgr && eq(a.explosionPoints,b.explosionPoints) && eq(a.explosionAverage,b.explosionAverage)
+  );
 }
 
 export function buildRecordCenter(players, matches) {
+  const availableSeasons = [...new Set((matches || []).map(match => match.season).filter(Boolean))].sort((a,b)=>seasonNumber(a)-seasonNumber(b));
+  const seasonKeys = ["all", ...availableSeasons];
+  const views = {};
+  for (const season of seasonKeys) {
+    views[season] = {
+      all: buildRecordView(players, matches, season, "all"),
+      four: buildRecordView(players, matches, season, "four"),
+      five: buildRecordView(players, matches, season, "five")
+    };
+  }
   return {
     generatedAt: new Date().toISOString(),
-    views: {
-      all: buildView(players, matches, "all"),
-      four: buildView(players, matches, "four"),
-      five: buildView(players, matches, "five")
-    },
-    methodology: "记录中心全部由正式比赛数据实时重算。历史记录按单场或连续阶段比较；赛季记录以牌手＋赛季为候选；生涯记录使用S1至当前全部正式比赛。场均类记录须达到对应赛程50%且不少于3场；50+至100+大场面采用互斥档位。记录允许并列保持，不影响官方荣誉评选。"
+    seasons: availableSeasons,
+    views,
+    methodology: "记录中心由正式比赛数据实时重算。单场记录只比较单场表现；连续记录按所选赛季与比赛类型内的个人实际参赛序列计算，缺席在表现连续记录中不增加也不中断，在连续参赛记录中会中断。爆发定义为单场积分≥50。记录允许并列保持。"
   };
 }

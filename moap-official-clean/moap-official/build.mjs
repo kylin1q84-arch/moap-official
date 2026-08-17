@@ -51,14 +51,14 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v1.9.0 Season Performance build completed successfully.')
+console.log('MOAP v2.0.0 Monthly & Record Center build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
 console.log('Directional precise matchup matrix: included')
 console.log('Unique honor engine: included')
 console.log('MSL form center and S1-current career evaluation: included')
-console.log('Historical, season and career record center: included')
+console.log('Single/continuous record center, data leaderboards and explosion board: included')
 console.log('Fixed GOAT model and data validation: included')
 
-console.log('Current-season OVR, match detail matrix, honor process evidence and portrait reservation: included')
+console.log('Monthly report, current-season OVR, match detail matrix, honor process evidence and portrait reservation: included')

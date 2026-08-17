@@ -142,25 +142,17 @@ function careerMetrics(players, matches) {
 }
 
 const NEGATIVE_RECORD_IDS = new Set([
-  "HIST_SINGLE_LOW", "HIST_MVP_LOW", "HIST_SOLO_LOW", "HIST_BIGWIN_LOW", "HIST_NEG_STREAK", "HIST_NEG_STAGE_POINTS",
-  "SEASON_TOTAL_LOW", "SEASON_AVG_LOW", "SEASON_NEG_COUNT", "SEASON_NEG_TOTAL_HIGH", "SEASON_NEG_TOTAL_LOW",
-  "SEASON_POS_TOTAL_LOW", "SEASON_MVP_TOTAL_LOW", "SEASON_SOLO_TOTAL_LOW", "SEASON_BIGWIN_TOTAL_LOW", "SEASON_NEG_STREAK", "SEASON_NEG_STAGE_POINTS",
-  "CAREER_NEG_COUNT", "CAREER_SOLO_LOSS_COUNT", "CAREER_SOLO_LOSS_TOTAL"
+  "HIST_SINGLE_LOW", "HIST_MVP_LOW", "HIST_SOLO_LOW",
+  "HIST_NEG_STREAK", "HIST_NEG_STAGE_POINTS"
 ]);
 
 const S_TIER = new Set([
-  "HIST_SINGLE_HIGH", "HIST_MVP_STREAK", "HIST_MVP_STAGE_POINTS",
-  "SEASON_TOTAL_HIGH", "SEASON_AVG_HIGH", "SEASON_MVP_COUNT", "SEASON_MVP_TOTAL_HIGH", "SEASON_MAX_LEAD",
-  "CAREER_MVP_COUNT", "CAREER_MVP_TOTAL"
+  "HIST_SINGLE_HIGH", "HIST_MVP_STREAK", "HIST_MVP_STAGE_POINTS"
 ]);
 const A_TIER = new Set([
-  "HIST_MVP_HIGH", "HIST_SOLO_HIGH", "HIST_BIGWIN_HIGH", "HIST_MAX_LEAD", "HIST_POS_STREAK", "HIST_POS_STAGE_POINTS",
-  "HIST_SOLO_STREAK", "HIST_SOLO_STAGE_POINTS", "HIST_BIGWIN_STREAK", "HIST_BIGWIN_STAGE_POINTS", "HIST_BIG_STAGE_STREAK",
-  "HIST_BIG_STAGE_POINTS", "HIST_PARTICIPATION_STREAK", "SEASON_POS_COUNT", "SEASON_POS_TOTAL_HIGH", "SEASON_SOLO_COUNT",
-  "SEASON_SOLO_TOTAL_HIGH", "SEASON_BIGWIN_COUNT", "SEASON_BIGWIN_TOTAL_HIGH", "SEASON_POS_STREAK", "SEASON_POS_STAGE_POINTS",
-  "SEASON_MVP_STREAK", "SEASON_MVP_STAGE_POINTS", "SEASON_SOLO_STREAK", "SEASON_SOLO_STAGE_POINTS", "SEASON_BIGWIN_STREAK",
-  "SEASON_BIGWIN_STAGE_POINTS", "SEASON_BIG_STAGE_STREAK", "SEASON_BIG_STAGE_POINTS", "CAREER_POS_COUNT", "CAREER_POS_TOTAL",
-  "CAREER_SOLO_WIN_COUNT", "CAREER_SOLO_WIN_TOTAL", "CAREER_BIGWIN_COUNT", "CAREER_BIGWIN_TOTAL"
+  "HIST_MVP_HIGH", "HIST_SOLO_HIGH", "HIST_MAX_LEAD",
+  "HIST_POS_STREAK", "HIST_POS_STAGE_POINTS", "HIST_SOLO_STREAK", "HIST_SOLO_STAGE_POINTS",
+  "HIST_BIG_STAGE_STREAK", "HIST_BIG_STAGE_POINTS", "HIST_PARTICIPATION_STREAK"
 ]);
 
 function recordTier(recordId) {
@@ -173,8 +165,8 @@ function recordMetrics(players, recordCenter) {
   const byPlayer = Object.fromEntries(players.map(player => [player.playerId, {
     playerId: player.playerId, player: player.name, recordCount: 0, weightedRecords: 0, leadBonus: 0, records: []
   }]));
-  const sections = recordCenter?.views?.all || {};
-  for (const sectionName of ["historical", "season", "career"]) {
+  const sections = recordCenter?.views?.all?.all || {};
+  for (const sectionName of ["single", "continuous"]) {
     for (const record of sections[sectionName] || []) {
       if (NEGATIVE_RECORD_IDS.has(record.id) || record.value == null || !record.holders?.length) continue;
       const tier = recordTier(record.id);
@@ -302,7 +294,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
 
   return {
     rows,
-    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋历史纪录15%＋持续性与适应性15%。A级荣誉按原分值计入，铁人奖按5分全额计入，其余B级荣誉采用递减系数；C级及负向纪录不加分。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
+    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。A级荣誉按原分值计入，铁人奖按5分全额计入，其余B级荣誉采用递减系数；C级及负向纪录不加分。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
   };
 }
 

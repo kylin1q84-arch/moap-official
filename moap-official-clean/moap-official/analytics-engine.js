@@ -143,6 +143,58 @@ function cumulativeSwing(entries) {
   };
 }
 
+
+function comebackMetrics(entries) {
+  if (!entries || entries.length < 2) {
+    return { comebackAmplitude:0, comebackPositiveTotal:0, comebackMvps:0, comebackLow:0, comebackPeak:0, comebackLowDate:null, comebackPeakDate:null, comebackEvidence:[] };
+  }
+  let cumulative = 0;
+  const points = entries.map(entry => { cumulative += num(entry.score); return cumulative; });
+  let lowIndex = 0, lowValue = points[0];
+  let best = { amplitude:0, positiveTotal:0, mvps:0, lowIndex:-1, peakIndex:-1, low:0, peak:0 };
+  for (let peakIndex = 1; peakIndex < points.length; peakIndex += 1) {
+    const amplitude = points[peakIndex] - lowValue;
+    const stage = entries.slice(lowIndex + 1, peakIndex + 1);
+    const positiveTotal = sum(stage.filter(entry => entry.score >= 0).map(entry => entry.score));
+    const mvps = stage.filter(entry => entry.isMvp).length;
+    const better = amplitude > best.amplitude + EPS ||
+      (eq(amplitude, best.amplitude) && positiveTotal > best.positiveTotal + EPS) ||
+      (eq(amplitude, best.amplitude) && eq(positiveTotal, best.positiveTotal) && mvps > best.mvps);
+    if (amplitude > 0 && better) best = { amplitude, positiveTotal, mvps, lowIndex, peakIndex, low:lowValue, peak:points[peakIndex] };
+    if (points[peakIndex] < lowValue - EPS) { lowValue = points[peakIndex]; lowIndex = peakIndex; }
+  }
+  const stage = best.lowIndex >= 0 ? entries.slice(best.lowIndex + 1, best.peakIndex + 1) : [];
+  return {
+    comebackAmplitude: best.amplitude,
+    comebackPositiveTotal: best.positiveTotal,
+    comebackMvps: best.mvps,
+    comebackLow: best.low,
+    comebackPeak: best.peak,
+    comebackLowDate: best.lowIndex >= 0 ? entries[best.lowIndex]?.date : null,
+    comebackPeakDate: best.peakIndex >= 0 ? entries[best.peakIndex]?.date : null,
+    comebackEvidence: stage.map(entry => ({ ...entry }))
+  };
+}
+
+function halfSeasonContrast(entries) {
+  const half = Math.floor((entries || []).length / 2);
+  if (!half) return { halfFrontGames:0, halfBackGames:0, halfFrontTotal:0, halfBackTotal:0, halfScoreDiff:0, halfFrontPositiveRate:0, halfBackPositiveRate:0, halfPositiveRateDiff:0, halfFrontMvps:0, halfBackMvps:0, halfMvpDiff:0 };
+  const front = entries.slice(0, half);
+  const back = entries.slice(entries.length - half);
+  const frontTotal = sum(front.map(entry => entry.score));
+  const backTotal = sum(back.map(entry => entry.score));
+  const frontPositiveRate = front.filter(entry => entry.score >= 0).length / front.length;
+  const backPositiveRate = back.filter(entry => entry.score >= 0).length / back.length;
+  const frontMvps = front.filter(entry => entry.isMvp).length;
+  const backMvps = back.filter(entry => entry.isMvp).length;
+  return {
+    halfFrontGames:front.length, halfBackGames:back.length,
+    halfFrontTotal:frontTotal, halfBackTotal:backTotal, halfScoreDiff:Math.abs(frontTotal-backTotal),
+    halfFrontPositiveRate:frontPositiveRate, halfBackPositiveRate:backPositiveRate, halfPositiveRateDiff:Math.abs(frontPositiveRate-backPositiveRate),
+    halfFrontMvps:frontMvps, halfBackMvps:backMvps, halfMvpDiff:Math.abs(frontMvps-backMvps)
+  };
+}
+
 function seasonMetrics(players, matches, season) {
   const seasonMatches = sortedMatches(matches.filter(match => match.season === season));
   const rows = [];
@@ -183,6 +235,8 @@ function seasonMetrics(players, matches, season) {
     const streak = streakMetrics(schedule);
     const mvpStage = consecutiveStageMetrics(schedule, item => item.isMvp);
     const cumulative = cumulativeSwing(entries);
+    const comeback = comebackMetrics(entries);
+    const halfContrast = halfSeasonContrast(entries);
 
     rows.push({
       playerId: player.playerId,
@@ -239,7 +293,9 @@ function seasonMetrics(players, matches, season) {
       longestAbsence: longestBoolean(schedule, item => item.absent),
       volatility: std(scores),
       singleRange: scores.length ? Math.max(...scores) - Math.min(...scores) : 0,
-      ...cumulative
+      ...cumulative,
+      ...comeback,
+      ...halfContrast
     });
   }
 
@@ -358,7 +414,7 @@ export function buildCurrentSeasonRatings(players, matches) {
   return {
     season: latestSeason,
     rows,
-    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋大场面能力15%（BGR、50+场次、单场最高）＋稳定性10%（波动、连续正分、极端负分）。各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
+    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋爆发能力15%（BGR、爆发场次、单场最高）＋稳定性10%（波动、连续正分、极端负分）。各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
   };
 }
 
@@ -388,7 +444,8 @@ function evidenceFor(id, row) {
   if (id === "H001") return row.longestPositiveEvidence || row.entries;
   if (id === "H003") return row.entries.filter(entry => entry.isMvp);
   if (id === "H010") return row.soloEntries;
-  if (id === "H016") return row.bigWins.map(entry => ({ ...entry, margin: Number(entry.margin.toFixed(2)) }));
+  if (id === "H015") return row.comebackEvidence || [];
+  if (id === "H018") return row.entries || [];
   return [];
 }
 
@@ -434,12 +491,12 @@ function awardProcessFormula(honorId, row, criteria = []) {
   if (honorId === "H008") return [
     f("BGR指数", "50–59/60–69/70–79/80–89/90–99/100+分别计1/2/3/5/8/12后累计", formatMetric(row.bgr,"BGR")),
     f("单场最高", "取本赛季所有实际参赛场次最高积分", formatMetric(row.best,"分")),
-    f("最长连续大场面", "按个人实际参赛序列统计连续50+；缺席不增加也不中断", formatMetric(row.longestBigStage,"场"))
+    f("最长连续爆发记录", "按个人实际参赛序列统计连续50+爆发；缺席不增加也不中断", formatMetric(row.longestBigStage,"场"))
   ];
-  if (honorId === "H016") return [
-    f("大胜场次", "本人单场积分－其他实际参赛牌手平均积分≥100，每场最多计1次", formatMetric(row.bigWinCount,"场")),
-    f("累计统治分差", "所有大胜场次的（本人积分－其他牌手平均积分）累计", formatMetric(row.bigWinDominanceTotal,"分")),
-    f("最大统治分差", "取所有大胜场次中统治分差最大值", formatMetric(row.maxDominanceMargin,"分"))
+  if (honorId === "H015") return [
+    f("最大逆袭幅度", `${row.comebackLowDate||"低谷"}累计${formatMetric(row.comebackLow,"分")} → ${row.comebackPeakDate||"高点"}累计${formatMetric(row.comebackPeak,"分")}`, formatMetric(row.comebackAmplitude,"分")),
+    f("逆袭阶段累计正分", "低谷点之后至最高点之间，仅累计得分≥0场次", formatMetric(row.comebackPositiveTotal,"分")),
+    f("逆袭阶段MVP场次", "同一逆袭区间内统计MVP次数", formatMetric(row.comebackMvps,"次"))
   ];
   if (honorId === "H010") return [
     f("独赢场次", "本人积分≥0且其他实际参赛牌手全部＜0，满足一次计1场", formatMetric(row.soloCount,"场")),
@@ -479,9 +536,9 @@ function awardProcessFormula(honorId, row, criteria = []) {
     f("单场最低", "取本赛季所有实际参赛场次最低积分", formatMetric(row.worst,"分"))
   ];
   if (honorId === "H018") return [
-    f("累计积分最大波动幅度", `${formatMetric(row.cumulativeHigh, "分")} - (${formatMetric(row.cumulativeLow, "分")})`, formatMetric(row.cumulativeSwing, "分")),
-    f("单场最高/最低积分差", `${formatMetric(row.best, "分")} - (${formatMetric(row.worst, "分")})`, formatMetric(row.singleRange, "分")),
-    f("累计积分正负转换次数", "按赛季累计积分曲线逐轮统计；累计分回到0不单独计转换", formatMetric(row.cumulativeSignChanges, "次"))
+    f("前后半赛季积分反差", `前半${formatMetric(row.halfFrontTotal,"分")} vs 后半${formatMetric(row.halfBackTotal,"分")}，取绝对差`, formatMetric(row.halfScoreDiff,"分")),
+    f("前后半赛季正分率反差", `前半${formatMetric(row.halfFrontPositiveRate,"%")} vs 后半${formatMetric(row.halfBackPositiveRate,"%")}，取绝对差`, formatMetric(row.halfPositiveRateDiff,"%")),
+    f("前后半赛季MVP场次反差", `前半${formatMetric(row.halfFrontMvps,"次")} vs 后半${formatMetric(row.halfBackMvps,"次")}，取绝对差`, formatMetric(row.halfMvpDiff,"次"))
   ];
   return criteriaText(criteria || [], row).map(item => ({ 指标: item.指标, 计算: "按该项官方指标统计", 结果: item.数值 }));
 }
@@ -506,7 +563,7 @@ function awardObject(result, row) {
       winner: row.player,
       winners: result.winners.map(winner => winner.player),
       officialValue: num(row[primaryKey] ?? 1),
-      calculationStatus: "LIVE_RECALCULATED_V1_9_RULES",
+      calculationStatus: "LIVE_RECALCULATED_V2_0_RULES",
       ranking: result.ranking.map(ranked => ({
         playerId: ranked.playerId,
         player: ranked.player,
@@ -586,14 +643,14 @@ function seasonAwards(players, matches, season) {
   push("H008", rows, [
     { key: "bgr", dir: "desc", label: "BGR指数", unit: "BGR" },
     { key: "best", dir: "desc", label: "单场最高", unit: "分" },
-    { key: "longestBigStage", dir: "desc", label: "最长连续大场面", unit: "场" }
+    { key: "longestBigStage", dir: "desc", label: "最长连续爆发记录", unit: "场" }
   ], { eligibility: row => row.games > 0 });
 
-  push("H016", rows, [
-    { key: "bigWinCount", dir: "desc", label: "大胜场次", unit: "场" },
-    { key: "bigWinDominanceTotal", dir: "desc", label: "累计统治分差", unit: "分" },
-    { key: "maxDominanceMargin", dir: "desc", label: "最大统治分差", unit: "分" }
-  ], { requirePositive: true });
+  push("H015", rows, [
+    { key: "comebackAmplitude", dir: "desc", label: "最大逆袭幅度", unit: "分" },
+    { key: "comebackPositiveTotal", dir: "desc", label: "逆袭阶段累计正分", unit: "分" },
+    { key: "comebackMvps", dir: "desc", label: "逆袭阶段MVP场次", unit: "次" }
+  ], { eligibility: row => row.games >= 2, requirePositive: true });
 
   push("H006", rows, [
     { key: "longestStreak", dir: "desc", label: "最长连庄", unit: "场" },
@@ -619,10 +676,10 @@ function seasonAwards(players, matches, season) {
   ]);
 
   push("H018", rows, [
-    { key: "cumulativeSwing", dir: "desc", label: "累计积分最大波动幅度", unit: "分" },
-    { key: "singleRange", dir: "desc", label: "单场最高/最低积分差", unit: "分" },
-    { key: "cumulativeSignChanges", dir: "desc", label: "累计积分正负转换次数", unit: "次" }
-  ], { eligibility: row => row.games > 0 });
+    { key: "halfScoreDiff", dir: "desc", label: "前后半赛季积分反差", unit: "分" },
+    { key: "halfPositiveRateDiff", dir: "desc", label: "前后半赛季正分率反差", unit: "%" },
+    { key: "halfMvpDiff", dir: "desc", label: "前后半赛季MVP场次反差", unit: "次" }
+  ], { eligibility: row => row.games >= 2 });
 
   const awards = [];
   for (const result of results) {
@@ -644,20 +701,36 @@ export function calculateHonorSystem(players, matches) {
     const calculation = seasonAwards(players, matches, season);
     seasonMetricsMap[season] = calculation.rows;
     calculation.awards.forEach(award => honors[award.ownerPlayerId].push(award));
-    calculation.results.forEach(result => board.push({
-      scope: season,
-      honorId: result.honorId,
-      name: result.catalog.name,
-      grade: result.catalog.grade,
-      category: result.catalog.category,
-      status: result.status,
-      winners: result.winners.map(winner => winner.player),
-      winnerIds: result.winners.map(winner => winner.playerId),
-      value: result.ranking[0] ? num(result.ranking[0][result.criteria?.[0]?.key]) : null,
-      unit: result.catalog.unit,
-      summary: result.summary || result.reason || "",
-      allowTie: result.catalog.allowTie
-    }));
+    calculation.results.forEach(result => {
+      const top = result.ranking[0] || null;
+      const primaryKey = result.criteria?.[0]?.key;
+      const winnerNames = result.winners.map(winner => winner.player);
+      board.push({
+        scope: season,
+        honorId: result.honorId,
+        name: result.catalog.name,
+        grade: result.catalog.grade,
+        category: result.catalog.category,
+        points: result.catalog.points,
+        status: result.status,
+        winners: winnerNames,
+        winnerIds: result.winners.map(winner => winner.playerId),
+        value: top ? num(top[primaryKey]) : null,
+        unit: result.catalog.unit,
+        summary: result.summary || result.reason || "",
+        allowTie: result.catalog.allowTie,
+        details: top ? {
+          rule: result.catalog.rule, unit: result.catalog.unit,
+          winner: winnerNames.length ? winnerNames.join(" / ") : (result.status === "PENDING_TIEBREAK" ? "待定" : "本季不颁发"),
+          winners: winnerNames, officialValue: num(top[primaryKey] ?? 0),
+          calculationStatus: "LIVE_RECALCULATED_V2_0_RULES",
+          ranking: result.ranking.map(ranked => ({ playerId: ranked.playerId, player: ranked.player, value: num(ranked[primaryKey] ?? 0), unit: result.catalog.unit, rank: ranked.rank, note: criteriaText(result.criteria || [], ranked).map(item => `${item.指标} ${item.数值}`).join(" · ") })),
+          formula: awardProcessFormula(result.honorId, top, result.criteria || []),
+          evidence: evidenceFor(result.honorId, top),
+          summary: result.summary || result.reason || ""
+        } : { rule: result.catalog.rule, unit: result.catalog.unit, winner:"本季不颁发", winners:[], officialValue:null, calculationStatus:"LIVE_RECALCULATED_V2_0_RULES", ranking:[], formula:[], evidence:[], summary:result.summary || result.reason || "" }
+      });
+    });
   }
 
   return { honors, board, seasons, seasonMetrics: seasonMetricsMap, catalog: HONOR_CATALOG };
@@ -725,8 +798,8 @@ function computePower(players,matches){
   rows=rows.map(r=>({...r,powerIndex:Math.round(100*(nScore(r)*.35+nPos(r)*.20+nMvp(r)*.15+nBgr(r)*.10+nTrend(r)*.10+nVs(r)*.10))})).sort((a,b)=>b.powerIndex-a.powerIndex||b.weightedScore-a.weightedScore||a.playerId.localeCompare(b.playerId));
   return rows.map((r,i)=>({...r,rank:i+1}));
 }
-function statusLabel(r){if(r.recent.length<3)return '🕒 样本不足';const last3=r.recent.slice(-3).map(x=>x.score);if(r.latest?.isMvp&&r.powerIndex>=55)return '👑 MVP状态';if(last3.length===3&&last3.every(x=>x>=0))return '🎯 连续正分';if(last3.length===3&&last3[0]<last3[1]&&last3[1]<last3[2])return r.powerIndex>=45?'🚀 强势上升':'📈 回暖中';if(last3.length===3&&last3[0]>last3[1]&&last3[1]>last3[2])return r.powerIndex>=55?'🎢 高开低走':'📉 状态下滑';if(r.recent.filter(x=>x.score>=50).length>=2)return '⚡ 大场面模式';if(r.recentStd>=35)return '🌊 表现起伏';if(r.powerIndex>=85)return '🔥 炙手可热';if(r.powerIndex>=70)return '🔥 手感火热';if(r.powerIndex>=55)return '✅ 状态稳定';if(r.powerIndex>=45)return '➖ 状态平平';if(r.powerIndex>=30)return '🌧 状态低迷';return '🧊 深陷低谷';}
-function archetypes(rows){const avgRank=[...rows].sort((a,b)=>b.seasonAverage-a.seasonAverage).map(x=>x.playerId),posRank=[...rows].sort((a,b)=>b.recentPositive-a.recentPositive).map(x=>x.playerId),bgrRank=[...rows].sort((a,b)=>b.recentBgr-a.recentBgr).map(x=>x.playerId),volRank=[...rows].sort((a,b)=>b.recentStd-a.recentStd).map(x=>x.playerId);return Object.fromEntries(rows.map(r=>{let t='稳定轮换';if(avgRank.indexOf(r.playerId)<2&&posRank.indexOf(r.playerId)<2&&r.recentMvp>0)t='全能型核心';else if(avgRank[0]===r.playerId)t='得分型牌手';else if(posRank[0]===r.playerId)t='稳定型牌手';else if(bgrRank[0]===r.playerId&&r.recentBgr>0)t='大场面牌手';else if(volRank[0]===r.playerId&&r.recentStd>25)t='高波动攻击手';return [r.playerId,t];}));}
+function statusLabel(r){if(r.recent.length<3)return '🕒 样本不足';const last3=r.recent.slice(-3).map(x=>x.score);if(r.latest?.isMvp&&r.powerIndex>=55)return '👑 MVP状态';if(last3.length===3&&last3.every(x=>x>=0))return '🎯 连续正分';if(last3.length===3&&last3[0]<last3[1]&&last3[1]<last3[2])return r.powerIndex>=45?'🚀 强势上升':'📈 回暖中';if(last3.length===3&&last3[0]>last3[1]&&last3[1]>last3[2])return r.powerIndex>=55?'🎢 高开低走':'📉 状态下滑';if(r.recent.filter(x=>x.score>=50).length>=2)return '⚡ 爆发模式';if(r.recentStd>=35)return '🌊 表现起伏';if(r.powerIndex>=85)return '🔥 炙手可热';if(r.powerIndex>=70)return '🔥 手感火热';if(r.powerIndex>=55)return '✅ 状态稳定';if(r.powerIndex>=45)return '➖ 状态平平';if(r.powerIndex>=30)return '🌧 状态低迷';return '🧊 深陷低谷';}
+function archetypes(rows){const avgRank=[...rows].sort((a,b)=>b.seasonAverage-a.seasonAverage).map(x=>x.playerId),posRank=[...rows].sort((a,b)=>b.recentPositive-a.recentPositive).map(x=>x.playerId),bgrRank=[...rows].sort((a,b)=>b.recentBgr-a.recentBgr).map(x=>x.playerId),volRank=[...rows].sort((a,b)=>b.recentStd-a.recentStd).map(x=>x.playerId);return Object.fromEntries(rows.map(r=>{let t='稳定轮换';if(avgRank.indexOf(r.playerId)<2&&posRank.indexOf(r.playerId)<2&&r.recentMvp>0)t='全能型核心';else if(avgRank[0]===r.playerId)t='得分型牌手';else if(posRank[0]===r.playerId)t='稳定型牌手';else if(bgrRank[0]===r.playerId&&r.recentBgr>0)t='爆发型牌手';else if(volRank[0]===r.playerId&&r.recentStd>25)t='高波动攻击手';return [r.playerId,t];}));}
 function seasonAssessment(r){
   const s=r.season||{}, perf=r.seasonPerformance||{};
   if(!s.games)return {label:'赛季样本不足',summary:`${r.player}在当前赛季暂无有效参赛记录。`,outlook:'需要更多正式比赛后才能形成完整的赛季定位。'};
@@ -734,8 +807,8 @@ function seasonAssessment(r){
   if(perf.rank===1)label=`${perf.ratingLabel||'高水平赛季'} · 赛季综合第1`;
   else if(perf.rank===2)label=`${perf.ratingLabel||'高水平赛季'} · 争冠集团`;
   const dims=perf.dimensionScores||{};
-  const weak=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,大场面能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
-  const strong=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,大场面能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
+  const weak=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
+  const strong=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
   const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，联盟第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP，BGR指数${s.bgr}。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
   const outlook=weak?`当前最需要提升的是${weak[0]}（${Number(weak[1]).toFixed(1)}）；赛季OVR只跟随${s.id}数据变化，不受历史赛季成绩影响。`:'继续积累当前赛季正式比赛样本。';
   return {label,summary,outlook};
@@ -767,7 +840,7 @@ function reportFor(r,all){
   if(totalRank===1)strengths.push(`最近5场累计${r.recentTotal>=0?'+':''}${r.recentTotal}，同期排名第1`);
   if(r.recentPositive>=.6)strengths.push(`近期正分率${(r.recentPositive*100).toFixed(0)}%`);
   if(r.recent.filter(x=>x.isMvp).length)strengths.push(`最近5场拿到${r.recent.filter(x=>x.isMvp).length}次MVP`);
-  if(r.recent.filter(x=>x.score>=50).length)strengths.push(`出现${r.recent.filter(x=>x.score>=50).length}场50+大场面`);
+  if(r.recent.filter(x=>x.score>=50).length)strengths.push(`出现${r.recent.filter(x=>x.score>=50).length}场爆发`);
   if(r.recentStd>=35)risks.push(`近期波动指数${r.recentStd.toFixed(1)}，上下限差距较大`);
   if(r.recent.filter(x=>x.score<0).length>=3)risks.push('最近5场负分次数偏多');
   if(r.weightedScore<r.seasonAverage)risks.push(`近期加权表现低于赛季场均${r.seasonAverage.toFixed(1)}`);
