@@ -9,6 +9,12 @@
 </head>
 <body>
 
+<div class="ambient-background" id="ambientBackground" aria-hidden="true">
+  <span class="ambient-glow ambient-glow-a"></span>
+  <span class="ambient-glow ambient-glow-b"></span>
+  <span class="ambient-glow ambient-glow-c"></span>
+</div>
+
 <div class="shell" id="appShell">
   <header class="topbar">
     <div class="brand">
@@ -20,7 +26,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v2.0.0 Monthly & Record Center</span>
+      <span class="badge" id="versionBadge">v2.1.0 Immersive UI & Data Refinement</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -33,7 +39,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v2.0.0 Monthly & Record Center<br>
+        分析引擎：MOAP v2.1.0 Immersive UI & Data Refinement<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -76,6 +82,17 @@
           <div class="table-scroll"><table class="record-table"><thead id="dataLeaderboardHead"></thead><tbody id="dataLeaderboardBody"></tbody></table></div>
         </div>
 
+        <div class="card section explosion-board-card">
+          <div class="section-head record-data-head">
+            <div><h3>MSL生涯爆发榜</h3><small>爆发＝单场积分≥50；50+至100+采用档位互斥统计</small></div>
+            <div class="record-filter-row">
+              <label>赛季<select id="explosionSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
+              <label>比赛类型<select id="explosionMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+            </div>
+          </div>
+          <div class="table-scroll"><table class="record-table explosion-table"><thead><tr><th>排名</th><th>牌手</th><th>场次</th><th>爆发次数</th><th>爆发积分</th><th>爆发场均积分</th><th>爆发率</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>BGR指数</th></tr></thead><tbody id="explosionLeaderboardBody"></tbody></table></div>
+        </div>
+
         <div class="card section record-center-card" style="margin-bottom:16px">
           <div class="record-toolbar">
             <div class="record-section-tabs" role="tablist" aria-label="记录板块">
@@ -98,17 +115,6 @@
               <tbody id="recordTableBody"></tbody>
             </table>
           </div>
-        </div>
-
-        <div class="card section explosion-board-card">
-          <div class="section-head record-data-head">
-            <div><h3>生涯爆发榜</h3><small>爆发＝单场积分≥50；50+至100+采用档位互斥统计</small></div>
-            <div class="record-filter-row">
-              <label>赛季<select id="explosionSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-              <label>比赛类型<select id="explosionMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
-            </div>
-          </div>
-          <div class="table-scroll"><table class="record-table explosion-table"><thead><tr><th>排名</th><th>牌手</th><th>场次</th><th>爆发次数</th><th>爆发积分</th><th>爆发场均积分</th><th>爆发率</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>BGR指数</th></tr></thead><tbody id="explosionLeaderboardBody"></tbody></table></div>
         </div>
       </section>
 
@@ -243,7 +249,7 @@
             <div class="matrix-wrap"><table class="matrix" id="netMatrix"></table></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看逐场证据</small></div>
+            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看概览，明细进入详情页</small></div>
             <div id="rivalDetail" class="empty">请选择一个对位。</div>
           </div>
         </div>

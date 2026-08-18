@@ -51,7 +51,7 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v2.0.0 Monthly & Record Center build completed successfully.')
+console.log('MOAP v2.1.0 Immersive UI & Data Refinement build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
@@ -61,4 +61,4 @@ console.log('MSL form center and S1-current career evaluation: included')
 console.log('Single/continuous record center, data leaderboards and explosion board: included')
 console.log('Fixed GOAT model and data validation: included')
 
-console.log('Monthly report, current-season OVR, match detail matrix, honor process evidence and portrait reservation: included')
+console.log('Monthly report, immersive ambient background, centered record tables, matchup detail page and current-season OVR: included')
