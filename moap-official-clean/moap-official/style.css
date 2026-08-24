@@ -787,3 +787,53 @@ body{
     font-size:22px;
   }
 }
+
+/* v2.2.0 data table refinements */
+.record-data-leaderboard .record-table{
+  min-width:900px;
+  table-layout:fixed;
+}
+.record-data-leaderboard .record-table th,
+.record-data-leaderboard .record-table td,
+.player-season-data-table th,
+.player-season-data-table td{
+  text-align:center;
+  vertical-align:middle;
+}
+.record-data-leaderboard .record-table th:nth-child(1),
+.record-data-leaderboard .record-table td:nth-child(1){width:64px}
+.record-data-leaderboard .record-table th:nth-child(2),
+.record-data-leaderboard .record-table td:nth-child(2){width:104px}
+.record-data-leaderboard .record-table th:nth-child(3),
+.record-data-leaderboard .record-table td:nth-child(3){width:72px}
+.record-data-leaderboard .record-table th:nth-child(n+4),
+.record-data-leaderboard .record-table td:nth-child(n+4){width:auto}
+
+.player-season-data-head{align-items:flex-end;gap:14px}
+.player-season-filters{margin-left:auto}
+.player-season-data-table{width:100%;min-width:760px;table-layout:fixed}
+.player-season-data-table th:first-child,
+.player-season-data-table td:first-child{width:84px}
+.player-season-data-table th:nth-child(2),
+.player-season-data-table td:nth-child(2){width:76px}
+
+/* Match center multi-player filter */
+.match-player-filter{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0}
+.filter-label{font-size:11px;color:var(--muted)}
+.match-player-trigger{height:39px;width:100%;border:1px solid var(--line2);border-radius:10px;background:var(--input);color:var(--text);padding:0 12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-player-trigger:after{content:"▾";float:right;color:var(--gold)}
+.match-player-menu{position:absolute;z-index:60;top:calc(100% + 6px);left:0;right:0;min-width:210px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#08211b;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+.match-player-actions{display:flex;gap:8px;margin-bottom:8px}
+.match-player-actions button{flex:1;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);padding:6px 8px;cursor:pointer}
+.match-player-options{display:grid;gap:6px}
+.match-player-option{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;color:var(--text);cursor:pointer;margin:0}
+.match-player-option:hover{background:rgba(215,178,91,.06)}
+.match-player-option input{accent-color:var(--gold)}
+
+@media(max-width:620px){
+  .record-data-leaderboard .record-table{min-width:860px}
+  .player-season-data-head{align-items:flex-start;flex-direction:column}
+  .player-season-filters{margin-left:0;width:100%}
+  .player-season-data-table{min-width:720px}
+  .match-player-menu{position:static;margin-top:2px}
+}

@@ -779,6 +779,21 @@ function careerMetrics(players,matches,honors={}){
     return [r.playerId,{...r,overallRank:ratingRanks[r.playerId],totalRank:totalRanks[r.playerId],averageRank:avgRanks[r.playerId],positiveRank:positiveRanks[r.playerId],mvpRank:mvpRanks[r.playerId],bgrRank:bgrRanks[r.playerId],honorRank:honorRanks[r.playerId],ratingLabel:careerRatingLabel(r.overallRating),bestSeason,trend,seasonRange:history.length?`${history[0].season}–${history.at(-1).season}`:'—'}];
   }));
 }
+function seasonStyleMetrics(matches,pid,season){
+  const seasonMatches=sortedMatches(matches).filter(m=>m.season===season);
+  let cumulative=0,minSeen=null,maxComeback=0,soloWins=0,maxDominance=0,dominanceTotal=0,dominanceGames=0;
+  const scores=[];
+  for(const match of seasonMatches){
+    const rows=played(match),result=rows.find(r=>r.playerId===pid);if(!result)continue;
+    const score=num(result.score),opponents=rows.filter(r=>r.playerId!==pid),oppAvg=opponents.length?mean(opponents.map(r=>num(r.score))):0,dominance=score-oppAvg;
+    scores.push(score);cumulative+=score;
+    if(minSeen!=null)maxComeback=Math.max(maxComeback,cumulative-minSeen);
+    minSeen=minSeen==null?cumulative:Math.min(minSeen,cumulative);
+    if(score>=0&&opponents.length&&opponents.every(r=>num(r.score)<0))soloWins++;
+    maxDominance=Math.max(maxDominance,dominance);dominanceTotal+=dominance;dominanceGames++;
+  }
+  return {maxComeback,soloWins,maxDominance,averageDominance:dominanceGames?dominanceTotal/dominanceGames:0,range:scores.length?Math.max(...scores)-Math.min(...scores):0};
+}
 function computePower(players,matches){
   const latestSeason=[...new Set(matches.map(m=>m.season))].sort((a,b)=>seasonNumber(a)-seasonNumber(b)).at(-1);
   let rows=players.map(p=>{
@@ -786,7 +801,8 @@ function computePower(players,matches){
     const seasonEntries=recentEntries(matches.filter(m=>m.season===latestSeason),p.playerId,999);
     const seasonScores=seasonEntries.map(x=>x.score),seasonTotal=sum(seasonScores),seasonGames=seasonScores.length;
     const season={id:latestSeason||'—',games:seasonGames,total:seasonTotal,average:mean(seasonScores),positiveRate:seasonGames?seasonEntries.filter(x=>x.score>=0).length/seasonGames:0,mvps:seasonEntries.filter(x=>x.isMvp).length,bgr:sum(seasonScores.map(bgrValue)),best:seasonGames?Math.max(...seasonScores):null,worst:seasonGames?Math.min(...seasonScores):null,volatility:std(seasonScores)};
-    return {playerId:p.playerId,player:p.name,recent,weightedScore:w.score,recentPositive:w.positive,recentMvp:w.mvp,recentBgr:w.bgr,trend:slope(recent.map(x=>x.score)),vsSeason:w.score-season.average,recentTotal:sum(recent.map(x=>x.score)),recentAverage:mean(recent.map(x=>x.score)),recentStd:std(recent.map(x=>x.score)),seasonAverage:season.average,season,latest:recent.at(-1)||null};
+    const seasonStyle=seasonStyleMetrics(matches,p.playerId,latestSeason);
+    return {playerId:p.playerId,player:p.name,recent,weightedScore:w.score,recentPositive:w.positive,recentMvp:w.mvp,recentBgr:w.bgr,trend:slope(recent.map(x=>x.score)),vsSeason:w.score-season.average,recentTotal:sum(recent.map(x=>x.score)),recentAverage:mean(recent.map(x=>x.score)),recentStd:std(recent.map(x=>x.score)),seasonAverage:season.average,season,seasonStyle,latest:recent.at(-1)||null};
   });
   const totalRanks=ordinalRanks(rows.map(r=>({...r,seasonTotal:r.season.total})),'seasonTotal');
   const avgRanks=ordinalRanks(rows.map(r=>({...r,seasonAvg:r.season.average})),'seasonAvg');
@@ -799,7 +815,24 @@ function computePower(players,matches){
   return rows.map((r,i)=>({...r,rank:i+1}));
 }
 function statusLabel(r){if(r.recent.length<3)return '🕒 样本不足';const last3=r.recent.slice(-3).map(x=>x.score);if(r.latest?.isMvp&&r.powerIndex>=55)return '👑 MVP状态';if(last3.length===3&&last3.every(x=>x>=0))return '🎯 连续正分';if(last3.length===3&&last3[0]<last3[1]&&last3[1]<last3[2])return r.powerIndex>=45?'🚀 强势上升':'📈 回暖中';if(last3.length===3&&last3[0]>last3[1]&&last3[1]>last3[2])return r.powerIndex>=55?'🎢 高开低走':'📉 状态下滑';if(r.recent.filter(x=>x.score>=50).length>=2)return '⚡ 爆发模式';if(r.recentStd>=35)return '🌊 表现起伏';if(r.powerIndex>=85)return '🔥 炙手可热';if(r.powerIndex>=70)return '🔥 手感火热';if(r.powerIndex>=55)return '✅ 状态稳定';if(r.powerIndex>=45)return '➖ 状态平平';if(r.powerIndex>=30)return '🌧 状态低迷';return '🧊 深陷低谷';}
-function archetypes(rows){const avgRank=[...rows].sort((a,b)=>b.seasonAverage-a.seasonAverage).map(x=>x.playerId),posRank=[...rows].sort((a,b)=>b.recentPositive-a.recentPositive).map(x=>x.playerId),bgrRank=[...rows].sort((a,b)=>b.recentBgr-a.recentBgr).map(x=>x.playerId),volRank=[...rows].sort((a,b)=>b.recentStd-a.recentStd).map(x=>x.playerId);return Object.fromEntries(rows.map(r=>{let t='稳定轮换';if(avgRank.indexOf(r.playerId)<2&&posRank.indexOf(r.playerId)<2&&r.recentMvp>0)t='全能型核心';else if(avgRank[0]===r.playerId)t='得分型牌手';else if(posRank[0]===r.playerId)t='稳定型牌手';else if(bgrRank[0]===r.playerId&&r.recentBgr>0)t='爆发型牌手';else if(volRank[0]===r.playerId&&r.recentStd>25)t='高波动攻击手';return [r.playerId,t];}));}
+function archetypes(rows){
+  const norm=getter=>{const vals=rows.map(r=>num(getter(r))),lo=Math.min(...vals),hi=Math.max(...vals);return r=>eq(hi,lo)?.5:(num(getter(r))-lo)/(hi-lo);};
+  const nTotal=norm(r=>r.season.total),nAvg=norm(r=>r.season.average),nPos=norm(r=>r.season.positiveRate),nMvp=norm(r=>r.season.mvps),nBgr=norm(r=>r.season.bgr),nBest=norm(r=>r.season.best??0),nVol=norm(r=>r.season.volatility),nComeback=norm(r=>r.seasonStyle?.maxComeback||0),nSolo=norm(r=>r.seasonStyle?.soloWins||0),nDom=norm(r=>r.seasonStyle?.maxDominance||0),nRange=norm(r=>r.seasonStyle?.range||0);
+  return Object.fromEntries(rows.map(r=>{
+    const dims=Object.values(r.seasonPerformance?.dimensionScores||{}).map(Number).filter(Number.isFinite),avgDim=dims.length?mean(dims):50,spread=dims.length?Math.max(...dims)-Math.min(...dims):50,balance=Math.max(0,1-spread/100);
+    const scores={
+      '全能型':(avgDim/100)*.62+balance*.38,
+      '稳健型':(1-nVol(r))*.62+nPos(r)*.38,
+      '爆发型':nBgr(r)*.55+nBest(r)*.45,
+      '进攻型':nTotal(r)*.38+nAvg(r)*.27+nMvp(r)*.35,
+      '韧性型':nComeback(r)*.78+nPos(r)*.22,
+      '统治型':nMvp(r)*.35+nSolo(r)*.30+nDom(r)*.35,
+      '波动型':nVol(r)*.62+nRange(r)*.38
+    };
+    const type=Object.entries(scores).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'zh-CN'))[0]?.[0]||'全能型';
+    return [r.playerId,type];
+  }));
+}
 function seasonAssessment(r){
   const s=r.season||{}, perf=r.seasonPerformance||{};
   if(!s.games)return {label:'赛季样本不足',summary:`${r.player}在当前赛季暂无有效参赛记录。`,outlook:'需要更多正式比赛后才能形成完整的赛季定位。'};

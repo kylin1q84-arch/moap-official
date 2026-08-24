@@ -279,23 +279,43 @@ function summaryRows(players, matches, season, type) {
     const negative = entries.filter(item => item.score < 0);
     const soloWin = entries.filter(item => item.isSoloWin);
     const soloLoss = entries.filter(item => item.isSoloLoss);
+    const explosion = entries.filter(item => item.score >= 50);
     const make = items => ({
       count: items.length,
       points: sum(items.map(item => item.score)),
       average: mean(items.map(item => item.score)),
       rate: entries.length ? items.length / entries.length : 0
     });
+    let cumulative = 0;
+    const cumulativeSeries = entries.map(item => (cumulative += item.score));
+    const bins = { over50:0, over60:0, over70:0, over80:0, over90:0, over100:0 };
+    for (const item of explosion) {
+      const score = item.score;
+      if (score >= 100) bins.over100 += 1;
+      else if (score >= 90) bins.over90 += 1;
+      else if (score >= 80) bins.over80 += 1;
+      else if (score >= 70) bins.over70 += 1;
+      else if (score >= 60) bins.over60 += 1;
+      else bins.over50 += 1;
+    }
     return {
       playerId: player.playerId,
       player: player.name,
       games: entries.length,
       total: sum(entries.map(item => item.score)),
       average: mean(entries.map(item => item.score)),
+      cumulativeHigh: cumulativeSeries.length ? Math.max(...cumulativeSeries) : null,
+      cumulativeLow: cumulativeSeries.length ? Math.min(...cumulativeSeries) : null,
+      best: entries.length ? Math.max(...entries.map(item => item.score)) : null,
+      worst: entries.length ? Math.min(...entries.map(item => item.score)) : null,
       mvp: make(mvp),
       positive: make(positive),
       negative: make(negative),
       soloWin: make(soloWin),
       soloLoss: make(soloLoss),
+      explosion: make(explosion),
+      explosionBins: bins,
+      bgr: sum(explosion.map(item => bgrValue(item.score))),
       entries
     };
   }).filter(Boolean);
@@ -320,6 +340,17 @@ export function buildDataLeaderboard(players, matches, { season = "all", type = 
   } else if (metric === "soloLoss") {
     comparator = (a,b)=>b.soloLoss.count-a.soloLoss.count || b.soloLoss.rate-a.soloLoss.rate || a.soloLoss.points-b.soloLoss.points || cmpText(a,b);
     sameRank = (a,b)=>a.soloLoss.count===b.soloLoss.count && eq(a.soloLoss.rate,b.soloLoss.rate) && eq(a.soloLoss.points,b.soloLoss.points);
+  } else if (metric === "explosion") {
+    comparator = (a,b)=>b.explosion.count-a.explosion.count || b.explosion.rate-a.explosion.rate || b.explosion.points-a.explosion.points || b.explosion.average-a.explosion.average || cmpText(a,b);
+    sameRank = (a,b)=>a.explosion.count===b.explosion.count && eq(a.explosion.rate,b.explosion.rate) && eq(a.explosion.points,b.explosion.points) && eq(a.explosion.average,b.explosion.average);
+  } else if (metric === "explosionTier") {
+    const tier = row => [row.bgr,row.explosionBins.over100,row.explosionBins.over90,row.explosionBins.over80,row.explosionBins.over70,row.explosionBins.over60,row.explosionBins.over50];
+    comparator = (a,b)=>{
+      const av=tier(a),bv=tier(b);
+      for(let i=0;i<av.length;i++) if(av[i]!==bv[i]) return bv[i]-av[i];
+      return cmpText(a,b);
+    };
+    sameRank = (a,b)=>tier(a).every((value,index)=>value===tier(b)[index]);
   } else {
     comparator = (a,b)=>b.total-a.total || b.average-a.average || cmpText(a,b);
     sameRank = (a,b)=>eq(a.total,b.total) && eq(a.average,b.average);

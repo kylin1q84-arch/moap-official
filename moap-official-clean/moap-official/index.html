@@ -26,7 +26,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v2.1.0 Immersive UI & Data Refinement</span>
+      <span class="badge" id="versionBadge">v2.2.0 Data Center & Multi-Player Filter</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -39,7 +39,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v2.1.0 Immersive UI & Data Refinement<br>
+        分析引擎：MOAP v2.2.0 Data Center & Multi-Player Filter<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -66,7 +66,7 @@
 
       <section class="view" data-view="records">
         <div class="hero">
-          <div><h2>记录中心</h2><p>查询综合数据榜、单场纪录、连续纪录与生涯爆发表现。</p></div>
+          <div><h2>记录中心</h2><p>查询综合数据榜、单场纪录与连续纪录。</p></div>
           <span class="chip gold">MSL RECORD BOOK</span>
         </div>
 
@@ -76,21 +76,10 @@
             <div class="record-filter-row">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>比赛类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
-              <label>数据类型<select id="dataMetricFilter"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option></select></label>
+              <label>数据类型<select id="dataMetricFilter"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
             </div>
           </div>
           <div class="table-scroll"><table class="record-table"><thead id="dataLeaderboardHead"></thead><tbody id="dataLeaderboardBody"></tbody></table></div>
-        </div>
-
-        <div class="card section explosion-board-card">
-          <div class="section-head record-data-head">
-            <div><h3>MSL生涯爆发榜</h3><small>爆发＝单场积分≥50；50+至100+采用档位互斥统计</small></div>
-            <div class="record-filter-row">
-              <label>赛季<select id="explosionSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-              <label>比赛类型<select id="explosionMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
-            </div>
-          </div>
-          <div class="table-scroll"><table class="record-table explosion-table"><thead><tr><th>排名</th><th>牌手</th><th>场次</th><th>爆发次数</th><th>爆发积分</th><th>爆发场均积分</th><th>爆发率</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>BGR指数</th></tr></thead><tbody id="explosionLeaderboardBody"></tbody></table></div>
         </div>
 
         <div class="card section record-center-card" style="margin-bottom:16px">
@@ -148,16 +137,12 @@
 
       <section class="view" data-view="player">
         <div class="hero">
-          <div><h2>个人档案</h2><p>查看个人趋势、赛季表现、新制精准对位与官方荣誉。</p></div>
+          <div><h2>个人中心</h2><p>查看个人趋势、当前赛季表现、历季综合数据与官方荣誉。</p></div>
           <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="card section player-profile-hero" style="margin-bottom:16px">
           <div class="player-head" id="playerHeader"></div>
           <div class="kpis" id="playerKpis" style="margin-top:16px;margin-bottom:0"></div>
-        </div>
-        <div class="card section current-season-performance-card" style="margin-bottom:16px">
-          <div class="section-head"><div><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
-          <div id="currentSeasonPerformance"></div>
         </div>
         <div class="grid-2">
           <div class="card section">
@@ -169,15 +154,19 @@
             <div id="recentMatchesPlayer" class="score-list"></div>
           </div>
         </div>
-        <div class="grid-2">
-          <div class="card section">
-            <div class="section-head"><h3>赛季分解</h3><small>S1–S3</small></div>
-            <div class="table-scroll"><table><thead><tr><th>赛季</th><th>场次</th><th>积分</th><th>场均</th><th>正分率</th><th>MVP</th><th>最高/最低</th></tr></thead><tbody id="playerSeasonTable"></tbody></table></div>
+        <div class="card section player-season-data-card" style="margin-bottom:16px">
+          <div class="section-head player-season-data-head">
+            <div><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
+            <div class="record-filter-row player-season-filters">
+              <label>比赛类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+              <label>数据类型<select id="playerSeasonMetric"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
+            </div>
           </div>
-          <div class="card section">
-            <div class="section-head"><h3>对位关系</h3><small>新制精准净分</small></div>
-            <div id="playerRivals"></div>
-          </div>
+          <div class="table-scroll"><table class="player-season-data-table"><thead id="playerSeasonHead"></thead><tbody id="playerSeasonTable"></tbody></table></div>
+        </div>
+        <div class="card section current-season-performance-card" style="margin-bottom:16px">
+          <div class="section-head"><div><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
+          <div id="currentSeasonPerformance"></div>
         </div>
         <div class="card section" style="margin-bottom:16px">
           <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + S1至今生涯评价</small></div>
@@ -194,7 +183,7 @@
         <div class="card section">
           <div class="form-row">
             <label>赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
-            <label>牌手<select id="matchPlayer"><option value="all">全部牌手</option></select></label>
+            <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div class="match-player-actions"><button type="button" id="matchPlayerAll">不限</button><button type="button" id="matchPlayerClear">全选</button></div><div id="matchPlayerOptions" class="match-player-options"></div></div></div>
             <label>比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
             <label>关键词<input id="matchQuery" placeholder="场地 / 场次 / 日期"></label>
           </div>

@@ -2,7 +2,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 import { HONOR_CATALOG } from "./honor-details.js";
 import { calculateHonorSystem, buildMslStatusCenter } from "./analytics-engine.js";
-import { buildRecordCenter, buildDataLeaderboard, buildExplosionLeaderboard } from "./records-engine.js";
+import { buildRecordCenter, buildDataLeaderboard } from "./records-engine.js";
 import { buildGoatSystem } from "./goat-engine.js";
 import { validateMoapData } from "./data-validation.js";
 import { MOAP_CONFIG } from "./config.js";
@@ -18,8 +18,9 @@ let recordSeason = "all";
 let dataSeason = "all";
 let dataMatchType = "all";
 let dataMetric = "points";
-let explosionSeason = "all";
-let explosionMatchType = "all";
+let playerSeasonMatchType = "all";
+let playerSeasonMetric = "points";
+const selectedMatchPlayers = new Set();
 
 const NAV = [
   ["overview","联赛总览"],
@@ -32,6 +33,13 @@ const NAV = [
   ["system","系统审计"],
   ["entry","录入比赛"]
 ];
+
+
+const VENUE_OVERRIDES = {
+  MSL0026: "拾月金秋茶馆（浦南一里店）",
+  MSL0069: "七囍茶室（厦门站店）"
+};
+function normalizedVenue(matchId, venue){ return VENUE_OVERRIDES[String(matchId||"")] || venue || ""; }
 
 const HONOR_NAME_OVERRIDES = {};
 const HONOR_BOARD_ITEMS = HONOR_CATALOG.map(x=>[x.honorId,x.name]);
@@ -49,6 +57,7 @@ function competitionRankBy(rows, valueGetter){
 }
 function applyAnalyticsToState(target){
   if(!target?.players || !target?.matches)return target;
+  target.matches.forEach(match=>{match.venue=normalizedVenue(match.matchId,match.venue);});
   const orderedMatches=[...target.matches].sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.round||0)-Number(b.round||0)||String(a.matchId).localeCompare(String(b.matchId)));
   const system=calculateHonorSystem(target.players,orderedMatches);
   target.honors=system.honors;
@@ -87,7 +96,7 @@ function applyAnalyticsToState(target){
   const top=target.goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
   const seasonIds=[...new Set(orderedMatches.map(match=>match.season))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const awardWinners=id=>seasonIds.map(season=>{const row=target.honorBoard.find(item=>item.scope===season&&item.honorId===id);return row?.winners?.length?`${season} ${row.winners.join("/")}`:null;}).filter(Boolean).join("；")||"暂无";
-  target.version={...(target.version||{}),version:"v2.1.0 Immersive UI & Data Refinement",releaseStage:"Official Feature Release",releaseDate:"2026-08-18",currentStatus:"immersive ambient background, refined record tables, monthly solo-win scoring and matchup detail page",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"升级沉浸式轻动态背景；优化记录中心表格排版与MSL生涯爆发榜顺序；月报独赢统计与月最佳评分更新；精准对位明细改为独立详情页。"};
+  target.version={...(target.version||{}),version:"v2.2.0 Data Center & Multi-Player Filter",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"expanded data leaderboards, season personal data, Mahjong play-style archetypes and multi-player match filtering",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"综合数据榜新增累计峰值/低谷、爆发与爆发档位；个人中心升级赛季个人综合数据；实力榜重建麻将牌风类型；比赛中心支持多牌手交集筛选，并修正两场场馆名称。"};
   return target;
 }
 applyAnalyticsToState(state);
@@ -126,7 +135,7 @@ function buildLiveState(db){
   const nameBy=Object.fromEntries(players.map(p=>[p.playerId,p.name]));
   const resultMap={};db.results.forEach(r=>(resultMap[r.match_id]??=[]).push(r));
   const matches=db.matches.slice().sort((a,b)=>String(a.match_date).localeCompare(String(b.match_date))||a.id.localeCompare(b.id)).map(m=>({
-    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:m.venue||"",isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
+    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:normalizedVenue(m.id,m.venue),isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
     results:(resultMap[m.id]||[]).map(r=>({playerId:r.player_id,player:nameBy[r.player_id]||r.player_id,score:r.score==null?null:Number(r.score),isMvp:!!r.is_mvp,isAbsent:!!r.is_absent}))
   }));
   const honorSystem=calculateHonorSystem(players,matches);
@@ -215,7 +224,7 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.1.0 Immersive UI & Data Refinement",releaseStage:"Official Feature Release",releaseDate:"2026-08-18",currentStatus:"immersive ambient background, refined record tables, monthly solo-win scoring and matchup detail page",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"升级沉浸式轻动态背景；优化记录中心表格排版与MSL生涯爆发榜顺序；月报独赢统计与月最佳评分更新；精准对位明细改为独立详情页。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.2.0 Data Center & Multi-Player Filter",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"expanded data leaderboards, season personal data, Mahjong play-style archetypes and multi-player match filtering",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"综合数据榜新增累计峰值/低谷、爆发与爆发档位；个人中心升级赛季个人综合数据；实力榜重建麻将牌风类型；比赛中心支持多牌手交集筛选，并修正两场场馆名称。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
@@ -515,27 +524,24 @@ function recordHolderText(record){return record?.holderNames?.length?record.hold
 function recordCurrentHolders(record){return (record?.ranking||[]).filter(row=>row.rank===1);}
 function recordFirstHolder(record){return [...recordCurrentHolders(record)].sort((a,b)=>String(a.createdAt||"9999").localeCompare(String(b.createdAt||"9999"))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
 function recordLatestCoHolder(record,first){return [...recordCurrentHolders(record)].filter(row=>!first||row.playerId!==first.playerId).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
-function dataMetricLabel(metric){return ({points:"积分",mvp:"MVP",positive:"正分",negative:"负分",soloWin:"独赢",soloLoss:"独输"})[metric]||"积分";}
+function dataMetricLabel(metric){return ({points:"积分",mvp:"MVP",positive:"正分",negative:"负分",soloWin:"独赢",soloLoss:"独输",explosion:"爆发",explosionTier:"爆发档位"})[metric]||"积分";}
 function renderDataLeaderboard(){
   const seasonSel=$("#dataSeasonFilter"),typeSel=$("#dataMatchTypeFilter"),metricSel=$("#dataMetricFilter");if(!seasonSel)return;
   dataSeason=seasonSel.value||dataSeason;dataMatchType=typeSel.value||dataMatchType;dataMetric=metricSel.value||dataMetric;
   const rows=buildDataLeaderboard(state.players||[],state.matches||[],{season:dataSeason,type:dataMatchType,metric:dataMetric});
   const head=$("#dataLeaderboardHead"),body=$("#dataLeaderboardBody");
   if(dataMetric==="points"){
-    head.innerHTML='<tr><th>排名</th><th>牌手</th><th>场次</th><th>积分</th><th>场均积分</th></tr>';
-    body.innerHTML=rows.map(r=>`<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td><td>${fmtAvg(r.average)}</td></tr>`).join("");
+    head.innerHTML='<tr><th>排名</th><th>牌手</th><th>场次</th><th>积分</th><th>场均积分</th><th>最高累计积分</th><th>最低累计积分</th></tr>';
+    body.innerHTML=rows.map(r=>`<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td><td>${fmtAvg(r.average)}</td><td class="${scoreClass(r.cumulativeHigh)}">${fmtScore(r.cumulativeHigh)}</td><td class="${scoreClass(r.cumulativeLow)}">${fmtScore(r.cumulativeLow)}</td></tr>`).join("");
+  }else if(dataMetric==="explosionTier"){
+    head.innerHTML='<tr><th>排名</th><th>牌手</th><th>场次</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>BGR指数</th></tr>';
+    body.innerHTML=rows.map(r=>{const x=r.explosionBins||{};return `<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.over50||0}</td><td>${x.over60||0}</td><td>${x.over70||0}</td><td>${x.over80||0}</td><td>${x.over90||0}</td><td>${x.over100||0}</td><td><b>${r.bgr||0}</b></td></tr>`;}).join("");
   }else{
-    const key=dataMetric,labels={mvp:["MVP次数","MVP积分","MVP场均积分","MVP率"],positive:["正分次数","正分积分","正分场均积分","正分率"],negative:["负分次数","负分积分","负分场均积分","负分率"],soloWin:["独赢次数","独赢积分","独赢场均积分","独赢率"],soloLoss:["独输次数","独输积分","独输场均积分","独输率"]}[key];
+    const key=dataMetric,labels={mvp:["MVP次数","MVP积分","MVP场均积分","MVP率"],positive:["正分次数","正分积分","正分场均积分","正分率"],negative:["负分次数","负分积分","负分场均积分","负分率"],soloWin:["独赢次数","独赢积分","独赢场均积分","独赢率"],soloLoss:["独输次数","独输积分","独输场均积分","独输率"],explosion:["爆发次数","爆发积分","爆发场均积分","爆发率"]}[key];
     head.innerHTML=`<tr><th>排名</th><th>牌手</th><th>场次</th><th>${labels[0]}</th><th>${labels[1]}</th><th>${labels[2]}</th><th>${labels[3]}</th></tr>`;
     body.innerHTML=rows.map(r=>{const x=r[key];return `<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.count}</td><td class="${scoreClass(x.points)}">${fmtScore(x.points)}</td><td>${x.count?fmtAvg(x.average):"—"}</td><td>${fmtPct(x.rate)}</td></tr>`;}).join("");
   }
-  if(!rows.length)body.innerHTML=`<tr><td colspan="8" class="empty">当前筛选范围暂无数据。</td></tr>`;
-}
-function renderExplosionLeaderboard(){
-  const seasonSel=$("#explosionSeasonFilter"),typeSel=$("#explosionMatchTypeFilter");if(!seasonSel)return;
-  explosionSeason=seasonSel.value||explosionSeason;explosionMatchType=typeSel.value||explosionMatchType;
-  const rows=buildExplosionLeaderboard(state.players||[],state.matches||[],{season:explosionSeason,type:explosionMatchType});
-  $("#explosionLeaderboardBody").innerHTML=rows.map(r=>`<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${r.explosionCount}</td><td class="${scoreClass(r.explosionPoints)}">${fmtScore(r.explosionPoints)}</td><td>${r.explosionCount?fmtAvg(r.explosionAverage):"—"}</td><td>${fmtPct(r.explosionRate)}</td><td>${r.over50}</td><td>${r.over60}</td><td>${r.over70}</td><td>${r.over80}</td><td>${r.over90}</td><td>${r.over100}</td><td><b>${r.bgr}</b></td></tr>`).join("")||'<tr><td colspan="14" class="empty">当前筛选范围暂无数据。</td></tr>';
+  if(!rows.length)body.innerHTML=`<tr><td colspan="10" class="empty">当前筛选范围暂无数据。</td></tr>`;
 }
 function renderRecords(){
   const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const seasonSel=$("#recordSeasonFilter");if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
@@ -545,7 +551,7 @@ function renderRecords(){
   $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${seasonName} · ${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
   $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="btn record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看详情</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
-  renderDataLeaderboard();renderExplosionLeaderboard();
+  renderDataLeaderboard();
 }
 function currentRecordById(recordId){return state.recordCenter?.views?.[recordSeason]?.[recordType]?.[recordSection]?.find(record=>record.id===recordId)||null;}
 function ensureRecordModal(){if($("#recordModalBackdrop"))return;document.body.insertAdjacentHTML("beforeend",`<div class="record-modal-backdrop" id="recordModalBackdrop" hidden><section class="record-modal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle"><button type="button" class="record-modal-close" id="recordModalClose" aria-label="关闭">×</button><div id="recordModalBody"></div></section></div>`);$("#recordModalBackdrop").addEventListener("mousedown",event=>{if(event.target.id==="recordModalBackdrop")closeRecordModal();});$("#recordModalClose").addEventListener("click",closeRecordModal);}
@@ -564,13 +570,24 @@ $("#recordSeasonFilter")?.addEventListener("change",e=>{recordSeason=e.target.va
 $("#dataSeasonFilter")?.addEventListener("change",e=>{dataSeason=e.target.value;renderDataLeaderboard();});
 $("#dataMatchTypeFilter")?.addEventListener("change",e=>{dataMatchType=e.target.value;renderDataLeaderboard();});
 $("#dataMetricFilter")?.addEventListener("change",e=>{dataMetric=e.target.value;renderDataLeaderboard();});
-$("#explosionSeasonFilter")?.addEventListener("change",e=>{explosionSeason=e.target.value;renderExplosionLeaderboard();});
-$("#explosionMatchTypeFilter")?.addEventListener("change",e=>{explosionMatchType=e.target.value;renderExplosionLeaderboard();});
 
+function renderMatchPlayerOptions(){
+  const holder=$("#matchPlayerOptions");if(!holder)return;
+  const valid=new Set((state.players||[]).map(p=>p.playerId));
+  [...selectedMatchPlayers].forEach(id=>{if(!valid.has(id))selectedMatchPlayers.delete(id);});
+  holder.innerHTML=(state.players||[]).map(p=>`<label class="match-player-option"><input type="checkbox" data-match-player="${escapeHtml(p.playerId)}" ${selectedMatchPlayers.has(p.playerId)?"checked":""}><span>${escapeHtml(p.name)}</span></label>`).join("");
+  updateMatchPlayerTrigger();
+}
+function updateMatchPlayerTrigger(){
+  const button=$("#matchPlayerTrigger");if(!button)return;
+  const names=(state.players||[]).filter(p=>selectedMatchPlayers.has(p.playerId)).map(p=>p.name);
+  button.textContent=!names.length?"全部牌手":names.length===1?names[0]:`${names.length}人同时参赛`;
+  button.title=names.length?names.join("、"):"不限制牌手";
+}
 function populateSelects(){
   const opts=state.players.map(p=>`<option value="${p.playerId}">${p.name}</option>`).join("");
   $("#playerSelect").innerHTML=opts; $("#honorPlayer").innerHTML=opts;
-  $("#matchPlayer").innerHTML='<option value="all">全部牌手</option>'+opts;
+  renderMatchPlayerOptions();
   const seasons=(state.seasons||[]).map(s=>s.id);
   const boardSeasons=seasons.filter(id=>(state.matches||[]).some(m=>m.season===id));
   $("#matchSeason").innerHTML='<option value="all">全部赛季</option>'+seasons.map(s=>`<option value="${s}">${s}</option>`).join("");
@@ -619,6 +636,29 @@ function renderCurrentSeasonPerformance(pid){
   holder.innerHTML=`<div class="season-performance-shell"><div class="season-rating-hero"><div><span>${escapeHtml(season)} SEASON RATING</span><strong>${perf.rating}</strong><b>${seasonGrade(perf.rating)} · 联盟 #${perf.rank}</b></div><div class="season-compare"><small>生涯OVR ${career.overallRating??"—"}</small><b class="${compareClass}">${diff>0?"+":""}${diff}</b><span>${escapeHtml(compareText)}</span></div></div><div class="season-dimension-grid">${dimList.map(([name,value,weight])=>`<div class="season-dimension"><div><span>${name}</span><b>${Number(value||0).toFixed(1)}</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,Number(value||0)))}%"></i></div><small>权重 ${weight}%</small></div>`).join("")}</div><div class="season-core-stats"><div><span>赛季积分</span><b class="${scoreClass(perf.total)}">${fmtScore(perf.total)}</b></div><div><span>场均</span><b>${fmtAvg(perf.average)}</b></div><div><span>正分率</span><b>${fmtPct(perf.positiveRate)}</b></div><div><span>MVP</span><b>${perf.mvps}次</b></div><div><span>MVP率</span><b>${fmtPct(perf.mvpRate)}</b></div><div><span>BGR</span><b>${perf.bgr}</b></div><div><span>爆发场次</span><b>${perf.bigStageCount}场</b></div><div><span>最高单场</span><b class="${scoreClass(perf.best)}">${fmtScore(perf.best)}</b></div></div><div class="season-performance-copy"><div><strong>${escapeHtml(r.report?.seasonLabel||perf.ratingLabel)}</strong><p>${escapeHtml(r.report?.seasonSummary||"")}</p></div><div><strong>赛季观察</strong><p>${escapeHtml(r.report?.seasonOutlook||"")}</p></div></div><small class="season-rating-method">${escapeHtml(state.statusCenter?.currentSeasonRating?.methodology||"")}</small></div>`;
 }
 
+function playerSeasonDataRow(pid,season,type,metric){
+  return buildDataLeaderboard(state.players||[],state.matches||[],{season,type,metric}).find(row=>row.playerId===pid)||null;
+}
+function renderPlayerSeasonData(pid){
+  const typeSel=$("#playerSeasonMatchType"),metricSel=$("#playerSeasonMetric"),head=$("#playerSeasonHead"),body=$("#playerSeasonTable");if(!head||!body)return;
+  playerSeasonMatchType=typeSel?.value||playerSeasonMatchType;playerSeasonMetric=metricSel?.value||playerSeasonMetric;
+  const seasons=[...new Set((state.matches||[]).map(m=>m.season).filter(Boolean))].sort((a,b)=>Number(String(a).replace(/\D/g,""))-Number(String(b).replace(/\D/g,"")));
+  const scopes=[...seasons,"all"];
+  const labels=scope=>scope==="all"?"合计":scope;
+  if(playerSeasonMetric==="points"){
+    head.innerHTML='<tr><th>赛季</th><th>场次</th><th>积分</th><th>场均积分</th><th>单场最高积分</th><th>单场最低积分</th></tr>';
+    body.innerHTML=scopes.map(scope=>{const r=playerSeasonDataRow(pid,scope,playerSeasonMatchType,"points");if(!r)return `<tr><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td colspan="5" class="muted">暂无参赛数据</td></tr>`;return `<tr class="${scope==="all"?"season-total-row":""}"><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td>${r.games}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td><td>${fmtAvg(r.average)}</td><td class="${scoreClass(r.best)}">${fmtScore(r.best)}</td><td class="${scoreClass(r.worst)}">${fmtScore(r.worst)}</td></tr>`;}).join("");
+  }else if(playerSeasonMetric==="explosionTier"){
+    head.innerHTML='<tr><th>赛季</th><th>场次</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>BGR指数</th></tr>';
+    body.innerHTML=scopes.map(scope=>{const r=playerSeasonDataRow(pid,scope,playerSeasonMatchType,"explosionTier");if(!r)return `<tr><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td colspan="8" class="muted">暂无参赛数据</td></tr>`;const x=r.explosionBins||{};return `<tr class="${scope==="all"?"season-total-row":""}"><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td>${r.games}</td><td>${x.over50||0}</td><td>${x.over60||0}</td><td>${x.over70||0}</td><td>${x.over80||0}</td><td>${x.over90||0}</td><td>${x.over100||0}</td><td><b>${r.bgr||0}</b></td></tr>`;}).join("");
+  }else{
+    const labelsBy={mvp:["MVP次数","MVP积分","MVP场均积分","MVP率"],positive:["正分次数","正分积分","正分场均积分","正分率"],negative:["负分次数","负分积分","负分场均积分","负分率"],soloWin:["独赢次数","独赢积分","独赢场均积分","独赢率"],soloLoss:["独输次数","独输积分","独输场均积分","独输率"],explosion:["爆发次数","爆发积分","爆发场均积分","爆发率"]};
+    const cols=labelsBy[playerSeasonMetric];
+    head.innerHTML=`<tr><th>赛季</th><th>场次</th><th>${cols[0]}</th><th>${cols[1]}</th><th>${cols[2]}</th><th>${cols[3]}</th></tr>`;
+    body.innerHTML=scopes.map(scope=>{const r=playerSeasonDataRow(pid,scope,playerSeasonMatchType,playerSeasonMetric);if(!r)return `<tr><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td colspan="5" class="muted">暂无参赛数据</td></tr>`;const x=r[playerSeasonMetric];return `<tr class="${scope==="all"?"season-total-row":""}"><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td>${r.games}</td><td>${x.count}</td><td class="${scoreClass(x.points)}">${fmtScore(x.points)}</td><td>${x.count?fmtAvg(x.average):"—"}</td><td>${fmtPct(x.rate)}</td></tr>`;}).join("");
+  }
+}
+
 function renderPlayer(){
   const pid=currentPlayer,p=state.players.find(x=>x.playerId===pid),c=playerCareer(pid),prof=state.profiles[pid];
   const statusRow=state.statusCenter?.rankings?.find(x=>x.playerId===pid),career=statusRow?.career||{},seasonPerf=statusRow?.seasonPerformance||{};
@@ -631,17 +671,7 @@ function renderPlayer(){
   drawTrend(pid);
   const rec=playerTimeline(pid).slice(-10).reverse();
   $("#recentMatchesPlayer").innerHTML=rec.map(r=>`<div class="score-row ${r.isMvp?"mvp":""}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold">MVP</span>':""}</div><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b></div>`).join("");
-  const seasonIds=[...new Set((state.matches||[]).map(m=>m.season).filter(Boolean))].sort((a,b)=>Number(String(a).replace(/\D/g,""))-Number(String(b).replace(/\D/g,"")));
-  const seasonRows=seasonIds.map(season=>{
-    const srow=(state.seasonStats[season]||[]).find(x=>x.playerId===pid);
-    if(!srow||!Number(srow.games||0))return `<tr><td><span class="chip">${season}</span></td><td colspan="6" class="muted">暂无参赛数据</td></tr>`;
-    return `<tr><td><span class="chip gold">${season}</span></td><td>${srow.games}</td><td class="${scoreClass(srow.total)}">${fmtScore(srow.total)}</td><td>${fmtAvg(srow.average)}</td><td>${fmtPct(srow.positiveRate)}</td><td>${srow.mvps}</td><td>${fmtScore(srow.best)} / ${fmtScore(srow.worst)}</td></tr>`;
-  });
-  const timeline=playerTimeline(pid),scores=timeline.map(x=>Number(x.score)),games=scores.length,total=scores.reduce((a,b)=>a+b,0),mvps=timeline.filter(x=>x.isMvp).length,positive=timeline.filter(x=>Number(x.score)>=0).length;
-  seasonRows.push(`<tr class="season-total-row"><td><span class="chip">合计</span></td><td>${games}</td><td class="${scoreClass(total)}">${fmtScore(total)}</td><td>${games?fmtAvg(total/games):"—"}</td><td>${games?fmtPct(positive/games):"—"}</td><td>${mvps}</td><td>${games?`${fmtScore(Math.max(...scores))} / ${fmtScore(Math.min(...scores))}`:"—"}</td></tr>`);
-  $("#playerSeasonTable").innerHTML=seasonRows.join("");
-  const name=p.name;
-  $("#playerRivals").innerHTML=state.players.filter(x=>x.playerId!==pid).map(o=>{const net=state.rivalNet[name][o.name],records=(state.rivalHistory?.[name]?.[o.name]||[]).length;return `<div class="goat-row"><span class="avatar">${initials(o.name)}</span><div><strong>${escapeHtml(o.name)}</strong><div class="muted" style="font-size:11px;margin-top:4px">精准对位 · ${records} 场方向记录</div></div><b class="${scoreClass(net)}">${fmtScore(net)}</b></div>`}).join("");
+  renderPlayerSeasonData(pid);
   renderPlayerScouting(pid);
   const honors=state.honors[pid]||[],groups=groupPlayerHonors(honors);
   $("#honorSummary").textContent=`${groups.length}类奖项 · 生涯累计 ${honors.length}次`;
@@ -649,6 +679,8 @@ function renderPlayer(){
 }
 
 $("#playerSelect").addEventListener("change",e=>{currentPlayer=e.target.value;renderPlayer()});
+$("#playerSeasonMatchType")?.addEventListener("change",e=>{playerSeasonMatchType=e.target.value;renderPlayerSeasonData(currentPlayer);});
+$("#playerSeasonMetric")?.addEventListener("change",e=>{playerSeasonMetric=e.target.value;renderPlayerSeasonData(currentPlayer);});
 
 function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=matchOrdinal(m.matchId)>=67;
@@ -679,11 +711,12 @@ function openMatchModal(matchId){
 }
 
 function filteredMatches(){
-  const season=$("#matchSeason").value, player=$("#matchPlayer").value, type=$("#matchType").value, q=$("#matchQuery").value.trim().toLowerCase();
+  const season=$("#matchSeason").value,type=$("#matchType").value,q=$("#matchQuery").value.trim().toLowerCase();
+  const selected=[...selectedMatchPlayers];
   return [...state.matches].reverse().filter(m=>{
     if(season!=="all"&&m.season!==season)return false;
     if(type!=="all"&&m.matchType!==type)return false;
-    if(player!=="all"&&!m.results.some(r=>r.playerId===player&&!r.isAbsent))return false;
+    if(selected.length&&!selected.every(playerId=>m.results.some(r=>r.playerId===playerId&&!r.isAbsent)))return false;
     if(q&&!`${m.matchId} ${m.date} ${m.venue} ${m.season} ${m.round}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -694,8 +727,13 @@ function renderMatches(reset=false){
   $("#matchList").innerHTML=rows.slice(0,matchLimit).map(matchCard).join("")||'<div class="empty">没有符合条件的比赛。</div>';
   $("#loadMoreBtn").style.display=rows.length>matchLimit?"block":"none";
 }
-["matchSeason","matchPlayer","matchType"].forEach(id=>$("#"+id).addEventListener("change",()=>renderMatches(true)));
+["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",()=>renderMatches(true)));
 $("#matchQuery").addEventListener("input",()=>renderMatches(true));
+$("#matchPlayerTrigger")?.addEventListener("click",()=>{const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");const open=menu.hidden;menu.hidden=!open;button.setAttribute("aria-expanded",String(open));});
+$("#matchPlayerAll")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);});
+$("#matchPlayerClear")?.addEventListener("click",()=>{(state.players||[]).forEach(p=>selectedMatchPlayers.add(p.playerId));renderMatchPlayerOptions();renderMatches(true);});
+document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();renderMatches(true);});
+document.addEventListener("click",e=>{const filter=e.target.closest?.(".match-player-filter");if(filter)return;const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");if(menu&&!menu.hidden){menu.hidden=true;button?.setAttribute("aria-expanded","false");}});
 $("#loadMoreBtn").addEventListener("click",()=>{matchLimit+=15;renderMatches()});
 document.addEventListener("click",e=>{const card=e.target.closest("[data-match-id]");if(card&&currentView==="matches")openMatchModal(card.dataset.matchId);});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape")closeMatchModal();});
@@ -1044,7 +1082,7 @@ function renderSystem(){
   const v=state.version;
   $("#versionInfo").innerHTML=[
     ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],["年度最有价值牌手",v.seasonMvp],
-    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v2.1.0更新",v.note]
+    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v2.2.0更新",v.note]
   ].map(x=>`<div class="honor-item"><strong>${x[0]}</strong><small>${x[1]}</small></div>`).join("");
 }
 
