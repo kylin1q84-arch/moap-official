@@ -933,3 +933,63 @@ body{
   .honor-contribution-strip{grid-template-columns:1fr 1fr}
   .honor-metric-main{grid-template-columns:1fr auto}.honor-metric-main>em{grid-column:1/-1}
 }
+
+/* v2.3.1 hotfix · match player multi-select checkbox layout */
+.match-player-options{
+  display:grid;
+  gap:3px;
+}
+.match-player-option{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:9px;
+  width:100%;
+  min-width:0;
+  padding:9px 8px;
+  margin:0;
+  border-radius:8px;
+  color:var(--text);
+  white-space:nowrap;
+  cursor:pointer;
+  box-sizing:border-box;
+}
+.match-player-option input[type="checkbox"]{
+  appearance:auto;
+  -webkit-appearance:checkbox;
+  width:15px !important;
+  min-width:15px !important;
+  max-width:15px !important;
+  height:15px !important;
+  min-height:15px !important;
+  flex:0 0 15px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:3px !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  accent-color:var(--gold);
+}
+.match-player-option span{
+  display:block;
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+  color:var(--text);
+  font-size:12px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.match-player-option:hover{
+  background:rgba(215,178,91,.06);
+}
+.match-player-option:has(input:checked){
+  background:rgba(215,178,91,.085);
+}
+@media(max-width:620px){
+  .match-player-option{padding:10px 8px}
+  .match-player-option span{font-size:12px}
+}
