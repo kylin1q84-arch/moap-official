@@ -20,6 +20,8 @@ let dataMatchType = "all";
 let dataMetric = "points";
 let playerSeasonMatchType = "all";
 let playerSeasonMetric = "points";
+let rivalMode = "cumulative";
+let selectedRivalPair = null;
 const selectedMatchPlayers = new Set();
 
 const NAV = [
@@ -96,7 +98,7 @@ function applyAnalyticsToState(target){
   const top=target.goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
   const seasonIds=[...new Set(orderedMatches.map(match=>match.season))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const awardWinners=id=>seasonIds.map(season=>{const row=target.honorBoard.find(item=>item.scope===season&&item.honorId===id);return row?.winners?.length?`${season} ${row.winners.join("/")}`:null;}).filter(Boolean).join("；")||"暂无";
-  target.version={...(target.version||{}),version:"v2.2.0 Data Center & Multi-Player Filter",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"expanded data leaderboards, season personal data, Mahjong play-style archetypes and multi-player match filtering",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"综合数据榜新增累计峰值/低谷、爆发与爆发档位；个人中心升级赛季个人综合数据；实力榜重建麻将牌风类型；比赛中心支持多牌手交集筛选，并修正两场场馆名称。"};
+  target.version={...(target.version||{}),version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。"};
   return target;
 }
 applyAnalyticsToState(state);
@@ -224,7 +226,7 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.2.0 Data Center & Multi-Player Filter",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"expanded data leaderboards, season personal data, Mahjong play-style archetypes and multi-player match filtering",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"综合数据榜新增累计峰值/低谷、爆发与爆发档位；个人中心升级赛季个人综合数据；实力榜重建麻将牌风类型；比赛中心支持多牌手交集筛选，并修正两场场馆名称。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
@@ -398,7 +400,7 @@ function latestRecapHtml(){
 }
 function renderMonthlyReport(){
   const select=$("#monthlyReportMonth"),months=availableReportMonths();if(!select)return;
-  if(!monthlyReportMonth||!months.includes(monthlyReportMonth))monthlyReportMonth=months[0]||"";
+  if(!monthlyReportMonth||!months.includes(monthlyReportMonth)||(months[0]&&monthlyReportMonth<months[0]))monthlyReportMonth=months[0]||"";
   select.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("")||'<option value="">暂无月份</option>';select.value=monthlyReportMonth;
   const matches=(state.matches||[]).filter(m=>String(m.date||"").startsWith(monthlyReportMonth));const rows=monthlyPlayerStats(monthlyReportMonth),best=monthlyBestPlayer(rows);const holder=$("#monthlyReport");
   if(!matches.length||!rows.length){holder.innerHTML='<div class="empty">该月份暂无正式比赛。</div>';return;}
@@ -413,11 +415,12 @@ function renderMonthlyReport(){
   const explosionText=[...rows].sort((a,b)=>b.explosionCount-a.explosionCount||b.bgr-a.bgr).map(r=>`${r.player} ${r.explosionCount}场 / BGR ${r.bgr}`).join("；");
   const soloText=[...rows].sort((a,b)=>b.soloCount-a.soloCount||b.soloPoints-a.soloPoints).map(r=>`${r.player} ${r.soloCount}次 / ${fmtScore(r.soloPoints)}`).join("；");
   const stageText=[bestPositive,bestMvp,bestExplosion].filter(Boolean).map(x=>`${x.player} ${x.label}${x.length}场，阶段${fmtScore(x.points)} (${x.start}→${x.end})`).join("；")||"本月暂无连续表现记录";
-  holder.innerHTML=`<div class="monthly-hero"><div><span>${escapeHtml(monthLabel(monthlyReportMonth))}</span><h4>月最佳牌手 · ${escapeHtml(best?.player||"—")}</h4><p>月度综合评分 ${best?.monthlyScore??"—"} · 仅用于月报，不计入官方荣誉</p></div><b>${best?.monthlyScore??"—"}</b></div><div class="monthly-kpis"><div><span>本月比赛</span><b>${matches.length}场</b></div><div><span>最高单场</span><b class="${scoreClass(topSingle?.score)}">${escapeHtml(topSingle?.player||"—")} ${fmtScore(topSingle?.score)}</b></div><div><span>最低单场</span><b class="${scoreClass(lowSingle?.score)}">${escapeHtml(lowSingle?.player||"—")} ${fmtScore(lowSingle?.score)}</b></div><div><span>最大领先分差</span><b>${escapeHtml(maxLead?.player||"—")} ${maxLead?`${Number(maxLead.dominance)>=0?"+":""}${Number(maxLead.dominance).toFixed(1)}`:"—"}</b></div></div><div class="monthly-section"><h4>本月积分及赛季排名变化</h4><div class="table-scroll"><table><thead><tr><th>月排名</th><th>牌手</th><th>场次</th><th>本月积分</th><th>本月场均</th><th>${escapeHtml(season)}排名变化</th></tr></thead><tbody>${standingRows}</tbody></table></div></div><div class="monthly-grid"><article><h4>MVP情况</h4><p>${escapeHtml(mvpText)}</p></article><article><h4>正分情况</h4><p>${escapeHtml(positiveText)}</p></article><article><h4>爆发情况</h4><p>${escapeHtml(explosionText)}</p></article><article><h4>独赢</h4><p>${escapeHtml(soloText)}</p></article></div><div class="monthly-section"><h4>本月最佳连续表现</h4><p>${escapeHtml(stageText)}</p></div><div class="monthly-section"><h4>本月新创造 / 打破的纪录</h4>${recordEvents.length?`<div class="monthly-record-list">${recordEvents.map(e=>`<span><b>${escapeHtml(e.type)}</b> · ${escapeHtml(e.players)} · ${escapeHtml(e.name)} ${escapeHtml(e.value)} <small>${escapeHtml(e.date)} · ${escapeHtml(e.matchId)}</small></span>`).join("")}</div>`:'<p class="muted">本月没有新增、打破或追平当前有效纪录。</p>'}</div><small class="monthly-method">月最佳牌手评分：本月总积分30% + 本月场均积分15% + 本月MVP表现20% + 本月正分表现20% + 本月爆发表现10% + 本月独赢表现5%。</small>`;
+  const now=new Date(),currentMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`,bestTitle=monthlyReportMonth===currentMonth?"当前月最佳牌手":"月最佳牌手";
+  holder.innerHTML=`<div class="monthly-hero"><div><span>${escapeHtml(monthLabel(monthlyReportMonth))}</span><h4>${bestTitle} · ${escapeHtml(best?.player||"—")}</h4><p>月度综合评分 ${best?.monthlyScore??"—"} · 仅用于月报，不计入官方荣誉</p></div><b>${best?.monthlyScore??"—"}</b></div><div class="monthly-kpis"><div><span>本月比赛</span><b>${matches.length}场</b></div><div><span>最高单场</span><b class="${scoreClass(topSingle?.score)}">${escapeHtml(topSingle?.player||"—")} ${fmtScore(topSingle?.score)}</b></div><div><span>最低单场</span><b class="${scoreClass(lowSingle?.score)}">${escapeHtml(lowSingle?.player||"—")} ${fmtScore(lowSingle?.score)}</b></div><div><span>最大领先分差</span><b>${escapeHtml(maxLead?.player||"—")} ${maxLead?`${Number(maxLead.dominance)>=0?"+":""}${Number(maxLead.dominance).toFixed(1)}`:"—"}</b></div></div><div class="monthly-section"><h4>本月积分及赛季排名变化</h4><div class="table-scroll"><table><thead><tr><th>月排名</th><th>牌手</th><th>场次</th><th>本月积分</th><th>本月场均</th><th>${escapeHtml(season)}排名变化</th></tr></thead><tbody>${standingRows}</tbody></table></div></div><div class="monthly-grid"><article><h4>MVP情况</h4><p>${escapeHtml(mvpText)}</p></article><article><h4>正分情况</h4><p>${escapeHtml(positiveText)}</p></article><article><h4>爆发情况</h4><p>${escapeHtml(explosionText)}</p></article><article><h4>独赢</h4><p>${escapeHtml(soloText)}</p></article></div><div class="monthly-section"><h4>本月最佳连续表现</h4><p>${escapeHtml(stageText)}</p></div><div class="monthly-section"><h4>本月新创造 / 打破的纪录</h4>${recordEvents.length?`<div class="monthly-record-list">${recordEvents.map(e=>`<span><b>${escapeHtml(e.type)}</b> · ${escapeHtml(e.players)} · ${escapeHtml(e.name)} ${escapeHtml(e.value)} <small>${escapeHtml(e.date)} · ${escapeHtml(e.matchId)}</small></span>`).join("")}</div>`:'<p class="muted">本月没有新增、打破或追平当前有效纪录。</p>'}</div><small class="monthly-method">月最佳牌手评分：本月总积分30% + 本月场均积分15% + 本月MVP表现20% + 本月正分表现20% + 本月爆发表现10% + 本月独赢表现5%。</small>`;
 }
 function renderOverview(){
   const goat=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank)[0]||{};$("#goatName").textContent=goat.player||"—";
-  $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["当前GOAT",goat.player||"—",Number(goat.goatIndex||0).toFixed(1)+" 指数"],["系统健康",state.meta.healthScore+"%",`${state.healthChecks.filter(x=>x.result==="PASS").length}/${state.healthChecks.length} 检查通过`]].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
+  $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["当前GOAT",goat.player||"—",Number(goat.goatIndex||0).toFixed(1)+" 指数"]].map((x,i)=>`<div class="card kpi ${i===2?"overview-goat-kpi":""}"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
 $("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonth=e.target.value;renderMonthlyReport();});
@@ -546,7 +549,7 @@ function renderDataLeaderboard(){
 function renderRecords(){
   const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const seasonSel=$("#recordSeasonFilter");if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
-  $$('[data-record-section]').forEach(button=>button.classList.toggle('active',button.dataset.recordSection===recordSection));$$('[data-record-type]').forEach(button=>button.classList.toggle('active',button.dataset.recordType===recordType));
+  $$('[data-record-section]').forEach(button=>button.classList.toggle('active',button.dataset.recordSection===recordSection));const typeSel=$("#recordTypeFilter");if(typeSel)typeSel.value=recordType;
   const sectionNames={single:"单场记录",continuous:"连续记录"},typeNames={all:"全部比赛",four:"四人局",five:"五人局"},seasonName=recordSeason==="all"?"全部赛季":recordSeason;
   $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${seasonName} · ${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
@@ -565,8 +568,9 @@ function openRecordModal(recordId){
   const evidence=(record.evidence||[]).length?record.evidence:holders.flatMap(item=>item.evidence||[]);
   $("#recordModalBody").innerHTML=`<header class="record-modal-header"><div><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></div><span class="record-holder-badge">MSL RECORD</span></header><section class="record-modal-section"><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;$("#recordModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
-document.addEventListener("click",event=>{const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){recordSection=sectionButton.dataset.recordSection;renderRecords();return;}const typeButton=event.target.closest("[data-record-type]");if(typeButton){recordType=typeButton.dataset.recordType;renderRecords();return;}const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
+document.addEventListener("click",event=>{const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){recordSection=sectionButton.dataset.recordSection;renderRecords();return;}const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
 $("#recordSeasonFilter")?.addEventListener("change",e=>{recordSeason=e.target.value;renderRecords();});
+$("#recordTypeFilter")?.addEventListener("change",e=>{recordType=e.target.value;renderRecords();});
 $("#dataSeasonFilter")?.addEventListener("change",e=>{dataSeason=e.target.value;renderDataLeaderboard();});
 $("#dataMatchTypeFilter")?.addEventListener("change",e=>{dataMatchType=e.target.value;renderDataLeaderboard();});
 $("#dataMetricFilter")?.addEventListener("change",e=>{dataMetric=e.target.value;renderDataLeaderboard();});
@@ -581,8 +585,9 @@ function renderMatchPlayerOptions(){
 function updateMatchPlayerTrigger(){
   const button=$("#matchPlayerTrigger");if(!button)return;
   const names=(state.players||[]).filter(p=>selectedMatchPlayers.has(p.playerId)).map(p=>p.name);
-  button.textContent=!names.length?"全部牌手":names.length===1?names[0]:`${names.length}人同时参赛`;
+  button.textContent=!names.length?"全部牌手":names.length===1?names[0]:names.length===2?names.join("、"):`已选择${names.length}名牌手`;
   button.title=names.length?names.join("、"):"不限制牌手";
+  const count=$("#matchPlayerCount");if(count)count.textContent=`已选择${names.length}人`;
 }
 function populateSelects(){
   const opts=state.players.map(p=>`<option value="${p.playerId}">${p.name}</option>`).join("");
@@ -662,23 +667,22 @@ function renderPlayerSeasonData(pid){
 function renderPlayer(){
   const pid=currentPlayer,p=state.players.find(x=>x.playerId===pid),c=playerCareer(pid),prof=state.profiles[pid];
   const statusRow=state.statusCenter?.rankings?.find(x=>x.playerId===pid),career=statusRow?.career||{},seasonPerf=statusRow?.seasonPerformance||{};
-  $("#playerHeader").innerHTML=`<div class="profile-identity">${playerPortraitHtml(p)}<div class="profile-name-block"><span class="profile-kicker">MSL PLAYER PROFILE</span><h3>${escapeHtml(p.name)}</h3><div class="muted">${pid} · ${p.joinSeason} 创始成员 · 荣誉排名第 ${prof.honorRank}</div><div class="profile-rating-pills"><span>生涯OVR <b>${career.overallRating??"—"}</b></span><span>${escapeHtml(seasonPerf.season||latestActualSeason())} OVR <b>${seasonPerf.rating??"—"}</b></span></div></div></div><span class="chip gold profile-goat-chip">${c.goatRank===1?"CURRENT GOAT":"GOAT #"+c.goatRank}</span>`;
-  $("#playerKpis").innerHTML=[
-    ["生涯积分",fmtScore(c.totalScore),`${c.games} 场`],["场均",fmtAvg(c.averageScore),`正分率 ${fmtPct(c.positiveRate)}`],
-    ["MVP",c.mvps+" 次",`MVP率 ${fmtPct(c.mvpRate)}`],["荣誉积分",prof.honorPoints,`${prof.honorCount} 项荣誉`]
-  ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value ${x[0]==="生涯积分"?scoreClass(c.totalScore):""}">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
-  renderCurrentSeasonPerformance(pid);
-  drawTrend(pid);
-  const rec=playerTimeline(pid).slice(-10).reverse();
-  $("#recentMatchesPlayer").innerHTML=rec.map(r=>`<div class="score-row ${r.isMvp?"mvp":""}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold">MVP</span>':""}</div><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b></div>`).join("");
-  renderPlayerSeasonData(pid);
-  renderPlayerScouting(pid);
   const honors=state.honors[pid]||[],groups=groupPlayerHonors(honors);
-  $("#honorSummary").textContent=`${groups.length}类奖项 · 生涯累计 ${honors.length}次`;
-  $("#playerHonors").innerHTML=groups.map(group=>honorGroupHtml(pid,group)).join("")||'<div class="empty">暂无荣誉记录</div>';
+  $("#playerHeader").innerHTML=`<div class="profile-identity">${playerPortraitHtml(p)}<div class="profile-name-block"><span class="profile-kicker">MSL PLAYER PROFILE</span><h3>${escapeHtml(p.name)}</h3><div class="muted">${pid} · 荣誉排名第 ${prof.honorRank}</div><div class="profile-rating-pills"><span>生涯OVR <b>${career.overallRating??"—"}</b></span><span>${escapeHtml(seasonPerf.season||latestActualSeason())} OVR <b>${seasonPerf.rating??"—"}</b></span></div></div></div><span class="chip gold profile-goat-chip">${c.goatRank===1?"CURRENT GOAT":"GOAT #"+c.goatRank}</span>`;
+  const topGroups=groups.slice(0,4);
+  const summary=$("#profileHonorSummary");if(summary)summary.textContent=`${groups.length}类奖项 · 生涯累计${honors.length}次`;
+  const list=$("#profileHonorList");if(list)list.innerHTML=topGroups.map(g=>profileHonorRowHtml(pid,g)).join("")||'<div class="empty">暂无荣誉记录</div>';
+  const allBtn=$("#profileHonorsAll");if(allBtn){allBtn.hidden=!groups.length;allBtn.dataset.playerHonorsAll=pid;}
+  renderCurrentSeasonPerformance(pid);
+  renderPlayerSeasonData(pid);
+  drawTrend(pid);
+  const rec=playerTimeline(pid).slice(-5).reverse();
+  $("#recentMatchesPlayer").innerHTML=rec.map(r=>`<div class="score-row ${r.isMvp?"mvp":""}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold">MVP</span>':""}</div><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b></div>`).join("");
+  renderPlayerScouting(pid);
 }
 
 $("#playerSelect").addEventListener("change",e=>{currentPlayer=e.target.value;renderPlayer()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-player-honors-all]");if(b)openAllPlayerHonorsModal(b.dataset.playerHonorsAll);});
 $("#playerSeasonMatchType")?.addEventListener("change",e=>{playerSeasonMatchType=e.target.value;renderPlayerSeasonData(currentPlayer);});
 $("#playerSeasonMetric")?.addEventListener("change",e=>{playerSeasonMetric=e.target.value;renderPlayerSeasonData(currentPlayer);});
 
@@ -691,7 +695,7 @@ function ensureMatchModal(){
   document.body.insertAdjacentHTML("beforeend",`<div class="honor-modal-backdrop" id="matchModalBackdrop" hidden><section class="honor-modal match-detail-modal" role="dialog" aria-modal="true" aria-labelledby="matchModalTitle"><button type="button" class="honor-modal-close" id="matchModalClose" aria-label="关闭">×</button><div id="matchModalBody"></div></section></div>`);
   $("#matchModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="matchModalBackdrop")closeMatchModal();});$("#matchModalClose").addEventListener("click",closeMatchModal);
 }
-function closeMatchModal(){const m=$("#matchModalBackdrop");if(m){m.hidden=true;document.body.classList.remove("modal-open");}}
+function closeMatchModal(){const m=$("#matchModalBackdrop");if(m){m.hidden=true;if($("#honorModalBackdrop")?.hidden!==false)document.body.classList.remove("modal-open");}}
 function singleMatchMatrixHtml(match){
   const participants=match.results.filter(r=>!r.isAbsent&&r.score!=null),ids=participants.map(r=>r.playerId),nameBy=Object.fromEntries(participants.map(r=>[r.playerId,r.player]));
   const rows=(state.matchups||[]).filter(x=>x.matchId===match.matchId),cell=new Map(rows.map(x=>[`${x.fromPlayerId}|${x.toPlayerId}`,Number(x.points)]));
@@ -704,9 +708,10 @@ function singleMatchMatrixHtml(match){
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
 function openMatchModal(matchId){
-  const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match||matchOrdinal(match.matchId)<67)return;
+  const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
   ensureMatchModal();const pp=match.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score);
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade A">局</span><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3><div class="match-scores">${pp.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></div><div class="honor-modal-section"><h3>本场精准对位矩阵</h3>${singleMatchMatrixHtml(match)}</div>`;
+  const precise=matchOrdinal(match.matchId)>=67?`<div class="honor-modal-section"><h3>本场精准对位矩阵</h3>${singleMatchMatrixHtml(match)}</div>`:"";
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade A">局</span><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3><div class="match-scores">${pp.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></div>${precise}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
@@ -716,7 +721,12 @@ function filteredMatches(){
   return [...state.matches].reverse().filter(m=>{
     if(season!=="all"&&m.season!==season)return false;
     if(type!=="all"&&m.matchType!==type)return false;
-    if(selected.length&&!selected.every(playerId=>m.results.some(r=>r.playerId===playerId&&!r.isAbsent)))return false;
+    if(selected.length){
+      const participants=m.results.filter(r=>!r.isAbsent&&r.score!=null).map(r=>r.playerId);
+      const participantSet=new Set(participants);
+      if(selected.length===1){if(!participantSet.has(selected[0]))return false;}
+      else if(participantSet.size!==selected.length||!selected.every(playerId=>participantSet.has(playerId)))return false;
+    }
     if(q&&!`${m.matchId} ${m.date} ${m.venue} ${m.season} ${m.round}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -730,8 +740,7 @@ function renderMatches(reset=false){
 ["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",()=>renderMatches(true)));
 $("#matchQuery").addEventListener("input",()=>renderMatches(true));
 $("#matchPlayerTrigger")?.addEventListener("click",()=>{const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");const open=menu.hidden;menu.hidden=!open;button.setAttribute("aria-expanded",String(open));});
-$("#matchPlayerAll")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);});
-$("#matchPlayerClear")?.addEventListener("click",()=>{(state.players||[]).forEach(p=>selectedMatchPlayers.add(p.playerId));renderMatchPlayerOptions();renderMatches(true);});
+$("#matchPlayerClear")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);});
 document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();renderMatches(true);});
 document.addEventListener("click",e=>{const filter=e.target.closest?.(".match-player-filter");if(filter)return;const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");if(menu&&!menu.hidden){menu.hidden=true;button?.setAttribute("aria-expanded","false");}});
 $("#loadMoreBtn").addEventListener("click",()=>{matchLimit+=15;renderMatches()});
@@ -874,52 +883,75 @@ $("#resetDemoBtn").addEventListener("click",async()=>{
   catch(err){toast("同步失败："+(err.message||String(err)));}
 });
 
+function fmtRivalValue(n){const v=Number(n||0);return rivalMode==="average"?`${v>0?"+":""}${v.toFixed(2)}`:fmtScore(v);}
+function fmtRivalEaten(n){const v=Number(n||0);if(!v)return rivalMode==="average"?"0.00":"0";return rivalMode==="average"?`-${v.toFixed(2)}`:`-${Number.isInteger(v)?v:v.toFixed(2)}`;}
+function rivalPairGames(a,b){
+  return (state.rivalHistory?.[a]?.[b]||[]).length;
+}
+function rivalDisplayMatrix(){
+  if(rivalMode==="cumulative")return state.rivalNet||{};
+  const out={};
+  (state.players||[]).forEach(a=>{out[a.name]={};(state.players||[]).forEach(b=>{
+    if(a.playerId===b.playerId){out[a.name][b.name]=null;return;}
+    const games=rivalPairGames(a.name,b.name);
+    out[a.name][b.name]=games?Number(state.rivalNet?.[a.name]?.[b.name]||0)/games:0;
+  });});
+  return out;
+}
 function renderMatrix(target,dataMatrix,clickable=false){
   const names=state.players.map(p=>p.name);
-  let html=`<thead><tr><th>攻击方（吃分） ↓</th>${names.map(n=>`<th>${escapeHtml(n)}</th>`).join("")}</tr></thead><tbody>`;
+  let html=`<thead><tr><th>攻击方（吃分） ↓</th>${names.map(n=>`<th>${escapeHtml(n)}</th>`).join("")}<th class="matrix-summary-head">吃分</th><th class="matrix-summary-head">被吃分</th><th class="matrix-summary-head">净分</th></tr></thead><tbody>`;
+  const summaryRows=rivalSummaryForMode();
   names.forEach(a=>{
+    const summary=summaryRows.find(r=>r.player===a)||{eat:0,eaten:0,total:0};
     html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a)}</span>${matchupPlayerNameHtml(a)}</div></td>`;
     names.forEach(b=>{
       if(a===b)html+=`<td class="matchup-diagonal">—</td>`;
       else{
         const v=Number(dataMatrix?.[a]?.[b]||0),cls=v>0?"pos":v<0?"neg":"neutral";
-        html+=`<td><button type="button" class="matrix-cell ${cls}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${fmtScore(v)}</button></td>`;
+        html+=`<td><button type="button" class="matrix-cell ${cls}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${fmtRivalValue(v)}</button></td>`;
       }
     });
-    html+="</tr>";
+    html+=`<td class="matrix-summary-cell score-pos">${fmtRivalValue(summary.eat)}</td><td class="matrix-summary-cell score-neg">${fmtRivalEaten(summary.eaten)}</td><td class="matrix-summary-cell ${scoreClass(summary.total)}">${fmtRivalValue(summary.total)}</td></tr>`;
   });
   target.innerHTML=html+"</tbody>";
 }
-function extremePlayers(rows,key,mode="max"){
-  if(!rows.length)return {value:0,names:[]};
-  const value=Math[mode](...rows.map(x=>Number(x[key]||0)));
-  return {value,names:rows.filter(x=>Number(x[key]||0)===value).map(x=>x.player)};
+function rivalSummaryForMode(){
+  const rows=[...(state.rivalSummary||[])];
+  if(rivalMode==="cumulative")return rows;
+  return rows.map(row=>{
+    const name=row.player;
+    const matchIds=new Set();
+    Object.values(state.rivalHistory?.[name]||{}).forEach(items=>(items||[]).forEach(item=>matchIds.add(item.matchId)));
+    const games=matchIds.size;
+    return {...row,games,eat:games?Number(row.eat||0)/games:0,eaten:games?Number(row.eaten||0)/games:0,total:games?Number(row.total||0)/games:0};
+  });
 }
 function renderRival(){
-  renderMatrix($("#netMatrix"),state.rivalNet,true);
+  const matrix=rivalDisplayMatrix();
+  renderMatrix($("#netMatrix"),matrix,true);
   $$('[data-rival-a]').forEach(b=>b.addEventListener("click",()=>showRivalDetail(b.dataset.rivalA,b.dataset.rivalB)));
   const meta=state.rivalryMeta||{startDate:null,trackedMatches:0,entries:0};
   $("#rivalKpis").innerHTML=[
     ["统计起点",meta.startDate||"等待首场","旧比赛不参与推算"],
     ["已记录比赛",meta.trackedMatches+" 场","仅含精准对位明细"],
     ["矩阵方向格",meta.entries+" 条",`${meta.nonZeroEntries??0} 条非零`],
-    ["统计口径","方向独立","A→B 与 B→A 不互相反推"]
+    ["当前口径",rivalMode==="average"?"场均":"累计",rivalMode==="average"?"方向净分÷共同记录场次":"方向原始格累计"]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
-  const rows=[...(state.rivalSummary||[])];
-  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(r.player)}</span>${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtScore(r.eat)}</td><td class="score-neg">${r.eaten?"-"+r.eaten:"0"}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td></tr>`).join("");
+  const rows=rivalSummaryForMode();
+  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(r.player)}</span>${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtRivalValue(r.eat)}</td><td class="score-neg">${fmtRivalEaten(r.eaten)}</td><td class="${scoreClass(r.total)}">${fmtRivalValue(r.total)}</td></tr>`).join("");
   if(!meta.entries){
-    $("#rivalRanking").innerHTML='<div class="empty">录入完整的精准对位方向矩阵后，这里会自动生成排名。</div>';
     $("#rivalDetail").className="empty";$("#rivalDetail").textContent="暂无新制对位记录。";
     return;
   }
-  const winner=extremePlayers(rows,"total","max"),loser=extremePlayers(rows,"total","min"),eat=extremePlayers(rows,"eat","max"),eaten=extremePlayers(rows,"eaten","max");
-  $("#rivalRanking").innerHTML=[
-    ["总赢家",winner.names.join(" / "),fmtScore(winner.value)],
-    ["最大输家",loser.names.join(" / "),fmtScore(loser.value)],
-    ["吃分最多",eat.names.join(" / "),fmtScore(eat.value)],
-    ["被吃最多",eaten.names.join(" / "),"-"+eaten.value]
-  ].map(x=>`<div class="honor-item rival-rank-item"><span>${x[0]}</span><strong>${escapeHtml(x[1])}</strong><b class="${x[2].startsWith("-")?"score-neg":"score-pos"}">${x[2]}</b></div>`).join("");
+  if(selectedRivalPair)showRivalDetail(selectedRivalPair[0],selectedRivalPair[1]);
 }
+function setRivalMode(mode){
+  rivalMode=mode==="average"?"average":"cumulative";
+  $$('[data-rival-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rivalMode===rivalMode));
+  renderRival();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rival-mode]");if(b)setRivalMode(b.dataset.rivalMode);});
 function ensureRivalDetailModal(){
   if($("#rivalDetailModalBackdrop"))return;
   document.body.insertAdjacentHTML("beforeend",`<div class="rival-detail-modal-backdrop" id="rivalDetailModalBackdrop" hidden><section class="rival-detail-modal" role="dialog" aria-modal="true" aria-labelledby="rivalDetailModalTitle"><button type="button" class="rival-detail-modal-close" id="rivalDetailModalClose" aria-label="关闭">×</button><div id="rivalDetailModalBody"></div></section></div>`);
@@ -955,23 +987,26 @@ function openRivalDetailModal(a,b){
   document.body.classList.add("modal-open");
 }
 function showRivalDetail(a,b){
-  const forward=Number(state.rivalNet?.[a]?.[b]||0),reverse=Number(state.rivalNet?.[b]?.[a]||0);
+  selectedRivalPair=[a,b];
   const history=state.rivalHistory?.[a]?.[b]||[],reverseHistory=state.rivalHistory?.[b]?.[a]||[];
+  const forwardRaw=Number(state.rivalNet?.[a]?.[b]||0),reverseRaw=Number(state.rivalNet?.[b]?.[a]||0);
+  const forward=rivalMode==="average"&&history.length?forwardRaw/history.length:forwardRaw,reverse=rivalMode==="average"&&reverseHistory.length?reverseRaw/reverseHistory.length:reverseRaw;
   const summarize=items=>({
     eat:items.filter(item=>Number(item.net)>0).reduce((sum,item)=>sum+Number(item.net),0),
     eaten:items.filter(item=>Number(item.net)<0).reduce((sum,item)=>sum+Math.abs(Number(item.net)),0),
     net:items.reduce((sum,item)=>sum+Number(item.net),0)
   });
-  const f=summarize(history),r=summarize(reverseHistory);
+  let f=summarize(history),r=summarize(reverseHistory);
+  if(rivalMode==="average"){if(history.length)f={eat:f.eat/history.length,eaten:f.eaten/history.length,net:f.net/history.length};if(reverseHistory.length)r={eat:r.eat/reverseHistory.length,eaten:r.eaten/reverseHistory.length,net:r.net/reverseHistory.length};}
   $("#rivalDetail").className="";
-  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">精准对位方向概览</div></div></div>
+  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
     <div class="kpis rival-detail-kpis" style="margin-top:16px">
-      <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtScore(forward)}</strong></div>
-      <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtScore(f.eat)} / ${f.eaten?`-${f.eaten}`:"0"}</strong></div>
-      <div class="mini-stat"><span>${escapeHtml(b)}→${escapeHtml(a)} 净积分</span><strong class="${scoreClass(reverse)}">${fmtScore(reverse)}</strong></div>
-      <div class="mini-stat"><span>反向吃分 / 被吃分</span><strong>${fmtScore(r.eat)} / ${r.eaten?`-${r.eaten}`:"0"}</strong></div>
+      <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtRivalValue(forward)}</strong></div>
+      <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtRivalValue(f.eat)} / ${fmtRivalEaten(f.eaten)}</strong></div>
+      <div class="mini-stat"><span>${escapeHtml(b)}→${escapeHtml(a)} 净积分</span><strong class="${scoreClass(reverse)}">${fmtRivalValue(reverse)}</strong></div>
+      <div class="mini-stat"><span>反向吃分 / 被吃分</span><strong>${fmtRivalValue(r.eat)} / ${fmtRivalEaten(r.eaten)}</strong></div>
     </div>
-    <div class="validation">两个方向完全独立记录，不要求互为相反数。逐场明细不再在本页叠加。</div>
+    <div class="validation">两个方向完全独立记录，不要求互为相反数。当前显示${rivalMode==="average"?"场均":"累计"}口径；逐场明细不在本页叠加。</div>
     <button type="button" class="btn rival-detail-open-btn" data-rival-detail-open="${escapeHtml(`${a}|${b}`)}">查看明细记录 · ${history.length}场</button>`;
 }
 document.addEventListener("click",e=>{
@@ -986,14 +1021,26 @@ function scopeOrder(scope){if(scope==="CAREER")return 999;const n=Number(String(
 function groupPlayerHonors(honors){
   const map=new Map();
   honors.forEach(h=>{const key=h.honorId;if(!map.has(key))map.set(key,{honorId:key,name:h.name,grade:h.grade,category:h.category,awards:[],points:0});const group=map.get(key);group.awards.push(h);group.points+=Number(h.points||0);});
+  const catalogOrder=Object.fromEntries(HONOR_CATALOG.map((item,index)=>[item.honorId,index]));
   return [...map.values()].map(group=>({...group,awards:group.awards.sort((a,b)=>scopeOrder(a.scope)-scopeOrder(b.scope))})).sort((a,b)=>{
-    const gradeOrder={A:1,B:2,C:3,D:4,"":5};return (gradeOrder[a.grade]||9)-(gradeOrder[b.grade]||9)||b.awards.length-a.awards.length||a.name.localeCompare(b.name,"zh-CN");
+    const gradeOrder={A:1,B:2,C:3,D:4,"":5};return (gradeOrder[a.grade]||9)-(gradeOrder[b.grade]||9)||(catalogOrder[a.honorId]??999)-(catalogOrder[b.honorId]??999);
   });
 }
 function honorGroupHtml(pid,group){
   const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
   return `<button type="button" class="honor-item honor-clickable honor-group-card" data-honor-group="${escapeHtml(`${pid}|${group.honorId}`)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${group.grade}">${group.grade}</span><strong>${escapeHtml(group.name)}</strong></div><span class="chip gold">×${group.awards.length}</span></div><small>${escapeHtml(group.category||"官方荣誉")} · 累计 ${group.points} 荣誉分</small><div class="honor-scope-list">${escapeHtml(scopes)}</div><span class="honor-open-hint">点击查看各赛季评选过程与明细</span></button>`;
 }
+function profileHonorRowHtml(pid,group){
+  const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
+  return `<button type="button" class="profile-honor-row" data-honor-group="${escapeHtml(`${pid}|${group.honorId}`)}"><span class="grade ${group.grade}">${escapeHtml(group.grade)}</span><strong>${escapeHtml(group.name)}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></button>`;
+}
+function openAllPlayerHonorsModal(pid){
+  const honors=state.honors?.[pid]||[],groups=groupPlayerHonors(honors),player=state.players.find(p=>p.playerId===pid)?.name||pid;
+  ensureHonorModal();
+  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade A">荣</span><div><p>${escapeHtml(player)} · 官方荣誉履历</p><h2 id="honorModalTitle">全部荣誉</h2><strong>${groups.length}类奖项 · 生涯累计${honors.length}次</strong></div></header><div class="honor-modal-section"><div class="profile-honor-all-list">${groups.map(g=>profileHonorRowHtml(pid,g)).join("")||'<div class="empty">暂无荣誉记录</div>'}</div></div>`;
+  $("#honorModalBackdrop").hidden=false;document.body.classList.add("modal-open");
+}
+
 function honorHtml(h){
   const key=`${h.ownerPlayerId||""}|${h.scope}|${h.honorId}`;
   return `<button type="button" class="honor-item honor-clickable" data-honor-key="${escapeHtml(key)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${h.grade}">${h.grade}</span><strong>${escapeHtml(h.name)}</strong></div><span class="chip">${escapeHtml(h.scope)}</span></div><small>${escapeHtml(h.category||"官方荣誉")} · 获奖值 ${typeof h.value==="number"?Number(h.value).toFixed(Number.isInteger(h.value)?0:2):escapeHtml(h.value)} · ${escapeHtml(h.status)}</small><span class="honor-open-hint">点击查看评选规则、完整排名与证据</span></button>`;
@@ -1005,14 +1052,36 @@ function ensureHonorModal(){
   $("#honorModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="honorModalBackdrop")closeHonorModal();});
   $("#honorModalClose").addEventListener("click",closeHonorModal);
 }
-function closeHonorModal(){const m=$("#honorModalBackdrop");if(m){m.hidden=true;document.body.classList.remove("modal-open");}}
+function closeHonorModal(){const m=$("#honorModalBackdrop");if(m){m.hidden=true;if($("#matchModalBackdrop")?.hidden!==false)document.body.classList.remove("modal-open");}}
+function honorMetricEvidenceHtml(item){
+  const evidence=item?.evidence||[];
+  if(!evidence.length)return '<div class="empty compact">暂无需要逐场展开的原始比赛。</div>';
+  let cumulative=0;
+  return `<div class="honor-metric-evidence">${evidence.map(entry=>{
+    const absent=!!entry.wasAbsent,score=absent?null:Number(entry.score),tag=entry.processTag?`<small>${escapeHtml(entry.processTag)}</small>`:"";
+    if(!absent&&Number.isFinite(score))cumulative+=score;
+    const bgr=entry.bgr!=null&&Number(entry.bgr)>0?` · BGR ${entry.bgr}`:"",running=!absent&&Number.isFinite(score)?` · 过程累计 ${fmtScore(cumulative)}`:"";
+    return `<button type="button" class="honor-evidence-match" data-honor-match-id="${escapeHtml(entry.matchId||"")}"><span><strong>${escapeHtml(entry.matchId||"—")} · ${escapeHtml(entry.date||"—")}</strong>${tag}<em>${escapeHtml(entry.matchType||"—")} · ${escapeHtml(entry.venue||"未填写场地")}${bgr}${running}${absent?" · 缺席":""}</em></span><b class="${absent?"":scoreClass(score)}">${absent?"缺席":fmtScore(score)}</b></button>`;
+  }).join("")}</div>`;
+}
+function honorMetricChainHtml(item){
+  const raw=item?.原始值??item?.结果??item?.数值??"—",standard=item?.标准分,contribution=item?.贡献分,weight=item?.权重;
+  if(standard!=null&&contribution!=null&&weight)return `<div class="honor-calc-chain"><span>原始值 <b>${escapeHtml(raw)}</b></span><i>→</i><span>标准化 <b>${Number(standard).toFixed(2)}</b></span><i>→</i><span>× ${escapeHtml(weight)}</span><i>→</i><span>贡献分 <b>${Number(contribution).toFixed(2)}</b></span></div>`;
+  return `<div class="honor-calc-chain"><span>官方统计结果 <b>${escapeHtml(raw)}</b></span>${item?.计算?`<i>·</i><span>${escapeHtml(item.计算)}</span>`:""}</div>`;
+}
+function honorMetricItemHtml(item,index,isComposite){
+  const value=item?.原始值??item?.结果??item?.数值??"—",weight=item?.权重?` · ${item.权重}`:"";
+  return `<article class="honor-metric-item"><div class="honor-metric-main"><span><b>条件${index+1}</b> ${escapeHtml(item?.指标||`指标${index+1}`)}${escapeHtml(weight)}</span><strong>${escapeHtml(value)}</strong>${isComposite&&item?.贡献分!=null?`<em>贡献 ${Number(item.贡献分).toFixed(2)}</em>`:""}</div><details class="honor-process-detail"><summary>查看过程明细</summary><div class="honor-process-detail-body">${honorMetricEvidenceHtml(item)}${honorMetricChainHtml(item)}</div></details></article>`;
+}
+function honorRankingCardHtml(row,isComposite,winners=[]){
+  const formula=row.formula||[],winner=winners.includes(row.player),compact=isComposite?formula.map((item,index)=>`<span>${index+1}. ${escapeHtml(item.指标)} <b>${Number(item.贡献分||0).toFixed(2)}</b></span>`).join(""):"";
+  const detailList=formula.map((item,index)=>honorMetricItemHtml(item,index,isComposite)).join("");
+  return `<article class="honor-ranking-card ${winner?"is-winner":""}"><header><span class="rank ${row.rank===1?"top":""}">#${row.rank}</span><div><strong>${escapeHtml(row.player)}</strong>${winner?'<small>获奖牌手</small>':""}</div><b>${isComposite?`${Number(row.value||0).toFixed(2)} 综合分`:escapeHtml(formatHonorValue(row.value,row.unit))}</b></header>${isComposite?`<div class="honor-contribution-strip">${compact}</div><details class="honor-score-details"><summary>查看六项评分明细</summary><div class="honor-metric-list">${detailList}</div></details>`:`<div class="honor-metric-list">${detailList}</div>`}</article>`;
+}
 function honorDetailSections(h){
-  const d=h.details||{};
-  const ranking=(d.ranking||[]).map(row=>`<div class="${row.player===d.winner||d.winners?.includes(row.player)?"is-winner":""}"><span>#${row.rank}</span><span><strong>${escapeHtml(row.player)}</strong>${row.note?`<small>${escapeHtml(row.note)}</small>`:""}</span><b>${escapeHtml(formatHonorValue(row.value,row.unit||d.unit))}</b></div>`).join("");
-  const process=(d.formula||[]).map((item,index)=>{const label=item.指标||`指标${index+1}`,weight=item.权重?` · 权重 ${item.权重}`:"";const raw=item.原始值?`<span>原始值 <b>${escapeHtml(item.原始值)}</b></span>`:"";const calc=item.计算?`<span>计算 <b>${escapeHtml(item.计算)}</b></span>`:"";const standard=item.标准分!=null?`<span>标准分 <b>${escapeHtml(item.标准分)}</b></span>`:"";const contribution=item.贡献分!=null?`<span>贡献分 <b>${escapeHtml(item.贡献分)}</b></span>`:"";const result=item.结果!=null?`<span>结果 <b>${escapeHtml(item.结果)}</b></span>`:"";const value=item.数值!=null?`<span>结果 <b>${escapeHtml(item.数值)}</b></span>`:"";return `<article class="honor-process-item"><header><strong>${index+1}. ${escapeHtml(label)}</strong><small>${escapeHtml(weight)}</small></header><div>${raw}${calc}${standard}${contribution}${result}${value}</div></article>`}).join("");
-  const evidence=(d.evidence||[]).map(item=>{if(item.matchId){let extra="";if(item.opponent)extra=` · 对阵 ${escapeHtml(item.opponent)} ${escapeHtml(item.opponentScore)} · 净胜 +${escapeHtml(item.margin)}`;else if(item.secondPlayer)extra=` · 第二名 ${escapeHtml(item.secondPlayer)} ${item.secondScore>=0?"+":""}${escapeHtml(item.secondScore)} · 领先 +${escapeHtml(item.margin)}`;else if(item.wasAbsent)extra=" · 缺席按0";else if(item.margin!=null)extra=` · 统治分差 +${Number(item.margin).toFixed(2)}`;return `<article><div><strong>${escapeHtml(item.matchId)} · ${escapeHtml(item.date)}</strong><span>${escapeHtml(item.matchType)} · ${escapeHtml(item.venue)}${extra}</span></div><b class="${scoreClass(item.score)}">${fmtScore(item.score)}</b></article>`;}return `<article><div><strong>对阵 ${escapeHtml(item.opponent||"—")}</strong><span>${item.meetings?`交手 ${item.meetings} · ${item.wins}-${item.losses}-${item.ties}`:"对位证据"}</span></div><b>${item.rivalryIndex!=null?Number(item.rivalryIndex).toFixed(2):fmtScore(item.netScore||0)}</b></article>`;}).join("");
-  const composite=(h.honorId==="H001"||h.honorId==="H003")&&d.officialValue!=null?`<div class="honor-process-total"><span>六项加权合计</span><strong>${Number(d.officialValue).toFixed(2)} 综合分</strong></div>`:"";
-  return `<div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div>${ranking?`<div class="honor-modal-section"><h3>完整排名</h3><div class="honor-ranking-table">${ranking}</div></div>`:""}${process?`<div class="honor-modal-section"><h3>过程证据</h3><div class="honor-process-list">${process}${composite}</div></div>`:""}${evidence?`<div class="honor-modal-section"><h3>相关比赛明细</h3><div class="honor-evidence-list">${evidence}</div></div>`:""}<footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)} · 荣誉分 ${Number(h.points||0)}</footer>`;
+  const d=h.details||{},isComposite=h.honorId==="H001"||h.honorId==="H003",ranking=d.ranking||[],winners=d.winners||[];
+  const cards=ranking.map(row=>honorRankingCardHtml(row,isComposite,winners)).join("")||'<div class="empty">暂无完整排名数据。</div>';
+  return `<div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div><div class="honor-modal-section"><h3>${isComposite?"完整排名 · 六项评分与过程证据":"完整排名 · 条件与过程证据"}</h3><div class="honor-ranking-cards">${cards}</div></div><footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)} · 荣誉分 ${Number(h.points||0)}</footer>`;
 }
 
 function openHonorModal(h){
@@ -1039,6 +1108,7 @@ document.addEventListener("click",e=>{
   const group=e.target.closest("[data-honor-group]");if(group){const [pid,hid]=group.dataset.honorGroup.split("|");openHonorGroupModal(pid,hid);return;}
   const card=e.target.closest("[data-honor-key]");if(!card)return;const [pid,scope,hid]=card.dataset.honorKey.split("|");const h=(state.honors[pid]||[]).find(x=>x.scope===scope&&x.honorId===hid);if(h)openHonorModal(h);
 });
+document.addEventListener("click",e=>{const match=e.target.closest("[data-honor-match-id]");if(match&&match.dataset.honorMatchId){openMatchModal(match.dataset.honorMatchId);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHonorModal();});
 function renderGoatRows(sel,limit=5){
   const rows=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank).slice(0,limit);
@@ -1073,7 +1143,7 @@ $("#honorBoardSeason")?.addEventListener("change",renderHonorSeasonBoard);
 function renderSystem(){
   $("#systemKpis").innerHTML=[
     ["当前版本",state.version.version,"Official Feature Release"],["认证状态",state.version.certification,state.version.formulaIntegrity],
-    ["当前GOAT",state.version.currentGoat,"GOAT指数 "+Number(state.version.goatIndex||0).toFixed(1)],["数据规模",state.matches.length+" 场",state.meta.results+" 条原始成绩"]
+    ["数据规模",state.matches.length+" 场",state.meta.results+" 条原始成绩"],["系统健康",state.meta.healthScore+"%",`${state.healthChecks.filter(x=>x.result==="PASS").length}/${state.healthChecks.length} 检查通过`]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>14?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   $("#healthList").innerHTML=(state.healthChecks||[]).map(h=>{
     const details=(h.details||[]).length?`<div class="health-details">${h.details.map(item=>`<span>${escapeHtml(item)}</span>`).join("")}</div>`:"";
@@ -1081,8 +1151,8 @@ function renderSystem(){
   }).join("");
   const v=state.version;
   $("#versionInfo").innerHTML=[
-    ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],["年度最有价值牌手",v.seasonMvp],
-    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v2.2.0更新",v.note]
+    ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],
+    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v2.3.0更新",v.note]
   ].map(x=>`<div class="honor-item"><strong>${x[0]}</strong><small>${x[1]}</small></div>`).join("");
 }
 

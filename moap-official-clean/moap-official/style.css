@@ -837,3 +837,99 @@ body{
   .player-season-data-table{min-width:720px}
   .match-player-menu{position:static;margin-top:2px}
 }
+
+/* v2.3.0 · exact multi-player filter, integrated matchup matrix, honor evidence and compact profile */
+/* Brand: logo removed with zero reserved space */
+.brand{gap:0}
+
+/* Overview keeps two primary cards in first row and GOAT full-width on mobile */
+@media(max-width:680px){
+  [data-view="overview"] #overviewKpis{grid-template-columns:1fr 1fr}
+  [data-view="overview"] #overviewKpis .overview-goat-kpi{grid-column:1/-1}
+}
+
+/* Standard multi-select visually matches select controls */
+.match-player-filter{min-width:0}
+.match-player-trigger{height:39px;border:1px solid var(--line2);border-radius:10px;background:var(--input);color:var(--text);padding:0 34px 0 12px;position:relative;font:inherit}
+.match-player-trigger:after{position:absolute;right:12px;top:50%;transform:translateY(-50%);float:none}
+.match-player-menu{left:0;right:auto;width:360px;min-width:340px;max-width:380px;padding:9px;background:#08211b;border-color:var(--line2)}
+.match-player-options{display:grid;gap:3px}
+.match-player-option{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:9px 8px;margin:0;border-radius:8px;white-space:nowrap;line-height:1.2}
+.match-player-option input{flex:0 0 auto;margin:0}
+.match-player-option span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-player-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:8px 6px 0;border-top:1px solid rgba(255,255,255,.07);font-size:10px;color:var(--muted)}
+.match-player-footer button{border:0;background:transparent;color:var(--gold2);padding:4px 6px;cursor:pointer;font:inherit}
+.match-player-actions{display:none!important}
+@media(max-width:620px){
+  .match-player-menu{position:absolute;width:min(360px,calc(100vw - 42px));min-width:0;max-width:none}
+}
+
+/* Record type now uses the same select UI as season */
+.record-filter-row.compact>label{min-width:116px}
+
+/* Matchup matrix: desktop summary columns are part of the matrix; mobile uses compact summary below */
+.rival-matrix-head{align-items:flex-end;gap:14px}
+.segmented-control{display:inline-flex;align-items:center;padding:3px;border:1px solid var(--line2);border-radius:10px;background:rgba(0,0,0,.12)}
+.segmented-control button{border:0;background:transparent;color:var(--muted);border-radius:7px;padding:7px 13px;cursor:pointer;font:inherit;font-size:10px}
+.segmented-control button.active{background:rgba(215,178,91,.13);color:var(--gold2)}
+.rival-matrix-layout{display:block}
+.rival-summary-inline{display:none}
+.matrix-summary-head,.matrix-summary-cell{border-left:1px solid rgba(215,178,91,.12)}
+.matrix-summary-cell{font-weight:750;white-space:nowrap}
+@media(max-width:760px){
+  .rival-matrix-head{align-items:flex-start;flex-direction:column}
+  .matrix-summary-head,.matrix-summary-cell{display:none}
+  .rival-summary-inline{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+  .rival-summary-title{font-size:11px;color:var(--gold2);margin-bottom:7px}
+  .rival-summary-inline table{width:100%;min-width:0}
+  .rival-summary-inline th,.rival-summary-inline td{text-align:center;white-space:nowrap}
+}
+
+/* Player profile: official honors live inside the hero card */
+.player-profile-hero{display:grid;gap:14px}
+.profile-honors-home{border-top:1px solid rgba(255,255,255,.065);padding-top:13px}
+.profile-honors-head{margin-bottom:8px}
+.profile-honor-list,.profile-honor-all-list{display:grid;gap:6px}
+.profile-honor-row{width:100%;display:grid;grid-template-columns:30px minmax(0,1fr) auto minmax(100px,auto);align-items:center;gap:9px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.022);border-radius:10px;padding:9px 10px;color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.profile-honor-row:hover{border-color:rgba(215,178,91,.25);background:rgba(215,178,91,.04)}
+.profile-honor-row>strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-honor-row>b{font-size:11px;color:var(--gold2)}
+.profile-honor-row>small{font-size:10px;color:var(--muted);text-align:right;white-space:nowrap}
+.profile-honors-all{margin-top:8px;border:0;background:transparent;color:var(--gold2);padding:5px 2px;cursor:pointer;font:inherit;font-size:11px}
+@media(max-width:620px){
+  .profile-honor-row{grid-template-columns:28px minmax(0,1fr) auto}
+  .profile-honor-row>small{grid-column:2/-1;text-align:left}
+}
+
+/* Integrated honor ranking/evidence */
+.honor-ranking-cards{display:grid;gap:10px}
+.honor-ranking-card{border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.024);border-radius:14px;padding:12px}
+.honor-ranking-card.is-winner{border-color:rgba(215,178,91,.3);background:rgba(215,178,91,.055)}
+.honor-ranking-card>header{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:9px}
+.honor-ranking-card>header>div strong{display:block;font-size:13px}.honor-ranking-card>header>div small{display:block;margin-top:2px;color:var(--gold);font-size:9px}
+.honor-ranking-card>header>b{font-size:13px;color:var(--gold2);white-space:nowrap}
+.honor-contribution-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0}
+.honor-contribution-strip span{display:flex;justify-content:space-between;gap:5px;padding:6px 7px;border-radius:8px;background:rgba(255,255,255,.028);font-size:9px;color:var(--muted)}
+.honor-contribution-strip b{color:var(--text)}
+.honor-score-details>summary,.honor-process-detail>summary{cursor:pointer;color:var(--gold2);font-size:10px;list-style:none;padding:6px 0}
+.honor-score-details>summary::-webkit-details-marker,.honor-process-detail>summary::-webkit-details-marker{display:none}
+.honor-score-details>summary:after,.honor-process-detail>summary:after{content:" ▾";color:var(--muted)}
+.honor-score-details[open]>summary:after,.honor-process-detail[open]>summary:after{content:" ▴"}
+.honor-metric-list{display:grid;gap:7px;margin-top:6px}
+.honor-metric-item{padding:9px 10px;border-radius:10px;background:rgba(0,0,0,.09);border:1px solid rgba(255,255,255,.045)}
+.honor-metric-main{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.honor-metric-main span{font-size:10px;color:var(--muted)}.honor-metric-main span b{color:var(--gold2);font-weight:700;margin-right:5px}.honor-metric-main>strong{font-size:11px;white-space:nowrap}.honor-metric-main>em{font-style:normal;font-size:9px;color:var(--gold)}
+.honor-process-detail-body{display:grid;gap:8px;margin-top:6px}
+.honor-metric-evidence{display:grid;gap:5px}
+.honor-evidence-match{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.018);border-radius:8px;padding:7px 8px;color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.honor-evidence-match:hover{border-color:rgba(215,178,91,.25)}
+.honor-evidence-match span strong{display:block;font-size:10px}.honor-evidence-match span small{display:block;color:var(--gold);font-size:8px;margin-top:2px}.honor-evidence-match span em{display:block;font-style:normal;color:var(--muted);font-size:9px;margin-top:2px}.honor-evidence-match>b{font-size:11px;white-space:nowrap}
+.honor-calc-chain{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:7px 8px;border-radius:8px;background:rgba(215,178,91,.055);font-size:9px;color:var(--muted)}
+.honor-calc-chain b{color:var(--text)}.honor-calc-chain i{font-style:normal;color:var(--gold)}
+.empty.compact{padding:8px;font-size:10px}
+@media(max-width:620px){
+  .honor-ranking-card>header{grid-template-columns:38px minmax(0,1fr)}
+  .honor-ranking-card>header>b{grid-column:2;text-align:left}
+  .honor-contribution-strip{grid-template-columns:1fr 1fr}
+  .honor-metric-main{grid-template-columns:1fr auto}.honor-metric-main>em{grid-column:1/-1}
+}

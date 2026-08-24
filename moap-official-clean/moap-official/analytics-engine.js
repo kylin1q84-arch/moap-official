@@ -234,6 +234,7 @@ function seasonMetrics(players, matches, season) {
     const dominanceEntries = dominationEntries.filter(entry => entry.qualifies);
     const streak = streakMetrics(schedule);
     const mvpStage = consecutiveStageMetrics(schedule, item => item.isMvp);
+    const bigStage = consecutiveStageMetrics(schedule, item => item.score >= 50);
     const cumulative = cumulativeSwing(entries);
     const comeback = comebackMetrics(entries);
     const halfContrast = halfSeasonContrast(entries);
@@ -275,7 +276,8 @@ function seasonMetrics(players, matches, season) {
       soloEntries,
       bgr: sum(scores.map(bgrValue)),
       bigStageCount: entries.filter(entry => entry.score >= 50).length,
-      longestBigStage: longestBoolean(schedule, item => !item.absent && item.score >= 50, { ignoreAbsent: true }),
+      longestBigStage: bigStage.maxLength,
+      longestBigStageEvidence: bigStage.bestGroup.map(item => ({ matchId:item.match.matchId,date:item.match.date,round:item.match.round,season:item.match.season,matchType:item.match.matchType,venue:item.match.venue||"未填写场地",score:item.score,isMvp:item.isMvp })),
       bigWinCount: bigWins.length,
       bigWinDominanceTotal: sum(bigWins.map(entry => entry.margin)),
       bigWinScoreTotal: sum(bigWins.map(entry => entry.score)),
@@ -543,6 +545,48 @@ function awardProcessFormula(honorId, row, criteria = []) {
   return criteriaText(criteria || [], row).map(item => ({ 指标: item.指标, 计算: "按该项官方指标统计", 结果: item.数值 }));
 }
 
+function metricEvidenceFor(honorId, row, item) {
+  const label = String(item?.指标 || "");
+  const all = row.entries || [];
+  const mvp = all.filter(entry => entry.isMvp);
+  const positive = all.filter(entry => entry.score >= 0);
+  const matchTypeRows = label.includes("四人局") ? all.filter(entry => entry.matchType === "四人局") : label.includes("五人局") ? all.filter(entry => entry.matchType === "五人局") : null;
+  const withTag = (entries, tag="") => entries.map(entry => ({ ...entry, processTag:tag, bgr:bgrValue(entry.score) }));
+  if (honorId === "H001") {
+    if (label.includes("总积分")) return withTag(all,"逐场积分累计");
+    if (label.includes("场均积分")) return withTag(all,`${formatMetric(row.total,"分")} ÷ ${formatMetric(row.games,"场")}`);
+    if (label.includes("MVP场次累计积分")) return withTag(mvp,"MVP场次积分累计");
+    if (label.includes("正分场次累计积分")) return withTag(positive,"正分场次积分累计");
+    if (label.includes("最长连续MVP")) return withTag(row.longestMvpEvidence||[],"最长连续MVP区间");
+    if (label.includes("最长连续正分")) return withTag(row.longestPositiveEvidence||[],"最长连续正分区间");
+  }
+  if (honorId === "H003") {
+    if (label.includes("最长连续MVP")) return withTag(row.longestMvpEvidence||[],"最长连续MVP区间");
+    if (label.includes("MVP率")) return withTag(all,`${formatMetric(row.mvps,"次")} ÷ ${formatMetric(row.games,"场")}`);
+    if (label.includes("MVP")) return withTag(mvp,label.includes("BGR")?"MVP场次BGR逐场累计":"MVP场次明细");
+  }
+  if (matchTypeRows) return withTag(matchTypeRows,`${label.includes("四人局")?"四人局":"五人局"}参赛明细`);
+  if (honorId === "H005") return withTag(positive,"正分场次明细");
+  if (honorId === "H007") return withTag(all,label.includes("最长")?"最长连续参赛依据":"实际参赛明细");
+  if (honorId === "H008") return withTag(label.includes("最长")?(row.longestBigStageEvidence||[]):all,label.includes("最长")?"最长连续爆发区间":"爆发/BGR原始比赛");
+  if (honorId === "H010") return withTag(row.soloEntries||[],"独赢场次明细");
+  if (honorId === "H015") return withTag(row.comebackEvidence||[],"最大逆袭区间");
+  if (honorId === "H006") return withTag(row.longestPositiveEvidence||[],"最长连庄阶段");
+  if (honorId === "H021") return withTag(all.filter(entry=>entry.score<=-40),"≤-40翻车场次");
+  if (honorId === "H017") return withTag(label.includes("正分率")?positive:all,"赛季原始比赛");
+  if (honorId === "H019") return (row.schedule||[]).filter(item=>label.includes("缺席")?item.absent:!item.absent).map(item=>({matchId:item.match.matchId,date:item.match.date,round:item.match.round,season:item.match.season,matchType:item.match.matchType,venue:item.match.venue||"未填写场地",score:item.absent?null:item.score,isMvp:item.isMvp,wasAbsent:item.absent,processTag:label.includes("缺席")?"缺席赛程":"实际参赛"}));
+  if (honorId === "H018") {
+    const half=Math.floor(all.length/2), front=all.slice(0,half), back=all.slice(all.length-half);
+    return [...withTag(front,"前半赛季"),...withTag(back,"后半赛季")];
+  }
+  return withTag(all,"原始比赛明细");
+}
+function rankingDetailFor(result, row) {
+  const formula=awardProcessFormula(result.honorId,row,result.criteria||[]).map(item=>({...item,evidence:metricEvidenceFor(result.honorId,row,item)}));
+  const primaryKey=result.criteria?.[0]?.key;
+  return {playerId:row.playerId,player:row.player,rank:row.rank,value:num(row[primaryKey]??0),unit:result.catalog.unit,formula};
+}
+
 function awardObject(result, row) {
   const catalog = result.catalog;
   const primaryKey = result.criteria?.[0]?.key;
@@ -563,15 +607,8 @@ function awardObject(result, row) {
       winner: row.player,
       winners: result.winners.map(winner => winner.player),
       officialValue: num(row[primaryKey] ?? 1),
-      calculationStatus: "LIVE_RECALCULATED_V2_0_RULES",
-      ranking: result.ranking.map(ranked => ({
-        playerId: ranked.playerId,
-        player: ranked.player,
-        value: num(ranked[primaryKey] ?? 0),
-        unit: catalog.unit,
-        rank: ranked.rank,
-        note: criteriaText(result.criteria || [], ranked).map(item => `${item.指标} ${item.数值}`).join(" · ")
-      })),
+      calculationStatus: "LIVE_RECALCULATED_V2_3_RULES",
+      ranking: result.ranking.map(ranked => rankingDetailFor(result, ranked)),
       formula,
       evidence: evidenceFor(catalog.honorId, row),
       summary: result.summary
@@ -723,12 +760,12 @@ export function calculateHonorSystem(players, matches) {
           rule: result.catalog.rule, unit: result.catalog.unit,
           winner: winnerNames.length ? winnerNames.join(" / ") : (result.status === "PENDING_TIEBREAK" ? "待定" : "本季不颁发"),
           winners: winnerNames, officialValue: num(top[primaryKey] ?? 0),
-          calculationStatus: "LIVE_RECALCULATED_V2_0_RULES",
-          ranking: result.ranking.map(ranked => ({ playerId: ranked.playerId, player: ranked.player, value: num(ranked[primaryKey] ?? 0), unit: result.catalog.unit, rank: ranked.rank, note: criteriaText(result.criteria || [], ranked).map(item => `${item.指标} ${item.数值}`).join(" · ") })),
+          calculationStatus: "LIVE_RECALCULATED_V2_3_RULES",
+          ranking: result.ranking.map(ranked => rankingDetailFor(result, ranked)),
           formula: awardProcessFormula(result.honorId, top, result.criteria || []),
           evidence: evidenceFor(result.honorId, top),
           summary: result.summary || result.reason || ""
-        } : { rule: result.catalog.rule, unit: result.catalog.unit, winner:"本季不颁发", winners:[], officialValue:null, calculationStatus:"LIVE_RECALCULATED_V2_0_RULES", ranking:[], formula:[], evidence:[], summary:result.summary || result.reason || "" }
+        } : { rule: result.catalog.rule, unit: result.catalog.unit, winner:"本季不颁发", winners:[], officialValue:null, calculationStatus:"LIVE_RECALCULATED_V2_3_RULES", ranking:[], formula:[], evidence:[], summary:result.summary || result.reason || "" }
       });
     });
   }

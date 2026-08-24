@@ -51,7 +51,7 @@ await writeFile(
   'utf8'
 )
 
-console.log('MOAP v2.2.0 Data Center & Multi-Player Filter build completed successfully.')
+console.log('MOAP v2.3.0 Matchup & Honor Detail Upgrade build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')

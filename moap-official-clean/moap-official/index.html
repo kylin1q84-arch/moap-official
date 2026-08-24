@@ -18,7 +18,6 @@
 <div class="shell" id="appShell">
   <header class="topbar">
     <div class="brand">
-      <div class="logo">麻</div>
       <div>
         <h1>MOAP OFFICIAL</h1>
         <p>Mahjong Official Analytics Platform · 五人官方数据系统</p>
@@ -26,7 +25,7 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v2.2.0 Data Center & Multi-Player Filter</span>
+      <span class="badge" id="versionBadge">v2.3.0 Matchup & Honor Detail Upgrade</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button">导出当前数据</button>
     </div>
@@ -39,7 +38,7 @@
       <nav id="sidebarNav"></nav>
       <div class="side-footer">
         数据源：Supabase 云端数据库<br>
-        分析引擎：MOAP v2.2.0 Data Center & Multi-Player Filter<br>
+        分析引擎：MOAP v2.3.0 Matchup & Honor Detail Upgrade<br>
         公开直达模式：打开网址即可查看、录入并永久保存。
       </div>
     </aside>
@@ -90,11 +89,7 @@
             </div>
             <div class="record-filter-row compact">
               <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-              <div class="record-type-tabs" role="tablist" aria-label="比赛类型">
-                <button type="button" class="record-type active" data-record-type="all">全部</button>
-                <button type="button" class="record-type" data-record-type="four">四人局</button>
-                <button type="button" class="record-type" data-record-type="five">五人局</button>
-              </div>
+              <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
             </div>
           </div>
           <div class="record-summary" id="recordSummary"></div>
@@ -142,16 +137,10 @@
         </div>
         <div class="card section player-profile-hero" style="margin-bottom:16px">
           <div class="player-head" id="playerHeader"></div>
-          <div class="kpis" id="playerKpis" style="margin-top:16px;margin-bottom:0"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card section">
-            <div class="section-head"><h3>生涯积分曲线</h3><small id="chartCaption"></small></div>
-            <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>最近十场</h3><small>得分与MVP</small></div>
-            <div id="recentMatchesPlayer" class="score-list"></div>
+          <div class="profile-honors-home">
+            <div class="section-head profile-honors-head"><h3>官方荣誉</h3><small id="profileHonorSummary"></small></div>
+            <div class="profile-honor-list" id="profileHonorList"></div>
+            <button type="button" class="profile-honors-all" id="profileHonorsAll">查看全部荣誉 →</button>
           </div>
         </div>
         <div class="card section player-season-data-card" style="margin-bottom:16px">
@@ -164,6 +153,16 @@
           </div>
           <div class="table-scroll"><table class="player-season-data-table"><thead id="playerSeasonHead"></thead><tbody id="playerSeasonTable"></tbody></table></div>
         </div>
+        <div class="grid-2">
+          <div class="card section">
+            <div class="section-head"><h3>生涯积分曲线</h3><small id="chartCaption"></small></div>
+            <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
+          </div>
+          <div class="card section">
+            <div class="section-head"><h3>最近五场</h3><small>最近参加的5场正式比赛 · 得分与MVP</small></div>
+            <div id="recentMatchesPlayer" class="score-list"></div>
+          </div>
+        </div>
         <div class="card section current-season-performance-card" style="margin-bottom:16px">
           <div class="section-head"><div><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
           <div id="currentSeasonPerformance"></div>
@@ -172,10 +171,6 @@
           <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + S1至今生涯评价</small></div>
           <div id="playerScouting"></div>
         </div>
-        <div class="card section">
-          <div class="section-head"><h3>官方荣誉墙</h3><small id="honorSummary"></small></div>
-          <div class="honor-grid" id="playerHonors"></div>
-        </div>
       </section>
 
       <section class="view" data-view="matches">
@@ -183,7 +178,7 @@
         <div class="card section">
           <div class="form-row">
             <label>赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
-            <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div class="match-player-actions"><button type="button" id="matchPlayerAll">不限</button><button type="button" id="matchPlayerClear">全选</button></div><div id="matchPlayerOptions" class="match-player-options"></div></div></div>
+            <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
             <label>比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
             <label>关键词<input id="matchQuery" placeholder="场地 / 场次 / 日期"></label>
           </div>
@@ -232,25 +227,16 @@
       <section class="view" data-view="rival">
         <div class="hero"><div><h2>精准对位中心</h2><p>统计逐场录入的精准对位方向矩阵。A→B 与 B→A 独立记录，吃分、被吃分和净积分均按原始方向格汇总。</p></div></div>
         <div class="kpis" id="rivalKpis"></div>
-        <div class="grid-2">
-          <div class="card section">
-            <div class="section-head"><h3>精准对位累计矩阵</h3><small>行攻击方 / 列承受方 · 双向独立</small></div>
+        <div class="card section rival-matrix-card" style="margin-bottom:16px">
+          <div class="section-head rival-matrix-head"><div><h3>对位矩阵</h3><small>行攻击方 / 列承受方 · 双向独立 · 点击数字查看对位概览</small></div><div class="segmented-control" id="rivalModeToggle"><button type="button" class="active" data-rival-mode="cumulative">累计</button><button type="button" data-rival-mode="average">场均</button></div></div>
+          <div class="rival-matrix-layout">
             <div class="matrix-wrap"><table class="matrix" id="netMatrix"></table></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看概览，明细进入详情页</small></div>
-            <div id="rivalDetail" class="empty">请选择一个对位。</div>
+            <div class="rival-summary-inline"><div class="rival-summary-title">牌手汇总</div><div class="table-scroll"><table><thead><tr><th>牌手</th><th>吃分</th><th>被吃分</th><th>净分</th></tr></thead><tbody id="rivalSummaryTable"></tbody></table></div></div>
           </div>
         </div>
-        <div class="grid-2">
-          <div class="card section">
-            <div class="section-head"><h3>五人对位汇总</h3><small>规则与上传表格一致</small></div>
-            <div class="table-scroll"><table><thead><tr><th>牌手</th><th>吃分</th><th>被吃分</th><th>净积分</th></tr></thead><tbody id="rivalSummaryTable"></tbody></table></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>新制对位排名</h3><small>无数据时不判定获奖者</small></div>
-            <div class="list" id="rivalRanking"></div>
-          </div>
+        <div class="card section">
+          <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看概览，逐场明细进入详情页</small></div>
+          <div id="rivalDetail" class="empty">请选择一个对位。</div>
         </div>
       </section>
 

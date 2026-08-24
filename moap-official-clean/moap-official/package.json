@@ -1,6 +1,6 @@
 {
-  "name": "moap-msl-data-center-multiplayer-filter",
-  "version": "2.2.0",
+  "name": "moap-msl-matchup-honor-detail-upgrade",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "scripts": {
