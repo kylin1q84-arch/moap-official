@@ -255,7 +255,7 @@ function seasonMetrics(players, matches, season) {
       mvps: mvpEntries.length,
       mvpTotal: sum(mvpEntries.map(entry => entry.score)),
       mvpAverage: mean(mvpEntries.map(entry => entry.score)),
-      mvpBgr: sum(mvpEntries.map(entry => bgrValue(entry.score))),
+      mvpExplosionPoints: sum(mvpEntries.filter(entry => entry.score >= 50).map(entry => entry.score)),
       mvpBest: mvpEntries.length ? Math.max(...mvpEntries.map(entry => entry.score)) : 0,
       mvpRate: entries.length ? mvpEntries.length / entries.length : 0,
       longestMvp: mvpStage.maxLength,
@@ -316,7 +316,7 @@ function seasonMetrics(players, matches, season) {
       ["mvpTotal", 20, "MVP场次累计积分", "分"],
       ["longestMvp", 10, "最长连续MVP", "场"],
       ["longestMvpPoints", 10, "最长连续MVP阶段积分", "分"],
-      ["mvpBgr", 10, "MVP场次BGR", "BGR"]
+      ["mvpExplosionPoints", 10, "MVP场次爆发积分", "分"]
     ]}
   ]);
 
@@ -563,7 +563,12 @@ function metricEvidenceFor(honorId, row, item) {
   if (honorId === "H003") {
     if (label.includes("最长连续MVP")) return withTag(row.longestMvpEvidence||[],"最长连续MVP区间");
     if (label.includes("MVP率")) return withTag(all,`${formatMetric(row.mvps,"次")} ÷ ${formatMetric(row.games,"场")}`);
-    if (label.includes("MVP")) return withTag(mvp,label.includes("BGR")?"MVP场次BGR逐场累计":"MVP场次明细");
+    if (label.includes("MVP场次爆发积分")) return mvp.map(entry => ({
+      ...entry,
+      metricValue: entry.score >= 50 ? entry.score : 0,
+      processTag: entry.score >= 50 ? "MVP且达到50+，完整计入" : "MVP但未达到50+，计入0"
+    }));
+    if (label.includes("MVP")) return mvp.map(entry => ({ ...entry, processTag:"MVP场次明细" }));
   }
   if (matchTypeRows) return withTag(matchTypeRows,`${label.includes("四人局")?"四人局":"五人局"}参赛明细`);
   if (honorId === "H005") return withTag(positive,"正分场次明细");
@@ -643,7 +648,7 @@ function seasonAwards(players, matches, season) {
     { key: "mvpTotal", dir: "desc", label: "MVP场次累计积分", unit: "分" },
     { key: "longestMvp", dir: "desc", label: "最长连续MVP", unit: "场" },
     { key: "longestMvpPoints", dir: "desc", label: "最长连续MVP阶段积分", unit: "分" },
-    { key: "mvpBgr", dir: "desc", label: "MVP场次BGR", unit: "BGR" }
+    { key: "mvpExplosionPoints", dir: "desc", label: "MVP场次爆发积分", unit: "分" }
   ], { eligibility: row => row.games > 0, requirePositive: true });
 
   const four = flattenFor(rows, { typeTotal: "four.total", typeMvps: "four.mvps", typeRate: "four.positiveRate", typeGames: "four.games" });
