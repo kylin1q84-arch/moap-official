@@ -400,7 +400,7 @@ function latestRecapHtml(){
 }
 function renderMonthlyReport(){
   const select=$("#monthlyReportMonth"),months=availableReportMonths();if(!select)return;
-  if(!monthlyReportMonth||!months.includes(monthlyReportMonth)||(months[0]&&monthlyReportMonth<months[0]))monthlyReportMonth=months[0]||"";
+  if(!monthlyReportMonth||!months.includes(monthlyReportMonth))monthlyReportMonth=months[0]||"";
   select.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("")||'<option value="">暂无月份</option>';select.value=monthlyReportMonth;
   const matches=(state.matches||[]).filter(m=>String(m.date||"").startsWith(monthlyReportMonth));const rows=monthlyPlayerStats(monthlyReportMonth),best=monthlyBestPlayer(rows);const holder=$("#monthlyReport");
   if(!matches.length||!rows.length){holder.innerHTML='<div class="empty">该月份暂无正式比赛。</div>';return;}
@@ -1059,9 +1059,10 @@ function honorMetricEvidenceHtml(item){
   let cumulative=0;
   return `<div class="honor-metric-evidence">${evidence.map(entry=>{
     const absent=!!entry.wasAbsent,score=absent?null:Number(entry.score),tag=entry.processTag?`<small>${escapeHtml(entry.processTag)}</small>`:"";
-    if(!absent&&Number.isFinite(score))cumulative+=score;
-    const bgr=entry.bgr!=null&&Number(entry.bgr)>0?` · BGR ${entry.bgr}`:"",running=!absent&&Number.isFinite(score)?` · 过程累计 ${fmtScore(cumulative)}`:"";
-    return `<button type="button" class="honor-evidence-match" data-honor-match-id="${escapeHtml(entry.matchId||"")}"><span><strong>${escapeHtml(entry.matchId||"—")} · ${escapeHtml(entry.date||"—")}</strong>${tag}<em>${escapeHtml(entry.matchType||"—")} · ${escapeHtml(entry.venue||"未填写场地")}${bgr}${running}${absent?" · 缺席":""}</em></span><b class="${absent?"":scoreClass(score)}">${absent?"缺席":fmtScore(score)}</b></button>`;
+    const metricValue=absent?null:Number(entry.metricValue??score);
+    if(!absent&&Number.isFinite(metricValue))cumulative+=metricValue;
+    const bgr=entry.bgr!=null&&Number(entry.bgr)>0?` · BGR ${entry.bgr}`:"",counted=entry.metricValue!=null?` · 本项计入 ${fmtScore(metricValue)}`:"",running=!absent&&Number.isFinite(metricValue)?` · 过程累计 ${fmtScore(cumulative)}`:"";
+    return `<button type="button" class="honor-evidence-match" data-honor-match-id="${escapeHtml(entry.matchId||"")}"><span><strong>${escapeHtml(entry.matchId||"—")} · ${escapeHtml(entry.date||"—")}</strong>${tag}<em>${escapeHtml(entry.matchType||"—")} · ${escapeHtml(entry.venue||"未填写场地")}${bgr}${counted}${running}${absent?" · 缺席":""}</em></span><b class="${absent?"":scoreClass(score)}">${absent?"缺席":fmtScore(score)}</b></button>`;
   }).join("")}</div>`;
 }
 function honorMetricChainHtml(item){
