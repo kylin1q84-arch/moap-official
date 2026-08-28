@@ -7,7 +7,7 @@ export const HONOR_CATALOG = [
   {
     honorId:"H003", name:"MSL年度最有价值牌手", grade:"A", category:"最高荣誉", points:20,
     unit:"综合分", allowTie:false,
-    rule:"采用综合评分制：单赛季MVP场次30%、MVP率20%、MVP场次累计积分20%、最长连续MVP场次10%、最长连续MVP阶段积分10%、MVP场次BGR指数10%。综合分相同后依次比较六项原始指标，仍完全相同则暂不颁发。"
+    rule:"采用综合评分制：单赛季MVP场次30%、MVP率20%、MVP场次累计积分20%、最长连续MVP场次10%、最长连续MVP阶段积分10%、MVP场次爆发积分10%。MVP场次爆发积分仅累计该牌手本赛季获得MVP且实际积分达到50+的场次完整积分；低于50分计0，未获MVP的场次不计。综合分相同后依次比较六项原始指标，仍完全相同则暂不颁发。"
   },
   {
     honorId:"H011", name:"四人局之王", grade:"B", category:"专项能力", points:5,
