@@ -12,6 +12,7 @@ let currentView = "overview";
 let currentPlayer = "P001";
 let matchLimit = 15;
 let monthlyReportMonth = "";
+let monthlyReportMonthTouched = false;
 let recordSection = "single";
 let recordType = "all";
 let recordSeason = "all";
@@ -400,7 +401,7 @@ function latestRecapHtml(){
 }
 function renderMonthlyReport(){
   const select=$("#monthlyReportMonth"),months=availableReportMonths();if(!select)return;
-  if(!monthlyReportMonth||!months.includes(monthlyReportMonth))monthlyReportMonth=months[0]||"";
+  if(!monthlyReportMonth||!months.includes(monthlyReportMonth)||(!monthlyReportMonthTouched&&monthlyReportMonth!==months[0]))monthlyReportMonth=months[0]||"";
   select.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("")||'<option value="">暂无月份</option>';select.value=monthlyReportMonth;
   const matches=(state.matches||[]).filter(m=>String(m.date||"").startsWith(monthlyReportMonth));const rows=monthlyPlayerStats(monthlyReportMonth),best=monthlyBestPlayer(rows);const holder=$("#monthlyReport");
   if(!matches.length||!rows.length){holder.innerHTML='<div class="empty">该月份暂无正式比赛。</div>';return;}
@@ -423,7 +424,7 @@ function renderOverview(){
   $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["当前GOAT",goat.player||"—",Number(goat.goatIndex||0).toFixed(1)+" 指数"]].map((x,i)=>`<div class="card kpi ${i===2?"overview-goat-kpi":""}"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
-$("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonth=e.target.value;renderMonthlyReport();});
+$("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();});
 
 function movementText(r){return r.movement>0?`↑${r.movement}`:r.movement<0?`↓${Math.abs(r.movement)}`:"—";}
 function seasonRankSnapshot(matches,season){
