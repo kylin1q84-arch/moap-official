@@ -1037,3 +1037,73 @@ button:not(:disabled):active,
     filter:none !important;
   }
 }
+
+
+/* Phase 2 · player archive, honor hierarchy and GOAT ranking motion */
+.honor-board-card{
+  overflow:hidden;
+  isolation:isolate;
+}
+.honor-board-card > *{
+  position:relative;
+  z-index:1;
+}
+.honor-board-card.honor-tier-a::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:-28% -42%;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(105deg,transparent 38%,rgba(215,178,91,.12) 50%,transparent 62%);
+  transform:translate3d(-72%,0,0) skewX(-14deg);
+}
+.honor-board-card.honor-tier-a.honor-shine-once::after{
+  animation:moap-honor-shine 1.25s ease-out 1 both;
+}
+@keyframes moap-honor-shine{
+  0%{opacity:0;transform:translate3d(-72%,0,0) skewX(-14deg)}
+  18%{opacity:.52}
+  78%{opacity:.24}
+  100%{opacity:0;transform:translate3d(72%,0,0) skewX(-14deg)}
+}
+@media (hover:hover) and (pointer:fine){
+  .honor-board-card.honor-tier-a{
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,filter .2s ease;
+  }
+  .honor-board-card.honor-tier-a:hover{
+    transform:translate3d(0,-3px,0);
+    border-color:rgba(215,178,91,.34);
+    box-shadow:0 18px 42px rgba(0,0,0,.25),0 0 24px rgba(215,178,91,.035);
+    filter:brightness(1.035);
+  }
+  .honor-board-card.honor-tier-b{
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+  }
+  .honor-board-card.honor-tier-b:hover{
+    transform:translate3d(0,-2px,0);
+    border-color:rgba(119,185,255,.24);
+    box-shadow:0 14px 34px rgba(0,0,0,.2);
+  }
+  .honor-board-card.honor-tier-c{
+    transition:border-color .18s ease,filter .18s ease;
+  }
+  .honor-board-card.honor-tier-c:hover{
+    transform:none;
+    border-color:rgba(255,255,255,.13);
+    filter:brightness(1.025);
+  }
+}
+@media(max-width:760px){
+  .honor-board-card.honor-tier-a::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .honor-board-card.honor-tier-a::after{
+    display:none!important;
+    animation:none!important;
+  }
+  .trend-line{
+    stroke-dasharray:none!important;
+    stroke-dashoffset:0!important;
+  }
+}
