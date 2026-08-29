@@ -7,6 +7,7 @@ const outputDir = join(projectRoot, 'dist')
 const sourceFiles = [
   'index.html',
   'app.js',
+  'animations.js',
   'style.css',
   'certified-data.js',
   'honor-details.js',
