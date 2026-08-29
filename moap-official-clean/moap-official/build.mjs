@@ -8,6 +8,7 @@ const sourceFiles = [
   'index.html',
   'app.js',
   'animations.js',
+  'motion-runtime.js',
   'gsap-index.js',
   'gsap-core.js',
   'CSSPlugin.js',
