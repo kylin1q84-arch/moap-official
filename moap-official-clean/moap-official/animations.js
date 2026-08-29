@@ -24,14 +24,35 @@ const NUMBER_SELECTOR = [
   ".monthly-grid b",
   ".monthly-hero > b",
   ".split-stats strong",
-  ".rival-summary-inline td"
+  ".rival-summary-inline td",
+  ".goat-score-v2 > b",
+  ".scouting-index > b",
+  ".honor-ranking-card > header > b"
 ].join(",");
+
+const MOAP_MOTION = Object.freeze({
+  duration:Object.freeze({fast:.14,normal:.32,slow:.46}),
+  distance:Object.freeze({enter:12,small:6,card:3}),
+  stagger:Object.freeze({fast:.045,normal:.06}),
+  ease:Object.freeze({enter:"power2.out",exit:"power1.in"})
+});
 
 let initialized = false;
 let viewTimeline = null;
 let recordTimeline = null;
 let filterTimeline = null;
 let detailTimeline = null;
+let playerEntryTimeline = null;
+let playerSwitchTimeline = null;
+let playerDataTimeline = null;
+let playerTrendTimeline = null;
+let honorEntryTimeline = null;
+let honorCardTimeline = null;
+let honorFilterTimeline = null;
+let honorDetailTimeline = null;
+let goatRankingTimeline = null;
+let honorShineObserver = null;
+const honorShineHistory = new Set();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -285,6 +306,350 @@ export function animateNumbers(root=document,{duration}={}){
     });
     numberTweens.set(key,tween);
   });
+}
+
+
+function mobileMotion(){
+  return Boolean(window.matchMedia?.("(max-width: 760px)")?.matches);
+}
+
+function directChildren(root,selector){
+  return root?.querySelectorAll ? [...root.querySelectorAll(selector)] : [];
+}
+
+function clearExtendedMotionProps(elements,extra=""){
+  const gsap=motionEngine();
+  const list=toElements(elements);
+  if(!gsap||!list.length)return;
+  const props=["opacity","visibility","transform",extra].filter(Boolean).join(",");
+  gsap.set(list,{clearProps:props});
+}
+
+export function animatePlayerTrend(root){
+  const chart=root?.querySelector?.("#trendChart")||root;
+  const line=chart?.querySelector?.(".trend-line");
+  const area=chart?.querySelector?.(".trend-area");
+  const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
+  const animated=[line,area,...dots].filter(Boolean);
+  playerTrendTimeline?.kill();
+  if(!line||motionDisabled()){
+    clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+    return;
+  }
+
+  let length=0;
+  try{length=line.getTotalLength();}catch{return;}
+  const gsap=motionEngine();
+  const mobile=mobileMotion();
+  clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+  gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
+  if(area)gsap.set(area,{autoAlpha:0});
+  if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.9,transformOrigin:"center"});
+
+  playerTrendTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+      playerTrendTimeline=null;
+    }
+  })
+    .to(line,{strokeDashoffset:0,duration:mobile?.5:.72,ease:MOAP_MOTION.ease.enter});
+  if(area)playerTrendTimeline.to(area,{autoAlpha:1,duration:.28},"-=.4");
+  if(dots.length)playerTrendTimeline.to(dots,{autoAlpha:1,scale:1,duration:.24,stagger:mobile?.025:.04},"-=.3");
+}
+
+function playerLayers(root){
+  const gridCards=directChildren(root,":scope > .grid-2 > .card");
+  const current=root?.querySelector?.(".current-season-performance-card");
+  const scouting=root?.querySelector?.("#playerScouting")?.closest?.(".card");
+  return [
+    root?.querySelector?.("#playerHeader"),
+    current,
+    root?.querySelector?.(".player-season-data-card"),
+    ...gridCards,
+    root?.querySelector?.(".profile-honors-home"),
+    scouting
+  ].filter(Boolean);
+}
+
+export function animatePlayerCenterEntry(root){
+  const gsap=motionEngine();
+  playerEntryTimeline?.kill();
+  playerSwitchTimeline?.kill();
+  const layers=playerLayers(root);
+  if(!root||motionDisabled()||!layers.length){
+    animatePlayerTrend(root);
+    return;
+  }
+  const mobile=mobileMotion();
+  clearMotionProps(layers);
+  playerEntryTimeline=gsap.timeline({
+    defaults:{ease:MOAP_MOTION.ease.enter},
+    onComplete:()=>{
+      clearMotionProps(layers);
+      playerEntryTimeline=null;
+    }
+  }).fromTo(
+    layers,
+    {autoAlpha:0,y:mobile?8:MOAP_MOTION.distance.enter},
+    {autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:MOAP_MOTION.stagger.normal}
+  );
+  animatePlayerTrend(root);
+}
+
+export function transitionPlayerProfile({root,update,onUpdated}){
+  const gsap=motionEngine();
+  playerEntryTimeline?.kill();
+  playerSwitchTimeline?.kill();
+  playerTrendTimeline?.kill();
+  const before=playerLayers(root);
+  clearMotionProps(before);
+
+  if(motionDisabled()||!before.length){
+    update();
+    onUpdated?.();
+    animatePlayerTrend(root);
+    return;
+  }
+
+  const mobile=mobileMotion();
+  playerSwitchTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(playerLayers(root));
+      playerSwitchTimeline=null;
+    }
+  })
+    .to(before,{autoAlpha:0,y:mobile?2:4,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
+    .call(()=>{
+      update();
+      onUpdated?.();
+      animatePlayerTrend(root);
+    })
+    .fromTo(
+      playerLayers(root),
+      {autoAlpha:0,y:mobile?6:10},
+      {autoAlpha:1,y:0,duration:mobile?.27:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter,stagger:mobile?.025:MOAP_MOTION.stagger.fast}
+    );
+}
+
+export function transitionPlayerData({target,update,onUpdated}){
+  const gsap=motionEngine();
+  const elements=toElements(target);
+  playerDataTimeline?.kill();
+  clearMotionProps(elements);
+  if(motionDisabled()||!elements.length){
+    update();
+    onUpdated?.();
+    return;
+  }
+
+  playerDataTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(elements);
+      playerDataTimeline=null;
+    }
+  })
+    .to(elements,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{
+      update();
+      onUpdated?.();
+    })
+    .fromTo(elements,{autoAlpha:0,y:mobileMotion()?3:6},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
+}
+
+function playHonorShine(card,key){
+  if(!card?.isConnected||honorShineHistory.has(key)||prefersReducedMotion()||mobileMotion())return;
+  honorShineHistory.add(key);
+  card.classList.remove("honor-shine-once");
+  void card.offsetWidth;
+  card.classList.add("honor-shine-once");
+}
+
+function queueHonorShine(cards){
+  if(prefersReducedMotion()||mobileMotion())return;
+  const eligible=cards.filter(card=>card.dataset.honorGrade==="A").filter(card=>{
+    const key=card.dataset.honorBoard||card.dataset.honorKey||card.textContent?.trim()||"";
+    return key&&!honorShineHistory.has(key);
+  });
+  if(!eligible.length)return;
+
+  if(!("IntersectionObserver" in window)){
+    eligible.forEach(card=>playHonorShine(card,card.dataset.honorBoard||card.dataset.honorKey||card.textContent.trim()));
+    return;
+  }
+
+  honorShineObserver ||= new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(!entry.isIntersecting)return;
+      honorShineObserver?.unobserve(entry.target);
+      const key=entry.target.dataset.honorBoard||entry.target.dataset.honorKey||entry.target.textContent.trim();
+      playHonorShine(entry.target,key);
+    });
+  },{threshold:.24});
+  eligible.forEach(card=>honorShineObserver.observe(card));
+}
+
+export function animateGoatRanking(root){
+  const gsap=motionEngine();
+  const rows=directChildren(root,".goat-row");
+  goatRankingTimeline?.kill();
+  clearMotionProps(rows);
+  if(!rows.length||motionDisabled())return;
+
+  const mobile=mobileMotion();
+  rows.forEach(row=>{
+    const movement=Number(row.dataset.rankMovement||0);
+    const y=movement>0?(mobile?3:6):movement<0?(mobile?-3:-6):(mobile?5:8);
+    gsap.set(row,{autoAlpha:0,y});
+  });
+  goatRankingTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(rows);
+      goatRankingTimeline=null;
+    }
+  }).to(rows,{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter,stagger:mobile?.035:MOAP_MOTION.stagger.fast});
+}
+
+export function animateHonorCards(root){
+  const gsap=motionEngine();
+  const cards=directChildren(root,".honor-board-card");
+  honorCardTimeline?.kill();
+  clearMotionProps(cards);
+  if(!cards.length||motionDisabled())return;
+
+  const mobile=mobileMotion();
+  honorCardTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(cards);
+      queueHonorShine(cards);
+      honorCardTimeline=null;
+    }
+  });
+  cards.forEach((card,index)=>{
+    const grade=card.dataset.honorGrade||card.querySelector(".grade")?.textContent?.trim()||"C";
+    const from=grade==="A"
+      ?{autoAlpha:0,y:mobile?5:8,scale:mobile?1:.97}
+      :grade==="B"
+        ?{autoAlpha:0,y:mobile?5:10}
+        :{autoAlpha:0,y:mobile?2:4};
+    const duration=grade==="A"?(mobile?.32:MOAP_MOTION.duration.slow):grade==="B"?(mobile?.28:.38):(mobile?.24:.3);
+    honorCardTimeline.fromTo(card,from,{autoAlpha:1,y:0,scale:1,duration,ease:MOAP_MOTION.ease.enter},index*(mobile?.03:MOAP_MOTION.stagger.fast));
+  });
+}
+
+export function animateHonorCenterEntry(root){
+  const gsap=motionEngine();
+  honorEntryTimeline?.kill();
+  honorFilterTimeline?.kill();
+  const hero=root?.querySelector?.(".hero");
+  const topCards=directChildren(root,":scope > .grid-2 > .card");
+  const boardSection=root?.querySelector?.("#honorSeasonBoard")?.closest?.(".card");
+  const regions=[hero,...topCards,boardSection].filter(Boolean);
+  clearMotionProps(regions);
+
+  if(!root||motionDisabled()){
+    animateGoatRanking(root?.querySelector?.("#goatRanking"));
+    animateHonorCards(root?.querySelector?.("#honorSeasonBoard"));
+    return;
+  }
+
+  const mobile=mobileMotion();
+  honorEntryTimeline=gsap.timeline({
+    defaults:{ease:MOAP_MOTION.ease.enter},
+    onComplete:()=>{
+      clearMotionProps(regions);
+      honorEntryTimeline=null;
+      animateGoatRanking(root.querySelector("#goatRanking"));
+      animateHonorCards(root.querySelector("#honorSeasonBoard"));
+    }
+  }).fromTo(
+    regions,
+    {autoAlpha:0,y:mobile?7:MOAP_MOTION.distance.enter},
+    {autoAlpha:1,y:0,duration:mobile?.32:.4,stagger:mobile?.04:MOAP_MOTION.stagger.normal}
+  );
+}
+
+export function transitionHonorContent({targets,update,onUpdated,onComplete}){
+  const gsap=motionEngine();
+  const elements=toElements(targets);
+  honorFilterTimeline?.kill();
+  clearMotionProps(elements);
+  if(motionDisabled()||!elements.length){
+    update();
+    onUpdated?.();
+    onComplete?.();
+    return;
+  }
+
+  honorFilterTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(elements);
+      honorFilterTimeline=null;
+      onComplete?.();
+    }
+  })
+    .to(elements,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit,stagger:.01})
+    .call(()=>{
+      update();
+      onUpdated?.();
+    })
+    .fromTo(
+      elements,
+      {autoAlpha:0,y:mobileMotion()?3:6},
+      {autoAlpha:1,y:0,duration:.22,ease:MOAP_MOTION.ease.enter,stagger:.02}
+    );
+}
+
+export function animateHonorDetails(backdrop,{open,grade="",onComplete}={}){
+  const gsap=motionEngine();
+  const panel=backdrop?.querySelector?.(".honor-modal");
+  honorDetailTimeline?.kill();
+  if(!backdrop||!panel||motionDisabled()){
+    if(!open)onComplete?.();
+    return;
+  }
+
+  const gradeMark=panel.querySelector(".honor-modal-grade");
+  const headerParts=directChildren(panel,".honor-modal-header > div > *");
+  const sections=directChildren(panel,".honor-modal-section, .honor-season-detail, .honor-modal-footer");
+  const animated=[gradeMark,...headerParts,...sections].filter(Boolean);
+
+  if(open){
+    clearExtendedMotionProps(animated);
+    gsap.set(backdrop,{autoAlpha:0});
+    gsap.set(panel,{height:0,autoAlpha:0,y:mobileMotion()?5:9,overflow:"hidden"});
+    if(gradeMark)gsap.set(gradeMark,{autoAlpha:0,scale:grade==="A"&&!mobileMotion()?.97:1,y:4});
+    gsap.set([...headerParts,...sections],{autoAlpha:0,y:mobileMotion()?3:7});
+    honorDetailTimeline=gsap.timeline({
+      onComplete:()=>{
+        gsap.set(backdrop,{clearProps:"opacity,visibility"});
+        gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
+        clearExtendedMotionProps(animated);
+        honorDetailTimeline=null;
+        onComplete?.();
+      }
+    })
+      .to(backdrop,{autoAlpha:1,duration:.13,ease:"power1.out"})
+      .to(panel,{height:"auto",autoAlpha:1,y:0,duration:mobileMotion()?.28:.36,ease:MOAP_MOTION.ease.enter},"-=.05");
+    if(gradeMark)honorDetailTimeline.to(gradeMark,{autoAlpha:1,scale:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},"-=.27");
+    if(headerParts.length)honorDetailTimeline.to(headerParts,{autoAlpha:1,y:0,duration:.24,stagger:.035,ease:MOAP_MOTION.ease.enter},"-=.23");
+    if(sections.length)honorDetailTimeline.to(sections,{autoAlpha:1,y:0,duration:.28,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},"-=.2");
+    return;
+  }
+
+  gsap.set(panel,{overflow:"hidden"});
+  honorDetailTimeline=gsap.timeline({
+    onComplete:()=>{
+      gsap.set(backdrop,{clearProps:"opacity,visibility"});
+      gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
+      clearExtendedMotionProps(animated);
+      honorDetailTimeline=null;
+      onComplete?.();
+    }
+  });
+  if(sections.length)honorDetailTimeline.to(sections,{autoAlpha:0,y:4,duration:.1,stagger:.008,ease:MOAP_MOTION.ease.exit});
+  honorDetailTimeline
+    .to(panel,{height:0,autoAlpha:0,y:mobileMotion()?4:7,duration:.22,ease:MOAP_MOTION.ease.exit},"-=.04")
+    .to(backdrop,{autoAlpha:0,duration:.12,ease:MOAP_MOTION.ease.exit},"-=.08");
 }
 
 export function animateRecordDetails(backdrop,{open,onComplete}={}){
