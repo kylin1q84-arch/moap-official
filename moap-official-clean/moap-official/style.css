@@ -991,3 +991,49 @@ body{
   .match-player-option{padding:10px 8px}
   .match-player-option span{font-size:12px}
 }
+
+/* Phase 1 · restrained interaction motion */
+@media (hover:hover) and (pointer:fine){
+  button:not(:disabled),
+  .btn:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]){
+    transition:transform .15s ease,filter .15s ease,border-color .15s ease,background-color .15s ease;
+    transform-origin:center;
+  }
+  button:not(:disabled):hover,
+  .btn:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover{
+    filter:brightness(1.06);
+    transform:scale(1.015);
+  }
+  .card{
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+  }
+  .card:hover{
+    transform:translate3d(0,-3px,0);
+    border-color:rgba(215,178,91,.22);
+    box-shadow:0 22px 58px rgba(0,0,0,.31),0 0 28px rgba(65,164,126,.04);
+  }
+  .record-row td{
+    transition:background-color .2s ease,border-color .2s ease;
+  }
+  .record-row:hover td{
+    background:rgba(255,255,255,.018);
+  }
+}
+button:not(:disabled):active,
+.btn:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active{
+  transform:scale(.97);
+}
+@media (prefers-reduced-motion:reduce){
+  button,
+  .btn,
+  [role="button"],
+  .card,
+  .record-row td{
+    transition:none !important;
+    transform:none !important;
+    filter:none !important;
+  }
+}
