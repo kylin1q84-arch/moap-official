@@ -1,3 +1,5 @@
+import "./motion-runtime.js";
+
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const BUTTON_SELECTOR = "button:not(:disabled), .btn:not(:disabled), [role='button']:not([aria-disabled='true'])";
 const NUMBER_SELECTOR = [
