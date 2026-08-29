@@ -8,6 +8,7 @@ const sourceFiles = [
   'index.html',
   'app.js',
   'animations.js',
+  'gsap.min.js',
   'style.css',
   'certified-data.js',
   'honor-details.js',
