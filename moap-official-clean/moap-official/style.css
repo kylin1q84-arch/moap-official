@@ -496,58 +496,51 @@ body{
   overflow-x:hidden;
 }
 .ambient-background{
-  --parallax-x:0px;
-  --parallax-y:0px;
   position:fixed;
-  inset:-8vh -8vw;
+  inset:0;
   z-index:0;
   pointer-events:none;
   overflow:hidden;
-  transform:translate3d(var(--parallax-x),var(--parallax-y),0);
-  transition:transform 1.2s cubic-bezier(.2,.7,.2,1);
-  will-change:transform;
+  transform:none;
+  transition:none;
 }
 .ambient-background::before,
 .ambient-background::after{
   content:"";
   position:absolute;
+  inset:0;
   pointer-events:none;
   background-repeat:no-repeat;
-  will-change:transform;
 }
 .ambient-background::before{
-  inset:-14%;
-  opacity:.88;
+  opacity:.9;
   background:
-    radial-gradient(ellipse 48% 42% at 18% 22%,rgba(57,164,122,.24) 0%,rgba(57,164,122,.10) 42%,transparent 100%),
-    radial-gradient(ellipse 42% 38% at 84% 18%,rgba(215,178,91,.16) 0%,rgba(215,178,91,.055) 42%,transparent 100%),
-    linear-gradient(145deg,rgba(10,32,27,.28),rgba(6,20,17,.07) 48%,rgba(2,9,7,.22));
-  background-size:100% 100%,100% 100%,100% 100%;
-  animation:ambientGradientDrift 24s ease-in-out infinite;
+    linear-gradient(180deg,rgba(6,20,17,.08),rgba(2,9,7,.28)),
+    linear-gradient(90deg,
+      rgba(57,164,122,.24) 0%,
+      rgba(10,32,27,.72) 15%,
+      rgba(6,20,17,.46) 25%,
+      rgba(215,178,91,.10) 35%,
+      rgba(215,178,91,.22) 50%,
+      rgba(215,178,91,.10) 65%,
+      rgba(6,20,17,.46) 75%,
+      rgba(10,32,27,.72) 85%,
+      rgba(57,164,122,.24) 100%);
+  background-size:100% 100%,200% 100%;
+  background-position:0 0,0% 50%;
+  animation:ambientColorExchange 30s ease-in-out infinite;
+  will-change:background-position;
 }
 .ambient-background::after{
-  inset:-18%;
-  opacity:.76;
-  background:
-    radial-gradient(ellipse 46% 40% at 72% 72%,rgba(50,151,113,.18) 0%,rgba(10,32,27,.07) 45%,transparent 100%),
-    radial-gradient(ellipse 40% 34% at 24% 78%,rgba(215,178,91,.11) 0%,rgba(6,20,17,.04) 44%,transparent 100%);
-  background-size:100% 100%,100% 100%;
-  animation:ambientGradientCounterflow 27s ease-in-out infinite;
+  opacity:.72;
+  background:linear-gradient(180deg,rgba(10,32,27,.08),transparent 42%,rgba(2,9,7,.30));
 }
 .ambient-glow{
   display:none;
 }
-@keyframes ambientGradientDrift{
-  0%,100%{transform:translate3d(-10%,-7%,0) scale(1.02)}
-  25%{transform:translate3d(11%,-5%,0) scale(1.06)}
-  50%{transform:translate3d(9%,10%,0) scale(1.04)}
-  75%{transform:translate3d(-11%,8%,0) scale(1.08)}
-}
-@keyframes ambientGradientCounterflow{
-  0%,100%{transform:translate3d(10%,7%,0) scale(1.03)}
-  28%{transform:translate3d(-11%,5%,0) scale(1.08)}
-  55%{transform:translate3d(-8%,-10%,0) scale(1.05)}
-  80%{transform:translate3d(12%,-6%,0) scale(1.09)}
+@keyframes ambientColorExchange{
+  0%,100%{background-position:0 0,0% 50%}
+  50%{background-position:0 0,100% 50%}
 }
 .shell{
   position:relative;
