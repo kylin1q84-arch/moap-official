@@ -1,13 +1,4 @@
-import { gsap } from "./gsap-index.js";
-
-const motionDiagnostics = document.documentElement;
-motionDiagnostics.dataset.motionEngine = gsap?.version || "unavailable";
-window.addEventListener("error", event => {
-  motionDiagnostics.dataset.motionError = event.message || "unknown error";
-});
-window.addEventListener("unhandledrejection", event => {
-  motionDiagnostics.dataset.motionError = String(event.reason?.message || event.reason || "unknown rejection");
-});
+import { gsap } from "./motion-runtime.js";
 
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const BUTTON_SELECTOR = "button:not(:disabled), .btn:not(:disabled), [role='button']:not([aria-disabled='true'])";
