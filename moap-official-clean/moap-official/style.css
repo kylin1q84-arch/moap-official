@@ -528,7 +528,8 @@ body{
       rgba(57,164,122,.24) 100%);
   background-size:100% 100%,200% 100%;
   background-position:0 0,0% 50%;
-  animation:ambientColorExchange 30s ease-in-out infinite;
+  background-repeat:no-repeat,repeat-x;
+  animation:ambientBackgroundFlow 24s linear infinite;
   will-change:background-position;
 }
 .ambient-background::after{
@@ -538,9 +539,9 @@ body{
 .ambient-glow{
   display:none;
 }
-@keyframes ambientColorExchange{
-  0%,100%{background-position:0 0,0% 50%}
-  50%{background-position:0 0,100% 50%}
+@keyframes ambientBackgroundFlow{
+  from{background-position:0 0,0% 50%}
+  to{background-position:0 0,200% 50%}
 }
 .shell{
   position:relative;
