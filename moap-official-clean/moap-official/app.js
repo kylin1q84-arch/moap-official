@@ -6,6 +6,15 @@ import { buildRecordCenter, buildDataLeaderboard } from "./records-engine.js";
 import { buildGoatSystem } from "./goat-engine.js";
 import { validateMoapData } from "./data-validation.js";
 import { MOAP_CONFIG } from "./config.js";
+import {
+  initAnimationSystem,
+  prefersReducedMotion,
+  transitionView,
+  animateRecordCenterEntry,
+  transitionRecordContent,
+  animateNumbers,
+  animateRecordDetails
+} from "./animations.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -295,12 +304,7 @@ function initNav(){
   $$('[data-nav]').forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.nav)));
 }
 
-function showView(id){
-  if(id==="entry"&&currentRole!=="admin"){toast("当前账号为只读成员");id="overview";}
-  currentView=id;
-  $$(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
-  $$("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));
-  window.scrollTo({top:0,behavior:"smooth"});
+function renderViewContent(id){
   if(id==="overview") renderOverview();
   if(id==="records") renderRecords();
   if(id==="status") renderStatus();
@@ -309,6 +313,21 @@ function showView(id){
   if(id==="rival") renderRival();
   if(id==="honors") renderHonors();
   if(id==="system") renderSystem();
+}
+
+function showView(id,{immediate=false}={}){
+  if(id==="entry"&&currentRole!=="admin"){toast("当前账号为只读成员");id="overview";}
+  const outgoing=$(".view.active"),incoming=$(`.view[data-view="${id}"]`);
+  const swap=()=>{
+    currentView=id;
+    $$(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
+    $$("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));
+    if(!immediate)window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"});
+    renderViewContent(id);
+    animateNumbers(incoming);
+    if(id==="records")animateRecordCenterEntry(incoming);
+  };
+  transitionView({outgoing,incoming,swap,immediate});
 }
 
 function currentLeaderboard(){
@@ -424,7 +443,7 @@ function renderOverview(){
   $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["当前GOAT",goat.player||"—",Number(goat.goatIndex||0).toFixed(1)+" 指数"]].map((x,i)=>`<div class="card kpi ${i===2?"overview-goat-kpi":""}"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
-$("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();});
+$("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();animateNumbers($("#monthlyReport"));});
 
 function movementText(r){return r.movement>0?`↑${r.movement}`:r.movement<0?`↓${Math.abs(r.movement)}`:"—";}
 function seasonRankSnapshot(matches,season){
@@ -547,7 +566,7 @@ function renderDataLeaderboard(){
   }
   if(!rows.length)body.innerHTML=`<tr><td colspan="10" class="empty">当前筛选范围暂无数据。</td></tr>`;
 }
-function renderRecords(){
+function renderRecords({includeLeaderboard=true}={}){
   const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const seasonSel=$("#recordSeasonFilter");if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
   $$('[data-record-section]').forEach(button=>button.classList.toggle('active',button.dataset.recordSection===recordSection));const typeSel=$("#recordTypeFilter");if(typeSel)typeSel.value=recordType;
@@ -555,11 +574,14 @@ function renderRecords(){
   $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${seasonName} · ${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
   $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="btn record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看详情</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
-  renderDataLeaderboard();
+  if(includeLeaderboard)renderDataLeaderboard();
 }
 function currentRecordById(recordId){return state.recordCenter?.views?.[recordSeason]?.[recordType]?.[recordSection]?.find(record=>record.id===recordId)||null;}
 function ensureRecordModal(){if($("#recordModalBackdrop"))return;document.body.insertAdjacentHTML("beforeend",`<div class="record-modal-backdrop" id="recordModalBackdrop" hidden><section class="record-modal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle"><button type="button" class="record-modal-close" id="recordModalClose" aria-label="关闭">×</button><div id="recordModalBody"></div></section></div>`);$("#recordModalBackdrop").addEventListener("mousedown",event=>{if(event.target.id==="recordModalBackdrop")closeRecordModal();});$("#recordModalClose").addEventListener("click",closeRecordModal);}
-function closeRecordModal(){const modal=$("#recordModalBackdrop");if(modal){modal.hidden=true;document.body.classList.remove("modal-open");}}
+function closeRecordModal(){
+  const modal=$("#recordModalBackdrop");if(!modal||modal.hidden)return;
+  animateRecordDetails(modal,{open:false,onComplete:()=>{modal.hidden=true;document.body.classList.remove("modal-open");}});
+}
 function recordRankingNote(row){const parts=[];if(row.season)parts.push(row.season);if(row.length)parts.push(`连续${row.length}场`);if(row.startDate&&row.endDate)parts.push(`${row.startDate} 至 ${row.endDate}`);if(row.matchId)parts.push(row.matchId);return parts.join(" · ");}
 function renderRecordEvidence(evidence){if(!evidence?.length)return '<div class="empty">暂无可展示的比赛明细。</div>';let cumulative=0,currentPlayer="";return evidence.map(item=>{if(item.player!==currentPlayer){currentPlayer=item.player||"";cumulative=0;}cumulative+=Number(item.score||0);const margin=item.dominanceMargin!=null?` · 领先均分 ${Number(item.dominanceMargin)>=0?"+":""}${Number(item.dominanceMargin).toFixed(2)}`:"";const player=item.player?`${escapeHtml(item.player)} · `:"";return `<article><div><strong>${player}${escapeHtml(item.season||"")} 第${escapeHtml(item.round??"—")}局 · ${escapeHtml(item.date||"—")}</strong><span>${escapeHtml(item.matchType||"—")} · ${escapeHtml(item.venue||"未填写场地")}${escapeHtml(margin)}</span></div><div><b class="${scoreClass(item.score)}">${fmtScore(item.score)}</b><small>阶段累计 ${fmtScore(cumulative)}</small></div></article>`;}).join("");}
 function openRecordModal(recordId){
@@ -567,14 +589,31 @@ function openRecordModal(recordId){
   const holders=recordCurrentHolders(record),first=recordFirstHolder(record),latest=recordLatestCoHolder(record,first);const typeName=recordType==="all"?"全部比赛":recordType==="four"?"四人局":"五人局",seasonName=recordSeason==="all"?"全部赛季":recordSeason,recentTie=latest?`${latest.player} · ${latest.createdAt}`:"暂无后来追平";
   const infoGrid=`<div><span>保持者</span><b>${escapeHtml(recordHolderText(record))}</b></div><div><span>当前记录</span><b>${escapeHtml(record.displayValue)}</b></div><div><span>首次创造</span><b>${escapeHtml(first?`${first.player} · ${first.createdAt}`:"—")}</b></div><div><span>最近追平</span><b>${escapeHtml(recentTie)}</b></div>`;
   const evidence=(record.evidence||[]).length?record.evidence:holders.flatMap(item=>item.evidence||[]);
-  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><div><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></div><span class="record-holder-badge">MSL RECORD</span></header><section class="record-modal-section"><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;$("#recordModalBackdrop").hidden=false;document.body.classList.add("modal-open");
+  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><div><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></div><span class="record-holder-badge">MSL RECORD</span></header><section class="record-modal-section"><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;
+  const modal=$("#recordModalBackdrop");modal.hidden=false;document.body.classList.add("modal-open");animateRecordDetails(modal,{open:true});animateNumbers(modal);
 }
-document.addEventListener("click",event=>{const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){recordSection=sectionButton.dataset.recordSection;renderRecords();return;}const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
-$("#recordSeasonFilter")?.addEventListener("change",e=>{recordSeason=e.target.value;renderRecords();});
-$("#recordTypeFilter")?.addEventListener("change",e=>{recordType=e.target.value;renderRecords();});
-$("#dataSeasonFilter")?.addEventListener("change",e=>{dataSeason=e.target.value;renderDataLeaderboard();});
-$("#dataMatchTypeFilter")?.addEventListener("change",e=>{dataMatchType=e.target.value;renderDataLeaderboard();});
-$("#dataMetricFilter")?.addEventListener("change",e=>{dataMetric=e.target.value;renderDataLeaderboard();});
+function refreshRecordResults(updateState){
+  const root=$('.view[data-view="records"]');
+  transitionRecordContent({
+    targets:[$("#recordSummary"),root?.querySelector(".record-center-card .record-table-scroll")].filter(Boolean),
+    update:()=>{updateState();renderRecords({includeLeaderboard:false});},
+    onUpdated:()=>animateNumbers(root)
+  });
+}
+function refreshDataLeaderboard(updateState){
+  const root=$('.view[data-view="records"]');
+  transitionRecordContent({
+    targets:[root?.querySelector(".record-data-leaderboard .table-scroll")].filter(Boolean),
+    update:()=>{updateState();renderDataLeaderboard();},
+    onUpdated:()=>animateNumbers(root?.querySelector(".record-data-leaderboard"))
+  });
+}
+document.addEventListener("click",event=>{const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){refreshRecordResults(()=>{recordSection=sectionButton.dataset.recordSection;});return;}const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
+$("#recordSeasonFilter")?.addEventListener("change",e=>refreshRecordResults(()=>{recordSeason=e.target.value;}));
+$("#recordTypeFilter")?.addEventListener("change",e=>refreshRecordResults(()=>{recordType=e.target.value;}));
+$("#dataSeasonFilter")?.addEventListener("change",e=>refreshDataLeaderboard(()=>{dataSeason=e.target.value;}));
+$("#dataMatchTypeFilter")?.addEventListener("change",e=>refreshDataLeaderboard(()=>{dataMatchType=e.target.value;}));
+$("#dataMetricFilter")?.addEventListener("change",e=>refreshDataLeaderboard(()=>{dataMetric=e.target.value;}));
 
 function renderMatchPlayerOptions(){
   const holder=$("#matchPlayerOptions");if(!holder)return;
@@ -682,10 +721,10 @@ function renderPlayer(){
   renderPlayerScouting(pid);
 }
 
-$("#playerSelect").addEventListener("change",e=>{currentPlayer=e.target.value;renderPlayer()});
+$("#playerSelect").addEventListener("change",e=>{currentPlayer=e.target.value;renderPlayer();animateNumbers($('.view[data-view="player"]'));});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-player-honors-all]");if(b)openAllPlayerHonorsModal(b.dataset.playerHonorsAll);});
-$("#playerSeasonMatchType")?.addEventListener("change",e=>{playerSeasonMatchType=e.target.value;renderPlayerSeasonData(currentPlayer);});
-$("#playerSeasonMetric")?.addEventListener("change",e=>{playerSeasonMetric=e.target.value;renderPlayerSeasonData(currentPlayer);});
+$("#playerSeasonMatchType")?.addEventListener("change",e=>{playerSeasonMatchType=e.target.value;renderPlayerSeasonData(currentPlayer);animateNumbers($("#playerSeasonTable"));});
+$("#playerSeasonMetric")?.addEventListener("change",e=>{playerSeasonMetric=e.target.value;renderPlayerSeasonData(currentPlayer);animateNumbers($("#playerSeasonTable"));});
 
 function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=matchOrdinal(m.matchId)>=67;
@@ -746,7 +785,7 @@ document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-
 document.addEventListener("click",e=>{const filter=e.target.closest?.(".match-player-filter");if(filter)return;const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");if(menu&&!menu.hidden){menu.hidden=true;button?.setAttribute("aria-expanded","false");}});
 $("#loadMoreBtn").addEventListener("click",()=>{matchLimit+=15;renderMatches()});
 document.addEventListener("click",e=>{const card=e.target.closest("[data-match-id]");if(card&&currentView==="matches")openMatchModal(card.dataset.matchId);});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape")closeMatchModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape"){closeMatchModal();closeRecordModal();}});
 
 function initEntry(){
   $("#entryDate").value=new Date().toISOString().slice(0,10);
@@ -951,6 +990,7 @@ function setRivalMode(mode){
   rivalMode=mode==="average"?"average":"cumulative";
   $$('[data-rival-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rivalMode===rivalMode));
   renderRival();
+  animateNumbers($('.view[data-view="rival"]'));
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rival-mode]");if(b)setRivalMode(b.dataset.rivalMode);});
 function ensureRivalDetailModal(){
@@ -1139,8 +1179,8 @@ function renderHonors(){
   ].map(x=>`<div class="mini-stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
   renderHonorSeasonBoard();
 }
-$("#honorPlayer").addEventListener("change",renderHonors);
-$("#honorBoardSeason")?.addEventListener("change",renderHonorSeasonBoard);
+$("#honorPlayer").addEventListener("change",()=>{renderHonors();animateNumbers($('.view[data-view="honors"]'));});
+$("#honorBoardSeason")?.addEventListener("change",()=>{renderHonorSeasonBoard();animateNumbers($("#honorSeasonBoard"));});
 
 function renderSystem(){
   $("#systemKpis").innerHTML=[
@@ -1199,9 +1239,10 @@ function initImmersiveBackground(){
 
 function boot(){
   initImmersiveBackground();
+  initAnimationSystem();
   initNav(); populateSelects(); initEntry();
   $("#versionBadge").textContent=state.version.version;
-  renderOverview(); appBooted=true;
+  showView("overview",{immediate:true});appBooted=true;
 }
 
 async function start(){
