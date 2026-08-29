@@ -1101,3 +1101,113 @@ button:not(:disabled):active,
     stroke-dashoffset:0!important;
   }
 }
+
+
+/* Honor detail system · deep green visual unification */
+#honorModalBackdrop{
+  background:rgba(2,9,7,.84);
+  backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
+}
+#honorModalBackdrop .honor-modal{
+  border-color:rgba(215,178,91,.22);
+  background:linear-gradient(180deg,rgba(10,32,27,.995),rgba(6,20,17,.995));
+  color:var(--text);
+  box-shadow:0 30px 90px rgba(0,0,0,.52);
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,178,91,.42) rgba(4,16,13,.72);
+}
+#honorModalBackdrop .honor-modal::-webkit-scrollbar{width:10px}
+#honorModalBackdrop .honor-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
+#honorModalBackdrop .honor-modal::-webkit-scrollbar-thumb{
+  border:2px solid rgba(4,16,13,.72);
+  border-radius:999px;
+  background:rgba(215,178,91,.38);
+}
+#honorModalBackdrop .honor-modal-close{color:var(--gold2)}
+#honorModalBackdrop .honor-modal-header{align-items:flex-start}
+#honorModalBackdrop .honor-modal-header>div{flex:1;min-width:0}
+#honorModalBackdrop .honor-modal-header p{color:var(--muted)}
+#honorModalBackdrop .honor-modal-header h2{color:var(--text)}
+#honorModalBackdrop .honor-modal-header strong{color:var(--gold2)}
+#honorModalBackdrop .honor-modal-header:has(+ .honor-modal-section .profile-honor-all-list) .honor-modal-grade{
+  display:none;
+}
+#honorModalBackdrop .honor-modal-section h3{color:var(--muted)}
+#honorModalBackdrop .honor-modal-section p{color:#d7e2dd}
+#honorModalBackdrop .honor-modal-summary{color:var(--gold2)!important}
+#honorModalBackdrop .honor-modal-footer{color:var(--muted)}
+#honorModalBackdrop .profile-honor-row{
+  border-color:rgba(85,214,156,.11);
+  background:rgba(10,32,27,.68);
+  color:var(--text);
+}
+#honorModalBackdrop .profile-honor-row:hover{
+  border-color:rgba(215,178,91,.28);
+  background:rgba(215,178,91,.055);
+}
+#honorModalBackdrop .profile-honor-row[data-honor-grade="A"]{
+  border-color:rgba(215,178,91,.2);
+  background:rgba(215,178,91,.04);
+}
+#honorModalBackdrop .profile-honor-row>b{color:var(--gold2)}
+#honorModalBackdrop .profile-honor-row>small{color:var(--muted)}
+#honorModalBackdrop .grade.A{
+  background:rgba(215,178,91,.18);
+  color:var(--gold2);
+}
+#honorModalBackdrop .grade.B{
+  background:rgba(85,214,156,.11);
+  color:#a8d7c0;
+}
+#honorModalBackdrop .grade.C,
+#honorModalBackdrop .grade.D{
+  background:rgba(168,183,177,.1);
+  color:#c5d1cc;
+}
+#honorModalBackdrop .honor-ranking-table{
+  border-color:rgba(85,214,156,.12);
+  background:rgba(10,32,27,.5);
+}
+#honorModalBackdrop .honor-ranking-table>div{border-top-color:rgba(85,214,156,.09)}
+#honorModalBackdrop .honor-ranking-table .is-winner{background:rgba(215,178,91,.075)}
+#honorModalBackdrop .honor-ranking-table small{color:var(--muted)}
+#honorModalBackdrop .honor-chip-list span{
+  background:rgba(85,214,156,.07);
+  color:#d7e2dd;
+}
+#honorModalBackdrop .honor-evidence-list article{
+  border:1px solid rgba(85,214,156,.08);
+  background:rgba(10,32,27,.58);
+}
+#honorModalBackdrop .honor-evidence-list article span{color:var(--muted)}
+#honorModalBackdrop .honor-season-detail{
+  border-color:rgba(85,214,156,.12);
+  background:rgba(10,32,27,.62);
+}
+#honorModalBackdrop .honor-season-detail summary{color:var(--text)}
+#honorModalBackdrop .honor-season-detail summary span:last-child{color:var(--muted)}
+#honorModalBackdrop .honor-season-body{border-top-color:rgba(85,214,156,.1)}
+#honorModalBackdrop .honor-season-body .honor-modal-footer{border-top-color:rgba(215,178,91,.14)}
+#honorModalBackdrop .honor-ranking-card{
+  border-color:rgba(85,214,156,.1);
+  background:rgba(10,32,27,.62);
+}
+#honorModalBackdrop .honor-ranking-card.is-winner{
+  border-color:rgba(215,178,91,.28);
+  background:rgba(215,178,91,.055);
+}
+#honorModalBackdrop .honor-contribution-strip span{
+  background:rgba(85,214,156,.045);
+  color:var(--muted);
+}
+#honorModalBackdrop .honor-metric-item{
+  border-color:rgba(85,214,156,.08);
+  background:rgba(6,20,17,.48);
+}
+#honorModalBackdrop .honor-evidence-match{
+  border-color:rgba(85,214,156,.08);
+  background:rgba(10,32,27,.55);
+}
+#honorModalBackdrop .honor-evidence-match:hover{border-color:rgba(215,178,91,.26)}
+#honorModalBackdrop .honor-calc-chain{background:rgba(215,178,91,.06)}
