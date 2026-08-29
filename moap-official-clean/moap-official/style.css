@@ -489,7 +489,7 @@ select:disabled{opacity:.48;cursor:not-allowed}
 }
 
 
-/* v2.1.0 · immersive ambient background + record layout refinement */
+/* Site-wide ambient background · CSS-only motion */
 body{
   position:relative;
   isolation:isolate;
@@ -507,59 +507,45 @@ body{
   transition:transform 1.2s cubic-bezier(.2,.7,.2,1);
   will-change:transform;
 }
-.ambient-background::before{
+.ambient-background::before,
+.ambient-background::after{
   content:"";
   position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 18% 18%,rgba(50,151,113,.08),transparent 36%),
-    radial-gradient(circle at 82% 14%,rgba(215,178,91,.055),transparent 32%),
-    linear-gradient(180deg,rgba(4,18,15,.1),rgba(2,9,7,.18));
-}
-.ambient-glow{
-  position:absolute;
-  display:block;
-  border-radius:50%;
-  filter:blur(58px);
-  opacity:.22;
-  mix-blend-mode:screen;
+  pointer-events:none;
+  background-repeat:no-repeat;
   will-change:transform;
 }
-.ambient-glow-a{
-  width:min(46vw,650px);
-  aspect-ratio:1;
-  left:-10vw;
-  top:8vh;
-  background:radial-gradient(circle,rgba(55,184,134,.22) 0%,rgba(44,138,106,.10) 42%,transparent 72%);
-  animation:ambientFloatA 26s ease-in-out infinite alternate;
+.ambient-background::before{
+  inset:-14%;
+  opacity:.72;
+  background:
+    radial-gradient(circle at 18% 22%,rgba(57,164,122,.14) 0%,rgba(57,164,122,.055) 30%,transparent 58%),
+    radial-gradient(circle at 84% 18%,rgba(215,178,91,.085) 0%,rgba(215,178,91,.03) 28%,transparent 55%),
+    linear-gradient(145deg,rgba(10,32,27,.22),rgba(6,20,17,.05) 48%,rgba(2,9,7,.18));
+  background-size:115% 115%,120% 120%,100% 100%;
+  animation:ambientGradientDrift 26s ease-in-out infinite;
 }
-.ambient-glow-b{
-  width:min(38vw,560px);
-  aspect-ratio:1;
-  right:-7vw;
-  top:20vh;
-  background:radial-gradient(circle,rgba(220,184,91,.16) 0%,rgba(183,146,63,.07) 42%,transparent 74%);
-  animation:ambientFloatB 32s ease-in-out infinite alternate;
+.ambient-background::after{
+  inset:-18%;
+  opacity:.58;
+  background:
+    radial-gradient(ellipse at 72% 72%,rgba(50,151,113,.10) 0%,rgba(10,32,27,.035) 34%,transparent 62%),
+    radial-gradient(ellipse at 24% 78%,rgba(215,178,91,.055) 0%,rgba(6,20,17,.02) 32%,transparent 60%);
+  background-size:125% 125%,130% 130%;
+  animation:ambientGradientCounterflow 28s ease-in-out infinite;
 }
-.ambient-glow-c{
-  width:min(34vw,500px);
-  aspect-ratio:1;
-  left:38vw;
-  bottom:-18vh;
-  background:radial-gradient(circle,rgba(46,132,104,.16) 0%,rgba(30,92,75,.06) 46%,transparent 74%);
-  animation:ambientFloatC 36s ease-in-out infinite alternate;
+.ambient-glow{
+  display:none;
 }
-@keyframes ambientFloatA{
-  from{transform:translate3d(-1vw,-1vh,0) scale(.96)}
-  to{transform:translate3d(8vw,7vh,0) scale(1.08)}
+@keyframes ambientGradientDrift{
+  0%,100%{transform:translate3d(-1.5%,-1%,0) scale(1)}
+  35%{transform:translate3d(2.5%,1.5%,0) scale(1.025)}
+  68%{transform:translate3d(-.5%,3%,0) scale(1.015)}
 }
-@keyframes ambientFloatB{
-  from{transform:translate3d(2vw,-3vh,0) scale(1)}
-  to{transform:translate3d(-8vw,9vh,0) scale(1.1)}
-}
-@keyframes ambientFloatC{
-  from{transform:translate3d(-5vw,3vh,0) scale(.94)}
-  to{transform:translate3d(6vw,-7vh,0) scale(1.06)}
+@keyframes ambientGradientCounterflow{
+  0%,100%{transform:translate3d(1.5%,1%,0) scale(1.01)}
+  42%{transform:translate3d(-2.5%,-1.5%,0) scale(1.035)}
+  74%{transform:translate3d(1%,-2.5%,0) scale(1.02)}
 }
 .shell{
   position:relative;
@@ -583,18 +569,20 @@ body{
   transform:none !important;
   transition:none;
 }
-.ambient-reduced .ambient-glow{
+.ambient-reduced .ambient-background::before,
+.ambient-reduced .ambient-background::after{
   animation:none;
-  opacity:.11;
+  transform:none;
 }
 @media (prefers-reduced-motion:reduce){
   .ambient-background{
     transform:none !important;
     transition:none !important;
   }
-  .ambient-glow{
+  .ambient-background::before,
+  .ambient-background::after{
     animation:none !important;
-    opacity:.10;
+    transform:none !important;
   }
   .card{
     transition:none !important;
@@ -609,9 +597,12 @@ body{
     transform:none !important;
     transition:none;
   }
-  .ambient-glow{
-    filter:blur(66px);
-    opacity:.14;
+  .ambient-background::before{
+    inset:-10%;
+    opacity:.62;
+  }
+  .ambient-background::after{
+    display:none;
   }
 }
 
