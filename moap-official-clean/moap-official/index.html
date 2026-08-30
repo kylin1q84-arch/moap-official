@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
-  <link rel="stylesheet" href="/style.css?v=2.3.1-honor-ui">
+  <link rel="stylesheet" href="/style.css?v=2.3.2-overview-goat">
 </head>
 <body>
 
@@ -50,6 +50,10 @@
           <span class="chip gold">CURRENT GOAT · <b id="goatName">—</b></span>
         </div>
         <div class="kpis" id="overviewKpis"></div>
+        <div class="card section overview-goat-ranking" style="margin-bottom:16px">
+          <div class="section-head"><h3>GOAT官方排名</h3><small>当前认证结果</small></div>
+          <div id="goatRanking"></div>
+        </div>
         <div class="card section" style="margin-bottom:16px">
           <div class="section-head"><h3>最新比赛 · MSL赛后简报</h3><small>自动读取最新正式比赛与纪录动态</small></div>
           <div id="latestAiRecap"></div>
@@ -239,24 +243,6 @@
         </div>
       </section>
 
-      <section class="view" data-view="honors">
-        <div class="hero"><div><h2>荣誉中心</h2><p>查看GOAT指数、荣誉排名与各赛季官方荣誉归属。</p></div></div>
-        <div class="grid-2">
-          <div class="card section">
-            <div class="section-head"><h3>GOAT官方排名</h3><small>当前认证结果</small></div>
-            <div id="goatRanking"></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>荣誉档案</h3><label style="min-width:150px">牌手<select id="honorPlayer"></select></label></div>
-            <div class="split-stats" id="honorStats"></div>
-          </div>
-        </div>
-        <div class="card section" style="margin-bottom:16px">
-          <div class="section-head"><div><h3>赛季荣誉归属</h3><small>每赛季评选 MSL总冠军 与 MSL年度最有价值牌手；若全部比较条件仍完全相同，则该荣誉暂不颁发。</small></div><label style="min-width:150px">赛季<select id="honorBoardSeason"></select></label></div>
-          <div class="honor-board-grid" id="honorSeasonBoard"></div>
-        </div>
-      </section>
-
       <section class="view" data-view="system">
         <div class="hero"><div><h2>系统与审计</h2><p>展示版本状态、健康检查及数据迁移信息。</p></div></div>
         <div class="kpis" id="systemKpis"></div>
@@ -277,6 +263,6 @@
 <div class="toast" id="toast"></div>
 
 
-<script type="module" src="/app.js?v=2.3.1-honor-ui"></script>
+<script type="module" src="/app.js?v=2.3.2-overview-goat"></script>
 </body>
 </html>
