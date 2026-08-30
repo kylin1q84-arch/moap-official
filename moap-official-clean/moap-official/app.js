@@ -18,10 +18,7 @@ import {
   animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
-  animateHonorCenterEntry,
-  transitionHonorContent,
-  animateHonorDetails,
-  animateHonorCards
+  animateGoatRanking
 } from "./animations.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
@@ -49,7 +46,6 @@ const NAV = [
   ["player","个人中心"],
   ["matches","比赛中心"],
   ["rival","对位中心"],
-  ["honors","荣誉中心"],
   ["system","系统审计"],
   ["entry","录入比赛"]
 ];
@@ -329,11 +325,11 @@ function renderViewContent(id){
   if(id==="player") renderPlayer();
   if(id==="matches") renderMatches(true);
   if(id==="rival") renderRival();
-  if(id==="honors") renderHonors();
   if(id==="system") renderSystem();
 }
 
 function showView(id,{immediate=false}={}){
+  if(id==="honors"||!NAV.some(([viewId])=>viewId===id))id="overview";
   if(id==="entry"&&currentRole!=="admin"){toast("当前账号为只读成员");id="overview";}
   const outgoing=$(".view.active"),incoming=$(`.view[data-view="${id}"]`);
   const swap=()=>{
@@ -345,7 +341,6 @@ function showView(id,{immediate=false}={}){
     animateNumbers(incoming);
     if(id==="records")animateRecordCenterEntry(incoming);
     if(id==="player")animatePlayerCenterEntry(incoming);
-    if(id==="honors")animateHonorCenterEntry(incoming);
   };
   transitionView({outgoing,incoming,swap,immediate});
 }
@@ -461,6 +456,8 @@ function renderMonthlyReport(){
 function renderOverview(){
   const goat=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank)[0]||{};$("#goatName").textContent=goat.player||"—";
   $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["当前GOAT",goat.player||"—",Number(goat.goatIndex||0).toFixed(1)+" 指数"]].map((x,i)=>`<div class="card kpi ${i===2?"overview-goat-kpi":""}"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
+  renderGoatRows("#goatRanking");
+  animateGoatRanking($("#goatRanking"));
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
 $("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();animateNumbers($("#monthlyReport"));});
@@ -651,15 +648,13 @@ function updateMatchPlayerTrigger(){
 }
 function populateSelects(){
   const opts=state.players.map(p=>`<option value="${p.playerId}">${p.name}</option>`).join("");
-  $("#playerSelect").innerHTML=opts; $("#honorPlayer").innerHTML=opts;
+  $("#playerSelect").innerHTML=opts;
   renderMatchPlayerOptions();
   const seasons=(state.seasons||[]).map(s=>s.id);
-  const boardSeasons=seasons.filter(id=>(state.matches||[]).some(m=>m.season===id));
   $("#matchSeason").innerHTML='<option value="all">全部赛季</option>'+seasons.map(s=>`<option value="${s}">${s}</option>`).join("");
   $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.status==="active"?"selected":""}>${s.id}${s.status==="active"?"（进行中）":""}</option>`).join("");
-  const honorSeason=$("#honorBoardSeason");if(honorSeason){const previous=honorSeason.value;honorSeason.innerHTML=boardSeasons.map(s=>`<option value="${s}">${s}</option>`).join("");honorSeason.value=boardSeasons.includes(previous)?previous:(boardSeasons.at(-1)||"");}
   if(!state.players.some(p=>p.playerId===currentPlayer)) currentPlayer=state.players[0]?.playerId||"P001";
-  $("#playerSelect").value=currentPlayer; $("#honorPlayer").value=currentPlayer;
+  $("#playerSelect").value=currentPlayer;
 }
 
 function playerCareer(pid){
@@ -786,7 +781,7 @@ function ensureMatchModal(){
   document.body.insertAdjacentHTML("beforeend",`<div class="honor-modal-backdrop" id="matchModalBackdrop" hidden><section class="honor-modal match-detail-modal" role="dialog" aria-modal="true" aria-labelledby="matchModalTitle"><button type="button" class="honor-modal-close" id="matchModalClose" aria-label="关闭">×</button><div id="matchModalBody"></div></section></div>`);
   $("#matchModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="matchModalBackdrop")closeMatchModal();});$("#matchModalClose").addEventListener("click",closeMatchModal);
 }
-function closeMatchModal(){const m=$("#matchModalBackdrop");if(m){m.hidden=true;if($("#honorModalBackdrop")?.hidden!==false)document.body.classList.remove("modal-open");}}
+function closeMatchModal(){const m=$("#matchModalBackdrop");if(m){m.hidden=true;document.body.classList.remove("modal-open");}}
 function singleMatchMatrixHtml(match){
   const participants=match.results.filter(r=>!r.isAbsent&&r.score!=null),ids=participants.map(r=>r.playerId),nameBy=Object.fromEntries(participants.map(r=>[r.playerId,r.player]));
   const rows=(state.matchups||[]).filter(x=>x.matchId===match.matchId),cell=new Map(rows.map(x=>[`${x.fromPlayerId}|${x.toPlayerId}`,Number(x.points)]));
@@ -1125,75 +1120,6 @@ function profileHonorRowHtml(group){
   const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
   return `<div class="profile-honor-row"><strong>${escapeHtml(safeHonorName(group))}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></div>`;
 }
-function formatHonorValue(value,unit=""){if(value===null||value===undefined)return "—";if(unit==="%")return `${(Number(value)*100).toFixed(1)}%`;if(typeof value==="number"&&!Number.isInteger(value))return `${value.toFixed(2)}${unit}`;return `${value}${unit}`;}
-function ensureHonorModal(){
-  if($("#honorModalBackdrop"))return;
-  document.body.insertAdjacentHTML("beforeend",`<div class="honor-modal-backdrop" id="honorModalBackdrop" hidden><section class="honor-modal" role="dialog" aria-modal="true" aria-labelledby="honorModalTitle"><button type="button" class="honor-modal-close" id="honorModalClose" aria-label="关闭">×</button><div id="honorModalBody"></div></section></div>`);
-  $("#honorModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="honorModalBackdrop")closeHonorModal();});
-  $("#honorModalClose").addEventListener("click",closeHonorModal);
-}
-function revealHonorModal(){
-  const backdrop=$("#honorModalBackdrop");if(!backdrop)return;
-  backdrop.hidden=false;document.body.classList.add("modal-open");
-  animateNumbers($("#honorModalBody"));
-  animateHonorDetails(backdrop,{open:true});
-}
-function closeHonorModal(){
-  const backdrop=$("#honorModalBackdrop");if(!backdrop||backdrop.hidden)return;
-  animateHonorDetails(backdrop,{open:false,onComplete:()=>{
-    backdrop.hidden=true;
-    if($("#matchModalBackdrop")?.hidden!==false)document.body.classList.remove("modal-open");
-  }});
-}
-function honorMetricEvidenceHtml(item){
-  const evidence=item?.evidence||[];
-  if(!evidence.length)return '<div class="empty compact">暂无需要逐场展开的原始比赛。</div>';
-  let cumulative=0;
-  return `<div class="honor-metric-evidence">${evidence.map(entry=>{
-    const absent=!!entry.wasAbsent,score=absent?null:Number(entry.score),tag=entry.processTag?`<small>${escapeHtml(entry.processTag)}</small>`:"";
-    const metricValue=absent?null:Number(entry.metricValue??score);
-    if(!absent&&Number.isFinite(metricValue))cumulative+=metricValue;
-    const bgr=entry.bgr!=null&&Number(entry.bgr)>0?` · BGR ${entry.bgr}`:"",counted=entry.metricValue!=null?` · 本项计入 ${fmtScore(metricValue)}`:"",running=!absent&&Number.isFinite(metricValue)?` · 过程累计 ${fmtScore(cumulative)}`:"";
-    return `<button type="button" class="honor-evidence-match" data-honor-match-id="${escapeHtml(entry.matchId||"")}"><span><strong>${escapeHtml(entry.matchId||"—")} · ${escapeHtml(entry.date||"—")}</strong>${tag}<em>${escapeHtml(entry.matchType||"—")} · ${escapeHtml(entry.venue||"未填写场地")}${bgr}${counted}${running}${absent?" · 缺席":""}</em></span><b class="${absent?"":scoreClass(score)}">${absent?"缺席":fmtScore(score)}</b></button>`;
-  }).join("")}</div>`;
-}
-function honorMetricChainHtml(item){
-  const raw=item?.原始值??item?.结果??item?.数值??"—",standard=item?.标准分,contribution=item?.贡献分,weight=item?.权重;
-  if(standard!=null&&contribution!=null&&weight)return `<div class="honor-calc-chain"><span>原始值 <b>${escapeHtml(raw)}</b></span><i>→</i><span>标准化 <b>${Number(standard).toFixed(2)}</b></span><i>→</i><span>× ${escapeHtml(weight)}</span><i>→</i><span>贡献分 <b>${Number(contribution).toFixed(2)}</b></span></div>`;
-  return `<div class="honor-calc-chain"><span>官方统计结果 <b>${escapeHtml(raw)}</b></span>${item?.计算?`<i>·</i><span>${escapeHtml(item.计算)}</span>`:""}</div>`;
-}
-function honorMetricItemHtml(item,index,isComposite){
-  const value=item?.原始值??item?.结果??item?.数值??"—",weight=item?.权重?` · ${item.权重}`:"";
-  return `<article class="honor-metric-item"><div class="honor-metric-main"><span><b>条件${index+1}</b> ${escapeHtml(item?.指标||`指标${index+1}`)}${escapeHtml(weight)}</span><strong>${escapeHtml(value)}</strong>${isComposite&&item?.贡献分!=null?`<em>贡献 ${Number(item.贡献分).toFixed(2)}</em>`:""}</div><details class="honor-process-detail"><summary>查看过程明细</summary><div class="honor-process-detail-body">${honorMetricEvidenceHtml(item)}${honorMetricChainHtml(item)}</div></details></article>`;
-}
-function honorRankingCardHtml(row,isComposite,winners=[]){
-  const formula=row.formula||[],winner=winners.includes(row.player),compact=isComposite?formula.map((item,index)=>`<span>${index+1}. ${escapeHtml(item.指标)} <b>${Number(item.贡献分||0).toFixed(2)}</b></span>`).join(""):"";
-  const detailList=formula.map((item,index)=>honorMetricItemHtml(item,index,isComposite)).join("");
-  return `<article class="honor-ranking-card ${winner?"is-winner":""}"><header><span class="rank ${row.rank===1?"top":""}">#${row.rank}</span><div><strong>${escapeHtml(row.player)}</strong>${winner?'<small>获奖牌手</small>':""}</div><b>${isComposite?`${Number(row.value||0).toFixed(2)} 综合分`:escapeHtml(formatHonorValue(row.value,row.unit))}</b></header>${isComposite?`<div class="honor-contribution-strip">${compact}</div><details class="honor-score-details"><summary>查看六项评分明细</summary><div class="honor-metric-list">${detailList}</div></details>`:`<div class="honor-metric-list">${detailList}</div>`}</article>`;
-}
-function honorDetailSections(h){
-  const d=h.details||{},isComposite=h.honorId==="H001"||h.honorId==="H003",ranking=d.ranking||[],winners=d.winners||[];
-  const cards=ranking.map(row=>honorRankingCardHtml(row,isComposite,winners)).join("")||'<div class="empty">暂无完整排名数据。</div>';
-  return `<div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div><div class="honor-modal-section"><h3>${isComposite?"完整排名 · 六项评分与过程证据":"完整排名 · 条件与过程证据"}</h3><div class="honor-ranking-cards">${cards}</div></div><footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)}</footer>`;
-}
-
-function openHonorModal(h){
-  ensureHonorModal();const d=h.details||{};
-  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(h.scope)} · 官方荣誉</p><h2 id="honorModalTitle">${escapeHtml(safeHonorName(h))}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header>${honorDetailSections(h)}`;
-  revealHonorModal();
-}
-function openHonorBoardModal(season,honorId){
-  const row=(state.honorBoard||[]).find(x=>x.scope===season&&x.honorId===honorId);if(!row)return;
-  const synthetic={ownerPlayerId:row.winnerIds?.[0]||"",scope:row.scope,honorId:row.honorId,name:safeHonorName(row),value:row.value,status:row.status,details:row.details||{rule:honorCatalogItem(row.honorId)?.rule||"",unit:row.unit,winner:row.winners?.join(" / ")||"—",winners:row.winners||[],ranking:[],formula:[],evidence:[],summary:row.summary||""}};
-  openHonorModal(synthetic);
-}
-document.addEventListener("click",e=>{
-  const board=e.target.closest("[data-honor-board]");if(!board)return;
-  const [season,hid]=board.dataset.honorBoard.split("|");
-  openHonorBoardModal(season,hid);
-});
-document.addEventListener("click",e=>{const match=e.target.closest("[data-honor-match-id]");if(match&&match.dataset.honorMatchId){openMatchModal(match.dataset.honorMatchId);}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHonorModal();});
 function renderGoatRows(sel,limit=5){
   const rows=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank).slice(0,limit);
   $(sel).innerHTML=rows.map(r=>{
@@ -1203,51 +1129,6 @@ function renderGoatRows(sel,limit=5){
     return `<div class="goat-row goat-row-v2" data-rank-movement="${Number(r.movement||0)}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div><div class="goat-row-title"><strong>${escapeHtml(r.player)}</strong><span class="muted">${escapeHtml(r.evaluation?.label||"")}</span></div><div class="goat-breakdown-mini"><span>荣誉 ${Number(b.honors?.score||0).toFixed(1)}</span><span>生涯 ${Number(b.career?.score||0).toFixed(1)}</span><span>纪录 ${Number(b.records?.score||0).toFixed(1)}</span><span>持续 ${Number(b.longevity?.score||0).toFixed(1)}</span></div><div class="bar"><i style="width:${Math.max(3,Math.min(100,Number(r.goatIndex||0)))}%"></i></div></div><div class="goat-score-v2"><b>${Number(r.goatIndex||0).toFixed(1)}</b><small class="${change>0?"score-pos":change<0?"score-neg":""}">${changeText}</small></div></div>`;
   }).join("")||'<div class="empty">暂无GOAT评分</div>';
 }
-function renderHonorSeasonBoard(){
-  const season=$("#honorBoardSeason")?.value||(state.seasons||[]).map(x=>x.id).at(-1),rows=state.honorBoard||[];
-  $("#honorSeasonBoard").innerHTML=HONOR_CATALOG.map(c=>{
-    const r=rows.find(x=>x.scope===season&&x.honorId===c.honorId);
-    const status=r?.status||"未计算";
-    const winner=r?.winners?.length?r.winners.join(" / "):status==="PENDING_TIEBREAK"?"待定":status==="NOT_AWARDED"?"本季不颁发":"—";
-    const statusClass=status==="PENDING_TIEBREAK"?"pending":status==="NOT_AWARDED"?"empty-state":"awarded";
-    return `<button type="button" class="honor-board-card honor-board-clickable ${statusClass}" data-honor-board="${escapeHtml(`${season}|${c.honorId}`)}"><div class="honor-top"><strong>${escapeHtml(safeHonorName(c))}</strong><span class="chip gold">${escapeHtml(season)}</span></div><b>${escapeHtml(winner)}</b><small>${escapeHtml(c.rule)}</small><span class="honor-open-hint">点击查看评选详情与过程证据</span><span class="unique-note">唯一获奖</span></button>`;
-  }).join("");
-}
-function renderHonorStats(){
-  const pid=$("#honorPlayer").value||currentPlayer, p=state.profiles[pid];
-  $("#honorStats").innerHTML=[
-    ["荣誉排名","#"+p.honorRank],
-    ["官方荣誉总数",p.honorCount],
-    ["MSL总冠军",p.titles],
-    ["年度最有价值牌手",p.mvAwards],
-    ["官方荣誉种类",p.honorTypes],
-    ["GOAT指数",Number(state.goat.find(x=>x.playerId===pid)?.goatIndex||0).toFixed(1)]
-  ].map(x=>`<div class="mini-stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
-}
-
-function renderHonors(){
-  renderGoatRows("#goatRanking");
-  renderHonorStats();
-  renderHonorSeasonBoard();
-}
-$("#honorPlayer").addEventListener("change",()=>{
-  const target=$("#honorStats");
-  transitionHonorContent({
-    targets:target,
-    update:renderHonorStats,
-    onUpdated:()=>animateNumbers(target)
-  });
-});
-$("#honorBoardSeason")?.addEventListener("change",()=>{
-  const target=$("#honorSeasonBoard");
-  transitionHonorContent({
-    targets:target,
-    update:renderHonorSeasonBoard,
-    onUpdated:()=>animateNumbers(target),
-    onComplete:()=>animateHonorCards(target)
-  });
-});
-
 function renderSystem(){
   $("#systemKpis").innerHTML=[
     ["当前版本",state.version.version,"Official Feature Release"],["认证状态",state.version.certification,state.version.formulaIntegrity],
