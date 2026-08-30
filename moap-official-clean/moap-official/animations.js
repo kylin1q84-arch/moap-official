@@ -716,7 +716,7 @@ function playHonorShine(card,key){
 
 function queueHonorShine(cards){
   if(prefersReducedMotion()||mobileMotion())return;
-  const eligible=cards.filter(card=>card.dataset.honorGrade==="A").filter(card=>{
+  const eligible=cards.filter(card=>{
     const key=card.dataset.honorBoard||card.dataset.honorKey||card.textContent?.trim()||"";
     return key&&!honorShineHistory.has(key);
   });
@@ -773,19 +773,12 @@ export function animateHonorCards(root){
       queueHonorShine(cards);
       honorCardTimeline=null;
     }
-  });
-  cards.forEach((card,index)=>{
-    const grade=card.dataset.honorGrade||card.querySelector(".grade")?.textContent?.trim()||"C";
-    const from=grade==="A"
-      ?{autoAlpha:0,y:mobile?5:8,scale:mobile?1:.97}
-      :grade==="B"
-        ?{autoAlpha:0,y:mobile?5:10}
-        :{autoAlpha:0,y:mobile?2:4};
-    const duration=grade==="A"?(mobile?.32:MOAP_MOTION.duration.slow):grade==="B"?(mobile?.28:.38):(mobile?.24:.3);
-    honorCardTimeline.fromTo(card,from,{autoAlpha:1,y:0,scale:1,duration,ease:MOAP_MOTION.ease.enter},index*(mobile?.03:MOAP_MOTION.stagger.fast));
-  });
+  }).fromTo(
+    cards,
+    {autoAlpha:0,y:mobile?5:8,scale:mobile?1:.98},
+    {autoAlpha:1,y:0,scale:1,duration:mobile?.32:MOAP_MOTION.duration.slow,ease:MOAP_MOTION.ease.enter,stagger:mobile?.04:MOAP_MOTION.stagger.fast}
+  );
 }
-
 export function animateHonorCenterEntry(root){
   const gsap=motionEngine();
   honorEntryTimeline?.kill();
@@ -849,7 +842,7 @@ export function transitionHonorContent({targets,update,onUpdated,onComplete}){
     );
 }
 
-export function animateHonorDetails(backdrop,{open,grade="",onComplete}={}){
+export function animateHonorDetails(backdrop,{open,onComplete}={}){
   const gsap=motionEngine();
   const panel=backdrop?.querySelector?.(".honor-modal");
   honorDetailTimeline?.kill();
@@ -858,17 +851,15 @@ export function animateHonorDetails(backdrop,{open,grade="",onComplete}={}){
     return;
   }
 
-  const gradeMark=panel.querySelector(".honor-modal-grade");
   const headerParts=directChildren(panel,".honor-modal-header > div > *");
-  const sections=directChildren(panel,".honor-modal-section, .honor-season-detail, .honor-modal-footer");
-  const animated=[gradeMark,...headerParts,...sections].filter(Boolean);
+  const sections=directChildren(panel,".honor-modal-section, .honor-modal-footer");
+  const animated=[...headerParts,...sections];
 
   if(open){
     clearExtendedMotionProps(animated);
     gsap.set(backdrop,{autoAlpha:0});
     gsap.set(panel,{height:0,autoAlpha:0,y:mobileMotion()?5:9,overflow:"hidden"});
-    if(gradeMark)gsap.set(gradeMark,{autoAlpha:0,scale:grade==="A"&&!mobileMotion()?.97:1,y:4});
-    gsap.set([...headerParts,...sections],{autoAlpha:0,y:mobileMotion()?3:7});
+    gsap.set(animated,{autoAlpha:0,y:mobileMotion()?3:7});
     honorDetailTimeline=gsap.timeline({
       onComplete:()=>{
         gsap.set(backdrop,{clearProps:"opacity,visibility"});
@@ -880,7 +871,6 @@ export function animateHonorDetails(backdrop,{open,grade="",onComplete}={}){
     })
       .to(backdrop,{autoAlpha:1,duration:.13,ease:"power1.out"})
       .to(panel,{height:"auto",autoAlpha:1,y:0,duration:mobileMotion()?.28:.36,ease:MOAP_MOTION.ease.enter},"-=.05");
-    if(gradeMark)honorDetailTimeline.to(gradeMark,{autoAlpha:1,scale:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},"-=.27");
     if(headerParts.length)honorDetailTimeline.to(headerParts,{autoAlpha:1,y:0,duration:.24,stagger:.035,ease:MOAP_MOTION.ease.enter},"-=.23");
     if(sections.length)honorDetailTimeline.to(sections,{autoAlpha:1,y:0,duration:.28,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},"-=.2");
     return;
@@ -901,7 +891,6 @@ export function animateHonorDetails(backdrop,{open,grade="",onComplete}={}){
     .to(panel,{height:0,autoAlpha:0,y:mobileMotion()?4:7,duration:.22,ease:MOAP_MOTION.ease.exit},"-=.04")
     .to(backdrop,{autoAlpha:0,duration:.12,ease:MOAP_MOTION.ease.exit},"-=.08");
 }
-
 export function animateRecordDetails(backdrop,{open,onComplete}={}){
   const gsap=motionEngine();
   const panel=backdrop?.querySelector(".record-modal");
