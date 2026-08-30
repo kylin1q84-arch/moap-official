@@ -1114,12 +1114,18 @@ button:not(:disabled):active,
   background:linear-gradient(180deg,rgba(10,32,27,.995),rgba(6,20,17,.995));
   color:var(--text);
   box-shadow:0 30px 90px rgba(0,0,0,.52);
+}
+#honorModalBackdrop .honor-modal,
+#recordModalBackdrop .record-modal{
   scrollbar-width:thin;
   scrollbar-color:rgba(215,178,91,.42) rgba(4,16,13,.72);
 }
-#honorModalBackdrop .honor-modal::-webkit-scrollbar{width:10px}
-#honorModalBackdrop .honor-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
-#honorModalBackdrop .honor-modal::-webkit-scrollbar-thumb{
+#honorModalBackdrop .honor-modal::-webkit-scrollbar,
+#recordModalBackdrop .record-modal::-webkit-scrollbar{width:10px}
+#honorModalBackdrop .honor-modal::-webkit-scrollbar-track,
+#recordModalBackdrop .record-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
+#honorModalBackdrop .honor-modal::-webkit-scrollbar-thumb,
+#recordModalBackdrop .record-modal::-webkit-scrollbar-thumb{
   border:2px solid rgba(4,16,13,.72);
   border-radius:999px;
   background:rgba(215,178,91,.38);
