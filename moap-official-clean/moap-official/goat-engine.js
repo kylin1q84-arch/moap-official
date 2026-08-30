@@ -51,30 +51,19 @@ function competitionRanks(rows) {
 
 function honorMetrics(players, honors) {
   return players.map(player => {
-    const awards = honors?.[player.playerId] || [];
-    const gradeA = awards.filter(award => award.grade === "A");
-    const gradeB = awards.filter(award => award.grade === "B");
-    const gradeC = awards.filter(award => award.grade === "C" || award.grade === "D");
-    const ironAwards = gradeB.filter(award => award.honorId === "H007");
-    const ordinaryB = gradeB.filter(award => award.honorId !== "H007").sort((a, b) => num(b.points) - num(a.points));
-    const bMultipliers = [1, .9, .8, .7];
-    const adjustedOrdinaryB = ordinaryB.reduce((total, award, index) => total + num(award.points) * (bMultipliers[index] ?? .6), 0);
-    const adjustedB = adjustedOrdinaryB + sum(ironAwards.map(award => award.points));
-    const aValue = sum(gradeA.map(award => award.points));
+    const awards = (honors?.[player.playerId] || []).filter(award => award.honorId === "H001" || award.honorId === "H003");
+    const titles = awards.filter(award => award.honorId === "H001").length;
+    const mvAwards = awards.filter(award => award.honorId === "H003").length;
     return {
       playerId: player.playerId,
       player: player.name,
-      honorPoints: sum(awards.map(award => award.points)),
-      adjustedHonorValue: aValue + adjustedB,
-      gradeA: gradeA.length,
-      gradeB: gradeB.length,
-      gradeC: gradeC.length,
-      titles: awards.filter(award => award.honorId === "H001").length,
-      mvAwards: awards.filter(award => award.honorId === "H003").length
+      officialHonorCount: awards.length,
+      adjustedHonorValue: awards.length,
+      titles,
+      mvAwards
     };
   });
 }
-
 function careerMetrics(players, matches) {
   const ordered = sortedMatches(matches);
   const seasons = [...new Set(ordered.map(match => match.season).filter(Boolean))].sort((a, b) => seasonNumber(a) - seasonNumber(b));
@@ -209,21 +198,21 @@ function goatLabel(row) {
 }
 
 function buildEvaluation(row, allRows) {
-  const rankedHonor = [...allRows].sort((a, b) => b.honorPoints - a.honorPoints || a.playerId.localeCompare(b.playerId));
-  const honorRank = rankedHonor.findIndex(item => item.playerId === row.playerId) + 1;
+  const rankedHonor = [...allRows].sort((a, b) => b.titles - a.titles || b.mvAwards - a.mvAwards || b.officialHonorCount - a.officialHonorCount || a.playerId.localeCompare(b.playerId));
+  const honorRank = rankedHonor.findIndex(item => item.titles === row.titles && item.mvAwards === row.mvAwards && item.officialHonorCount === row.officialHonorCount) + 1;
   const rankedTotal = [...allRows].sort((a, b) => b.careerRaw.total - a.careerRaw.total || a.playerId.localeCompare(b.playerId));
   const totalRank = rankedTotal.findIndex(item => item.playerId === row.playerId) + 1;
   const components = Object.entries(row.breakdown).sort((a, b) => (b[1].score / b[1].max) - (a[1].score / a[1].max));
   const strengths = components.slice(0, 2).map(([key, item]) => `${componentLabel(key)} ${item.score.toFixed(1)}/${item.max}`);
   const weakness = components.at(-1);
   const facts = [
-    `官方荣誉${row.honorPoints}分，联盟第${honorRank}`,
+    `官方荣誉${row.officialHonorCount}次（总冠军${row.titles}次、年度MVP${row.mvAwards}次），联盟第${honorRank}`,
     `S1至今累计${row.careerRaw.total >= 0 ? "+" : ""}${row.careerRaw.total}分，联盟第${totalRank}`,
     `保持${row.recordRaw.recordCount}项GOAT有效纪录，加权纪录值${row.recordRaw.recordValue.toFixed(2)}`,
     `覆盖${row.careerRaw.activeSeasons}/${row.careerRaw.eligibleSeasons}个可参赛赛季，参赛率${row.careerRaw.participationRate.toFixed(1)}%`
   ];
   const summary = `${row.player}当前GOAT指数${row.goatIndex.toFixed(1)}，排名第${row.rank}，历史定位为“${goatLabel(row)}”。主要支撑来自${strengths.join("与")}。`;
-  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续新增A级荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累正式比赛数据。";
+  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续增加总冠军或年度最有价值牌手荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累正式比赛数据。";
   return { label: goatLabel(row), summary, outlook, strengths, facts };
 }
 
@@ -294,7 +283,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
 
   return {
     rows,
-    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。A级荣誉按原分值计入，铁人奖按5分全额计入，其余B级荣誉采用递减系数；C级及负向纪录不加分。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
+    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。官方荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
   };
 }
 
