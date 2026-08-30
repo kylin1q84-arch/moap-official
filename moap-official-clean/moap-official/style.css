@@ -1328,8 +1328,6 @@ button:not(:disabled):active,
 .trend-dot{
   opacity:0;
   visibility:hidden;
-  transform-box:fill-box;
-  transform-origin:center;
   pointer-events:none;
 }
 .trend-dot.is-active{
