@@ -1319,3 +1319,101 @@ button:not(:disabled):active,
     animation:none!important;
   }
 }
+
+
+/* Player center · data change, career growth and recent-match motion */
+.trend-wrap{isolation:isolate}
+#trendChart{position:relative;z-index:1}
+.trend-area-reveal{transform-box:fill-box;transform-origin:left center}
+.trend-dot{
+  transform-box:fill-box;
+  transform-origin:center;
+  pointer-events:none;
+}
+.trend-dot.is-mvp{stroke:rgba(215,178,91,.72);stroke-width:2.2}
+.trend-dot.is-latest{fill:var(--gold);stroke:rgba(236,212,146,.88);stroke-width:2.4}
+.trend-dot.is-active{fill:var(--gold2)}
+.trend-guide{
+  stroke:rgba(215,178,91,.16);
+  stroke-width:1;
+  stroke-dasharray:3 5;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.trend-tooltip{
+  position:absolute;
+  z-index:4;
+  left:0;
+  top:0;
+  min-width:154px;
+  max-width:190px;
+  padding:9px 11px;
+  border:1px solid rgba(215,178,91,.22);
+  border-radius:10px;
+  background:rgba(6,22,18,.96);
+  box-shadow:0 10px 26px rgba(0,0,0,.3);
+  color:var(--text);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  will-change:transform;
+}
+.trend-tooltip strong,
+.trend-tooltip span{display:block;white-space:nowrap}
+.trend-tooltip strong{font-size:11px;color:var(--gold2);margin-bottom:4px}
+.trend-tooltip span{font-size:10px;line-height:1.55;color:var(--muted)}
+.trend-tooltip [data-trend-score].score-pos{color:var(--green)}
+.trend-tooltip [data-trend-score].score-neg{color:var(--red)}
+.trend-tooltip [data-trend-total]{color:var(--text)}
+
+#recentMatchesPlayer .score-row{position:relative}
+#recentMatchesPlayer .score-row>*{position:relative;z-index:1}
+#recentMatchesPlayer .recent-latest{
+  overflow:hidden;
+  isolation:isolate;
+  box-shadow:inset 2px 0 0 rgba(85,214,156,.17);
+}
+#recentMatchesPlayer .recent-latest::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0 auto 0 0;
+  width:30%;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(85,214,156,.075),transparent);
+  transform:translate3d(-120%,0,0);
+}
+#recentMatchesPlayer .recent-latest.recent-glow-once::after{
+  will-change:transform;
+  animation:recentLatestGlow 1.15s linear .08s 1 both;
+}
+#recentMatchesPlayer .recent-mvp-badge{transform-origin:center}
+
+@keyframes recentLatestGlow{
+  from{transform:translate3d(-120%,0,0)}
+  to{transform:translate3d(455%,0,0)}
+}
+
+@media (hover:hover) and (pointer:fine){
+  #trendChart{cursor:crosshair}
+}
+
+@media(max-width:760px){
+  .trend-tooltip,
+  .trend-guide{display:none!important}
+  .trend-dot{stroke-width:1.6}
+  #recentMatchesPlayer .recent-latest::after{
+    background:linear-gradient(90deg,transparent,rgba(85,214,156,.045),transparent);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .trend-area-reveal{transform:none!important}
+  .trend-tooltip,
+  .trend-guide{transition:none!important}
+  #recentMatchesPlayer .recent-latest::after{
+    display:none!important;
+    animation:none!important;
+  }
+}
