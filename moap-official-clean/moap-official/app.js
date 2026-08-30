@@ -62,16 +62,24 @@ const VENUE_OVERRIDES = {
 function normalizedVenue(matchId, venue){ return VENUE_OVERRIDES[String(matchId||"")] || venue || ""; }
 
 const HONOR_NAME_OVERRIDES = {};
-const HONOR_BOARD_ITEMS = HONOR_CATALOG.map(x=>[x.honorId,x.name]);
-const HONOR_BOARD_IDS = new Set(HONOR_BOARD_ITEMS.map(([id])=>id));
 function honorCatalogItem(honorId){ return HONOR_CATALOG.find(x => x.honorId === honorId); }
 function honorDisplayName(honorId, fallback=""){ return HONOR_NAME_OVERRIDES[honorId] || honorCatalogItem(honorId)?.name || fallback || honorId; }
-function competitionRankBy(rows, valueGetter){
-  let previous, rank=0;
-  return rows.map((row,index)=>{
-    const value=valueGetter(row);
-    if(index===0 || value!==previous) rank=index+1;
-    previous=value;
+function officialHonorStats(honors=[]){
+  const official=honors.filter(h=>h.honorId==="H001"||h.honorId==="H003");
+  return {
+    honorCount:official.length,
+    titles:official.filter(h=>h.honorId==="H001").length,
+    mvAwards:official.filter(h=>h.honorId==="H003").length,
+    honorTypes:new Set(official.map(h=>h.honorId)).size
+  };
+}
+function officialHonorRanking(players,stats){
+  const sorted=players.map(p=>({playerId:p.playerId,...stats[p.playerId]})).sort((a,b)=>b.titles-a.titles||b.mvAwards-a.mvAwards||b.honorCount-a.honorCount||a.playerId.localeCompare(b.playerId));
+  let rank=0,previous="";
+  return sorted.map((row,index)=>{
+    const key=`${row.titles}|${row.mvAwards}|${row.honorCount}`;
+    if(index===0||key!==previous)rank=index+1;
+    previous=key;
     return {...row,rank};
   });
 }
@@ -94,16 +102,13 @@ function applyAnalyticsToState(target){
   target.statusCenter=buildMslStatusCenter(target.players,orderedMatches,target.honors);
   target.profiles=target.profiles||{};
   const stats={};
-  target.players.forEach(p=>{
-    const hs=target.honors[p.playerId]||[];
-    stats[p.playerId]={honorCount:hs.length,gradeA:hs.filter(h=>h.grade==="A").length,gradeB:hs.filter(h=>h.grade==="B").length,gradeCD:hs.filter(h=>h.grade==="C"||h.grade==="D").length,honorPoints:hs.reduce((sum,h)=>sum+Number(h.points||0),0)};
-  });
-  const honorRanked=competitionRankBy(target.players.map(p=>({playerId:p.playerId,honorPoints:stats[p.playerId].honorPoints})).sort((a,b)=>b.honorPoints-a.honorPoints||a.playerId.localeCompare(b.playerId)),x=>x.honorPoints);
+  target.players.forEach(p=>{stats[p.playerId]=officialHonorStats(target.honors[p.playerId]||[]);});
+  const honorRanked=officialHonorRanking(target.players,stats);
   const honorRanks=Object.fromEntries(honorRanked.map(x=>[x.playerId,x.rank]));
   const goatBy=Object.fromEntries(target.goat.map(x=>[x.playerId,x]));
   (target.leaderboard||[]).forEach(row=>{
     const h=stats[row.playerId],g=goatBy[row.playerId];
-    if(h){row.honorCount=h.honorCount;row.honorPoints=h.honorPoints;}
+    if(h){row.honorCount=h.honorCount;row.titles=h.titles;row.mvAwards=h.mvAwards;}
     if(g){row.goatIndex=g.goatIndex;row.goatRank=g.rank;}
   });
   target.players.forEach(p=>{
@@ -113,10 +118,10 @@ function applyAnalyticsToState(target){
   const validation=validateMoapData(target.players,orderedMatches,target.matchups||[]);
   target.healthChecks=validation.checks;
   target.meta={...(target.meta||{}),healthScore:validation.healthScore};
-  const top=target.goat[0],honorTop=[...target.players].sort((a,b)=>stats[b.playerId].honorPoints-stats[a.playerId].honorPoints)[0];
+  const top=target.goat[0],honorTop=officialHonorRanking(target.players,stats)[0];
   const seasonIds=[...new Set(orderedMatches.map(match=>match.season))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const awardWinners=id=>seasonIds.map(season=>{const row=target.honorBoard.find(item=>item.scope===season&&item.honorId===id);return row?.winners?.length?`${season} ${row.winners.join("/")}`:null;}).filter(Boolean).join("；")||"暂无";
-  target.version={...(target.version||{}),version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${honorTop.name} · ${stats[honorTop.playerId].honorPoints}`:"—",seasonMvp:awardWinners("H003"),note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。"};
+  target.version={...(target.version||{}),version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:validation.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${target.players.find(p=>p.playerId===honorTop.playerId)?.name||honorTop.playerId} · ${honorTop.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。"};
   return target;
 }
 applyAnalyticsToState(state);
@@ -178,8 +183,8 @@ function buildLiveState(db){
       absences,bgr:scores.reduce((n,s)=>n+bgrValue(s),0)};
   }
 
-  const honorStats={};players.forEach(p=>{const hs=honors[p.playerId]||[];honorStats[p.playerId]={honorCount:hs.length,gradeA:hs.filter(h=>h.grade==="A").length,gradeB:hs.filter(h=>h.grade==="B").length,gradeCD:hs.filter(h=>h.grade==="C"||h.grade==="D").length,honorPoints:hs.reduce((n,h)=>n+Number(h.points||0),0)};});
-  const honorRanked=competitionRanks(players.map(p=>({playerId:p.playerId,honorPoints:honorStats[p.playerId].honorPoints})).sort((a,b)=>b.honorPoints-a.honorPoints||a.playerId.localeCompare(b.playerId)),"honorPoints");
+  const honorStats={};players.forEach(p=>{honorStats[p.playerId]=officialHonorStats(honors[p.playerId]||[]);});
+  const honorRanked=officialHonorRanking(players,honorStats);
   const honorRank=Object.fromEntries(honorRanked.map(x=>[x.playerId,x.rank]));
   const recordCenter=buildRecordCenter(players,matches);
   const previousMatches=matches.slice(0,-1);
@@ -189,7 +194,7 @@ function buildLiveState(db){
   const goatSystem=buildGoatSystem(players,matches,honors,recordCenter,previousGoat);
   const goat=goatSystem.rows;
   const goatBy=Object.fromEntries(goat.map(x=>[x.playerId,x]));
-  const leaderboard=players.map(p=>{const c=metrics(p.playerId),h=honorStats[p.playerId],g=goatBy[p.playerId];return {playerId:p.playerId,player:p.name,...c,honorCount:h.honorCount,honorPoints:h.honorPoints,goatIndex:g.goatIndex,goatRank:g.rank};});
+  const leaderboard=players.map(p=>{const c=metrics(p.playerId),h=honorStats[p.playerId],g=goatBy[p.playerId];return {playerId:p.playerId,player:p.name,...c,honorCount:h.honorCount,titles:h.titles,mvAwards:h.mvAwards,goatIndex:g.goatIndex,goatRank:g.rank};});
   const seasonStats={};seasonIds.forEach(s=>seasonStats[s]=players.map(p=>{const c=metrics(p.playerId,s);return {playerId:p.playerId,player:p.name,games:c.games,total:c.total,average:c.average,positiveRate:c.positiveRate,mvps:c.mvps,best:c.best,worst:c.worst,fourAverage:c.fourAverage,fiveAverage:c.fiveAverage,bgr:c.bgr};}));
   const profiles={};players.forEach(p=>{const c=metrics(p.playerId),h=honorStats[p.playerId];profiles[p.playerId]={name:p.name,games:c.games,total:c.total,average:c.average,positiveRate:c.positiveRate,mvps:c.mvps,absences:c.absences,best:c.best,worst:c.worst,honorRank:honorRank[p.playerId],...h};});
 
@@ -242,9 +247,9 @@ function buildLiveState(db){
   const validation=validateMoapData(players,matches,matchupRows);
   checks.push(...validation.checks);
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
-  const topGoat=goat[0],topHonor=[...leaderboard].sort((a,b)=>b.honorPoints-a.honorPoints)[0];
+  const topGoat=goat[0],topHonor=officialHonorRanking(players,honorStats)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${topHonor.player} · ${topHonor.honorPoints}`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
+  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
@@ -528,7 +533,7 @@ function renderStatus(){
   $("#powerRanking").innerHTML=rows.map(r=>`<button type="button" class="power-card" data-status-player="${r.playerId}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div class="power-card-main"><div class="power-card-title"><strong>${escapeHtml(r.player)}</strong><span class="stock ${r.report.trendKey==="up"?"up":r.report.trendKey==="down"?"down":"hold"}">${escapeHtml(r.report.headline)}</span></div><div class="power-card-meta"><span>${escapeHtml(r.label)}</span><span>${escapeHtml(r.archetype)}</span><span>近5场 ${fmtScore(r.recentTotal)}</span><span>${escapeHtml(r.seasonPerformance?.season||latestActualSeason())} OVR ${r.seasonPerformance?.rating??"—"}</span><span>生涯OVR ${r.career?.overallRating??"—"}</span></div><div class="bar"><i style="width:${Math.max(4,r.powerIndex)}%"></i></div></div><div class="power-score"><b>${r.powerIndex}</b><small>${movementText(r)}</small></div></button>`).join("");
   $("#stockWatch").innerHTML=rows.map(r=>`<button type="button" class="stock-row" data-status-player="${r.playerId}"><div><strong>${escapeHtml(r.player)}</strong><span>${escapeHtml(r.report.headline)}</span></div><b class="${r.indexChange>0?"score-pos":r.indexChange<0?"score-neg":""}">${r.indexChange>0?"+":""}${r.indexChange}</b></button>`).join("");
   $("#statusStorylines").innerHTML=(center.storylines||[]).map(x=>`<div class="storyline-item">${escapeHtml(x)}</div>`).join("");
-  $("#statusMethodology").innerHTML=`<p>${escapeHtml(center.methodology||"")}</p><h4 class="method-title">近期状态指数</h4><div class="method-bars"><span>近期加权净分 <b>35%</b></span><span>正分率 <b>20%</b></span><span>MVP <b>15%</b></span><span>BGR <b>10%</b></span><span>走势 <b>10%</b></span><span>相对赛季表现 <b>10%</b></span></div><h4 class="method-title">当前赛季OVR</h4><div class="method-bars"><span>得分表现 <b>30%</b></span><span>比赛质量 <b>25%</b></span><span>MVP影响力 <b>20%</b></span><span>爆发能力 <b>15%</b></span><span>稳定性 <b>10%</b></span></div><h4 class="method-title">生涯综合评分 OVR</h4><div class="method-bars"><span>历季累计积分 <b>25%</b></span><span>生涯场均 <b>20%</b></span><span>生涯正分率 <b>15%</b></span><span>MVP率 <b>15%</b></span><span>场均BGR <b>10%</b></span><span>官方荣誉积分 <b>15%</b></span></div><h4 class="method-title">GOAT指数</h4><div class="method-bars"><span>官方荣誉 <b>40%</b></span><span>生涯表现 <b>30%</b></span><span>历史纪录 <b>15%</b></span><span>持续性与适应性 <b>15%</b></span></div><small>当前赛季OVR只读取当前赛季数据；近期状态、生涯OVR和赛季OVR均不影响官方荣誉。</small>`;
+  $("#statusMethodology").innerHTML=`<p>${escapeHtml(center.methodology||"")}</p><h4 class="method-title">近期状态指数</h4><div class="method-bars"><span>近期加权净分 <b>35%</b></span><span>正分率 <b>20%</b></span><span>MVP <b>15%</b></span><span>BGR <b>10%</b></span><span>走势 <b>10%</b></span><span>相对赛季表现 <b>10%</b></span></div><h4 class="method-title">当前赛季OVR</h4><div class="method-bars"><span>得分表现 <b>30%</b></span><span>比赛质量 <b>25%</b></span><span>MVP影响力 <b>20%</b></span><span>爆发能力 <b>15%</b></span><span>稳定性 <b>10%</b></span></div><h4 class="method-title">生涯综合评分 OVR</h4><div class="method-bars"><span>历季累计积分 <b>25%</b></span><span>生涯场均 <b>20%</b></span><span>生涯正分率 <b>15%</b></span><span>MVP率 <b>15%</b></span><span>场均BGR <b>10%</b></span><span>官方荣誉 <b>15%</b></span></div><h4 class="method-title">GOAT指数</h4><div class="method-bars"><span>官方荣誉 <b>40%</b></span><span>生涯表现 <b>30%</b></span><span>历史纪录 <b>15%</b></span><span>持续性与适应性 <b>15%</b></span></div><small>当前赛季OVR只读取当前赛季数据；近期状态、生涯OVR和赛季OVR均不影响官方荣誉。</small>`;
 }
 
 function renderPlayerScouting(pid){
@@ -542,7 +547,7 @@ function renderPlayerScouting(pid){
   const goatChange=Number(goat.indexChange||0),goatMove=Number(goat.movement||0);
   el.innerHTML=`<div class="scouting-report"><header><div><span class="stock ${trendClass}">${escapeHtml(report.headline||"持续观望")}</span><h3>${escapeHtml(r.label)} · MSL实力榜 #${r.rank}</h3><p>${escapeHtml(report.summary||"")}</p></div><div class="scouting-index"><b>${r.powerIndex}</b><small>近期状态指数</small></div></header>
   <div class="goat-evaluation"><div class="goat-evaluation-head"><div><span>MSL历史地位</span><h4>GOAT综合评价</h4><b>${escapeHtml(goat.evaluation?.label||"历史观察中")}</b></div><div class="goat-rating"><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><small>GOAT INDEX</small><span>联盟 #${goat.rank||"—"}${goatMove?` · ${goatMove>0?"↑":"↓"}${Math.abs(goatMove)}`:""}</span></div></div><p>${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p><div class="goat-component-grid">${goatBreakdown}</div><div class="goat-change-reason"><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)}</b><span>${escapeHtml(goat.changeReason||"")}</span></div><div class="goat-fact-list">${goatFacts}</div><p class="goat-outlook">${escapeHtml(goat.evaluation?.outlook||"")}</p><small class="goat-method-note">${escapeHtml(state.goatMethodology||"")}</small></div>
-  <div class="career-evaluation"><div class="career-evaluation-head"><div><span>${escapeHtml(career.seasonRange||"S1–S3")}</span><h4>历季生涯综合评价</h4><b>${escapeHtml(report.careerLabel||"生涯观察中")}</b></div><div class="career-ovr"><strong>${career.overallRating??"—"}</strong><small>OVERALL</small><span>联盟 #${career.overallRank||"—"}</span></div></div><p>${escapeHtml(report.careerSummary||"暂无足够的历季数据。")}</p><div class="career-metric-grid"><div><span>历季参赛</span><b>${career.games||0}场</b></div><div><span>累计积分</span><b class="${scoreClass(career.total||0)}">${fmtScore(career.total||0)}</b></div><div><span>生涯场均</span><b>${fmtAvg(career.average||0)}</b></div><div><span>正分率</span><b>${fmtPct(career.positiveRate||0)}</b></div><div><span>MVP</span><b>${career.mvps||0}次</b></div><div><span>BGR</span><b>${career.bgr||0}</b></div><div><span>荣誉分</span><b>${career.honorPoints||0}</b></div></div><div class="career-analysis-copy"><h5>整体评价</h5><p>${escapeHtml(report.careerEvaluation||"")}</p><h5>长期展望</h5><p>${escapeHtml(report.careerOutlook||"")}</p></div><div class="career-two-col"><section><h5>生涯优势</h5>${(report.careerStrengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")||'<span>暂无突出单项</span>'}</section><section><h5>长期隐忧</h5>${(report.careerRisks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")||'<span>暂无明显预警</span>'}</section></div><div class="career-season-stack"><h5>历季表现</h5>${seasonCards}</div></div>
+  <div class="career-evaluation"><div class="career-evaluation-head"><div><span>${escapeHtml(career.seasonRange||"S1–S3")}</span><h4>历季生涯综合评价</h4><b>${escapeHtml(report.careerLabel||"生涯观察中")}</b></div><div class="career-ovr"><strong>${career.overallRating??"—"}</strong><small>OVERALL</small><span>联盟 #${career.overallRank||"—"}</span></div></div><p>${escapeHtml(report.careerSummary||"暂无足够的历季数据。")}</p><div class="career-metric-grid"><div><span>历季参赛</span><b>${career.games||0}场</b></div><div><span>累计积分</span><b class="${scoreClass(career.total||0)}">${fmtScore(career.total||0)}</b></div><div><span>生涯场均</span><b>${fmtAvg(career.average||0)}</b></div><div><span>正分率</span><b>${fmtPct(career.positiveRate||0)}</b></div><div><span>MVP</span><b>${career.mvps||0}次</b></div><div><span>BGR</span><b>${career.bgr||0}</b></div><div><span>官方荣誉</span><b>${career.officialHonorCount||0}次</b></div></div><div class="career-analysis-copy"><h5>整体评价</h5><p>${escapeHtml(report.careerEvaluation||"")}</p><h5>长期展望</h5><p>${escapeHtml(report.careerOutlook||"")}</p></div><div class="career-two-col"><section><h5>生涯优势</h5>${(report.careerStrengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")||'<span>暂无突出单项</span>'}</section><section><h5>长期隐忧</h5>${(report.careerRisks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")||'<span>暂无明显预警</span>'}</section></div><div class="career-season-stack"><h5>历季表现</h5>${seasonCards}</div></div>
   <div class="scouting-columns"><section><h4>近期亮点</h4>${(report.strengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")}</section><section><h4>潜在风险</h4>${(report.risks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")}</section><section><h4>下一场关注</h4><p>${escapeHtml(report.next||"")}</p></section></div><footer>牌手类型：${escapeHtml(r.archetype)} · 生涯定位：${escapeHtml(report.careerLabel||"—")} · 最近5场：${r.recent.map(x=>`${x.score>=0?"+":""}${x.score}`).join(" / ")||"暂无"}</footer></div>`;
 }
 
@@ -732,10 +737,8 @@ function renderPlayer(){
   const statusRow=state.statusCenter?.rankings?.find(x=>x.playerId===pid),career=statusRow?.career||{},seasonPerf=statusRow?.seasonPerformance||{};
   const honors=state.honors[pid]||[],groups=groupPlayerHonors(honors);
   $("#playerHeader").innerHTML=`<div class="profile-identity">${playerPortraitHtml(p)}<div class="profile-name-block"><span class="profile-kicker">MSL PLAYER PROFILE</span><h3>${escapeHtml(p.name)}</h3><div class="muted">${pid} · 荣誉排名第 ${prof.honorRank}</div><div class="profile-rating-pills"><span>生涯OVR <b>${career.overallRating??"—"}</b></span><span>${escapeHtml(seasonPerf.season||latestActualSeason())} OVR <b>${seasonPerf.rating??"—"}</b></span></div></div></div><span class="chip gold profile-goat-chip">${c.goatRank===1?"CURRENT GOAT":"GOAT #"+c.goatRank}</span>`;
-  const topGroups=groups.slice(0,4);
-  const summary=$("#profileHonorSummary");if(summary)summary.textContent=`${groups.length}类奖项 · 生涯累计${honors.length}次`;
-  const list=$("#profileHonorList");if(list)list.innerHTML=topGroups.map(g=>profileHonorRowHtml(pid,g)).join("")||'<div class="empty">暂无荣誉记录</div>';
-  const allBtn=$("#profileHonorsAll");if(allBtn){allBtn.hidden=!groups.length;allBtn.dataset.playerHonorsAll=pid;}
+  const summary=$("#profileHonorSummary");if(summary)summary.textContent=`${groups.length}类官方荣誉 · 生涯累计${honors.length}次`;
+  const list=$("#profileHonorList");if(list)list.innerHTML=groups.map(g=>profileHonorRowHtml(g)).join("")||'<div class="empty">暂无官方荣誉记录</div>';
   renderCurrentSeasonPerformance(pid);
   renderPlayerSeasonData(pid);
   drawTrend(pid);
@@ -752,7 +755,6 @@ $("#playerSelect").addEventListener("change",e=>{
     onUpdated:()=>animateNumbers(root)
   });
 });
-document.addEventListener("click",e=>{const b=e.target.closest("[data-player-honors-all]");if(b)openAllPlayerHonorsModal(b.dataset.playerHonorsAll);});
 $("#playerSeasonMatchType")?.addEventListener("change",e=>{
   const nextType=e.target.value,target=$('.player-season-data-card .table-scroll');
   transitionPlayerData({
@@ -1105,30 +1107,18 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeRivalDetailModa
 function scopeOrder(scope){if(scope==="CAREER")return 999;const n=Number(String(scope).replace(/\D/g,""));return Number.isFinite(n)?n:500;}
 function groupPlayerHonors(honors){
   const map=new Map();
-  honors.forEach(h=>{const key=h.honorId;if(!map.has(key))map.set(key,{honorId:key,name:h.name,grade:h.grade,category:h.category,awards:[],points:0});const group=map.get(key);group.awards.push(h);group.points+=Number(h.points||0);});
-  const catalogOrder=Object.fromEntries(HONOR_CATALOG.map((item,index)=>[item.honorId,index]));
-  return [...map.values()].map(group=>({...group,awards:group.awards.sort((a,b)=>scopeOrder(a.scope)-scopeOrder(b.scope))})).sort((a,b)=>{
-    const gradeOrder={A:1,B:2,C:3,D:4,"":5};return (gradeOrder[a.grade]||9)-(gradeOrder[b.grade]||9)||(catalogOrder[a.honorId]??999)-(catalogOrder[b.honorId]??999);
+  honors.filter(h=>h.honorId==="H001"||h.honorId==="H003").forEach(h=>{
+    if(!map.has(h.honorId))map.set(h.honorId,{honorId:h.honorId,name:h.name,awards:[]});
+    map.get(h.honorId).awards.push(h);
   });
+  const catalogOrder=Object.fromEntries(HONOR_CATALOG.map((item,index)=>[item.honorId,index]));
+  return [...map.values()]
+    .map(group=>({...group,awards:group.awards.sort((a,b)=>scopeOrder(a.scope)-scopeOrder(b.scope))}))
+    .sort((a,b)=>(catalogOrder[a.honorId]??999)-(catalogOrder[b.honorId]??999));
 }
-function honorGroupHtml(pid,group){
+function profileHonorRowHtml(group){
   const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
-  return `<button type="button" class="honor-item honor-clickable honor-group-card honor-tier-${String(group.grade||"C").toLowerCase()}" data-honor-grade="${escapeHtml(group.grade||"C")}" data-honor-group="${escapeHtml(`${pid}|${group.honorId}`)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${group.grade}">${group.grade}</span><strong>${escapeHtml(group.name)}</strong></div><span class="chip gold">×${group.awards.length}</span></div><small>${escapeHtml(group.category||"官方荣誉")} · 累计 ${group.points} 荣誉分</small><div class="honor-scope-list">${escapeHtml(scopes)}</div><span class="honor-open-hint">点击查看各赛季评选过程与明细</span></button>`;
-}
-function profileHonorRowHtml(pid,group){
-  const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
-  return `<button type="button" class="profile-honor-row honor-tier-${String(group.grade||"C").toLowerCase()}" data-honor-grade="${escapeHtml(group.grade||"C")}" data-honor-group="${escapeHtml(`${pid}|${group.honorId}`)}"><span class="grade ${group.grade}">${escapeHtml(group.grade)}</span><strong>${escapeHtml(group.name)}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></button>`;
-}
-function openAllPlayerHonorsModal(pid){
-  const honors=state.honors?.[pid]||[],groups=groupPlayerHonors(honors),player=state.players.find(p=>p.playerId===pid)?.name||pid;
-  ensureHonorModal();
-  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade A">荣</span><div><p>${escapeHtml(player)} · 官方荣誉履历</p><h2 id="honorModalTitle">全部荣誉</h2><strong>${groups.length}类奖项 · 生涯累计${honors.length}次</strong></div></header><div class="honor-modal-section"><div class="profile-honor-all-list">${groups.map(g=>profileHonorRowHtml(pid,g)).join("")||'<div class="empty">暂无荣誉记录</div>'}</div></div>`;
-  revealHonorModal("mixed");
-}
-
-function honorHtml(h){
-  const key=`${h.ownerPlayerId||""}|${h.scope}|${h.honorId}`;
-  return `<button type="button" class="honor-item honor-clickable honor-tier-${String(h.grade||"C").toLowerCase()}" data-honor-grade="${escapeHtml(h.grade||"C")}" data-honor-key="${escapeHtml(key)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${h.grade}">${h.grade}</span><strong>${escapeHtml(h.name)}</strong></div><span class="chip">${escapeHtml(h.scope)}</span></div><small>${escapeHtml(h.category||"官方荣誉")} · 获奖值 ${typeof h.value==="number"?Number(h.value).toFixed(Number.isInteger(h.value)?0:2):escapeHtml(h.value)} · ${escapeHtml(h.status)}</small><span class="honor-open-hint">点击查看评选规则、完整排名与证据</span></button>`;
+  return `<div class="profile-honor-row"><strong>${escapeHtml(group.name)}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></div>`;
 }
 function formatHonorValue(value,unit=""){if(value===null||value===undefined)return "—";if(unit==="%")return `${(Number(value)*100).toFixed(1)}%`;if(typeof value==="number"&&!Number.isInteger(value))return `${value.toFixed(2)}${unit}`;return `${value}${unit}`;}
 function ensureHonorModal(){
@@ -1137,11 +1127,11 @@ function ensureHonorModal(){
   $("#honorModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="honorModalBackdrop")closeHonorModal();});
   $("#honorModalClose").addEventListener("click",closeHonorModal);
 }
-function revealHonorModal(grade=""){
+function revealHonorModal(){
   const backdrop=$("#honorModalBackdrop");if(!backdrop)return;
   backdrop.hidden=false;document.body.classList.add("modal-open");
   animateNumbers($("#honorModalBody"));
-  animateHonorDetails(backdrop,{open:true,grade});
+  animateHonorDetails(backdrop,{open:true});
 }
 function closeHonorModal(){
   const backdrop=$("#honorModalBackdrop");if(!backdrop||backdrop.hidden)return;
@@ -1179,32 +1169,23 @@ function honorRankingCardHtml(row,isComposite,winners=[]){
 function honorDetailSections(h){
   const d=h.details||{},isComposite=h.honorId==="H001"||h.honorId==="H003",ranking=d.ranking||[],winners=d.winners||[];
   const cards=ranking.map(row=>honorRankingCardHtml(row,isComposite,winners)).join("")||'<div class="empty">暂无完整排名数据。</div>';
-  return `<div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div><div class="honor-modal-section"><h3>${isComposite?"完整排名 · 六项评分与过程证据":"完整排名 · 条件与过程证据"}</h3><div class="honor-ranking-cards">${cards}</div></div><footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)} · 荣誉分 ${Number(h.points||0)}</footer>`;
+  return `<div class="honor-modal-section"><h3>评选规则</h3><p>${escapeHtml(d.rule||"暂无规则说明")}</p>${d.summary?`<p class="honor-modal-summary">${escapeHtml(d.summary)}</p>`:""}</div><div class="honor-modal-section"><h3>${isComposite?"完整排名 · 六项评分与过程证据":"完整排名 · 条件与过程证据"}</h3><div class="honor-ranking-cards">${cards}</div></div><footer class="honor-modal-footer">数据状态：${escapeHtml(d.calculationStatus||h.status)}</footer>`;
 }
 
 function openHonorModal(h){
   ensureHonorModal();const d=h.details||{};
-  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade ${h.grade}">${escapeHtml(h.grade)}</span><div><p>${escapeHtml(h.scope)} · ${escapeHtml(h.category||"官方荣誉")}</p><h2 id="honorModalTitle">${escapeHtml(h.name)}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header>${honorDetailSections(h)}`;
-  revealHonorModal(h.grade);
+  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(h.scope)} · 官方荣誉</p><h2 id="honorModalTitle">${escapeHtml(h.name)}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header>${honorDetailSections(h)}`;
+  revealHonorModal();
 }
-function openHonorGroupModal(pid,honorId){
-  const awards=(state.honors?.[pid]||[]).filter(h=>h.honorId===honorId).sort((a,b)=>scopeOrder(a.scope)-scopeOrder(b.scope));if(!awards.length)return;
-  const first=awards[0],player=state.players.find(p=>p.playerId===pid)?.name||pid,totalPoints=awards.reduce((sum,h)=>sum+Number(h.points||0),0);
-  ensureHonorModal();
-  const seasons=awards.map((h,index)=>`<details class="honor-season-detail" ${index===awards.length-1?"open":""}><summary><span><b>${escapeHtml(h.scope==="CAREER"?"生涯":h.scope)}</b> · ${escapeHtml(formatHonorValue(h.value,h.details?.unit))}</span><span>${Number(h.points||0)}分 · ${escapeHtml(h.status)}</span></summary><div class="honor-season-body">${honorDetailSections(h)}</div></details>`).join("");
-  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade ${first.grade}">${escapeHtml(first.grade)}</span><div><p>${escapeHtml(player)} · 官方荣誉汇总</p><h2 id="honorModalTitle">${escapeHtml(first.name)} ×${awards.length}</h2><strong>${awards.length}次获奖 · 累计 ${totalPoints} 荣誉分</strong></div></header><div class="honor-modal-section"><h3>赛季获奖明细</h3><div class="honor-season-stack">${seasons}</div></div>`;
-  revealHonorModal(first.grade);
-}
-
 function openHonorBoardModal(season,honorId){
   const row=(state.honorBoard||[]).find(x=>x.scope===season&&x.honorId===honorId);if(!row)return;
-  const synthetic={ownerPlayerId:row.winnerIds?.[0]||"",scope:row.scope,honorId:row.honorId,name:row.name,grade:row.grade,category:row.category,value:row.value,points:Number(row.points||honorCatalogItem(row.honorId)?.points||0),status:row.status,details:row.details||{rule:honorCatalogItem(row.honorId)?.rule||"",unit:row.unit,winner:row.winners?.join(" / ")||"—",winners:row.winners||[],ranking:[],formula:[],evidence:[],summary:row.summary||""}};
+  const synthetic={ownerPlayerId:row.winnerIds?.[0]||"",scope:row.scope,honorId:row.honorId,name:row.name,value:row.value,status:row.status,details:row.details||{rule:honorCatalogItem(row.honorId)?.rule||"",unit:row.unit,winner:row.winners?.join(" / ")||"—",winners:row.winners||[],ranking:[],formula:[],evidence:[],summary:row.summary||""}};
   openHonorModal(synthetic);
 }
 document.addEventListener("click",e=>{
-  const board=e.target.closest("[data-honor-board]");if(board){const [season,hid]=board.dataset.honorBoard.split("|");openHonorBoardModal(season,hid);return;}
-  const group=e.target.closest("[data-honor-group]");if(group){const [pid,hid]=group.dataset.honorGroup.split("|");openHonorGroupModal(pid,hid);return;}
-  const card=e.target.closest("[data-honor-key]");if(!card)return;const [pid,scope,hid]=card.dataset.honorKey.split("|");const h=(state.honors[pid]||[]).find(x=>x.scope===scope&&x.honorId===hid);if(h)openHonorModal(h);
+  const board=e.target.closest("[data-honor-board]");if(!board)return;
+  const [season,hid]=board.dataset.honorBoard.split("|");
+  openHonorBoardModal(season,hid);
 });
 document.addEventListener("click",e=>{const match=e.target.closest("[data-honor-match-id]");if(match&&match.dataset.honorMatchId){openMatchModal(match.dataset.honorMatchId);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHonorModal();});
@@ -1221,18 +1202,24 @@ function renderHonorSeasonBoard(){
   const season=$("#honorBoardSeason")?.value||(state.seasons||[]).map(x=>x.id).at(-1),rows=state.honorBoard||[];
   $("#honorSeasonBoard").innerHTML=HONOR_CATALOG.map(c=>{
     const r=rows.find(x=>x.scope===season&&x.honorId===c.honorId);
-    const status=!r?(c.honorId==="H022"?"未达成":"未计算"):r.status;
+    const status=r?.status||"未计算";
     const winner=r?.winners?.length?r.winners.join(" / "):status==="PENDING_TIEBREAK"?"待定":status==="NOT_AWARDED"?"本季不颁发":"—";
-    const statusClass=status==="PENDING_TIEBREAK"?"pending":status==="NOT_AWARDED"||status==="未达成"?"empty-state":"awarded";
-    return `<button type="button" class="honor-board-card honor-board-clickable honor-tier-${String(c.grade||"C").toLowerCase()} ${statusClass}" data-honor-grade="${escapeHtml(c.grade||"C")}" data-honor-board="${escapeHtml(`${season}|${c.honorId}`)}"><div class="honor-top"><div style="display:flex;align-items:center;gap:9px"><span class="grade ${c.grade}">${c.grade}</span><strong>${escapeHtml(c.name)}</strong></div><span class="chip">${escapeHtml(season)}</span></div><b>${escapeHtml(winner)}</b><small>${escapeHtml(c.rule)}</small><span class="honor-open-hint">点击查看评选详情与过程证据</span>${c.allowTie?'<span class="tie-note">允许并列</span>':'<span class="unique-note">唯一获奖</span>'}</button>`;
+    const statusClass=status==="PENDING_TIEBREAK"?"pending":status==="NOT_AWARDED"?"empty-state":"awarded";
+    return `<button type="button" class="honor-board-card honor-board-clickable ${statusClass}" data-honor-board="${escapeHtml(`${season}|${c.honorId}`)}"><div class="honor-top"><strong>${escapeHtml(c.name)}</strong><span class="chip gold">${escapeHtml(season)}</span></div><b>${escapeHtml(winner)}</b><small>${escapeHtml(c.rule)}</small><span class="honor-open-hint">点击查看评选详情与过程证据</span><span class="unique-note">唯一获奖</span></button>`;
   }).join("");
 }
 function renderHonorStats(){
   const pid=$("#honorPlayer").value||currentPlayer, p=state.profiles[pid];
   $("#honorStats").innerHTML=[
-    ["荣誉排名","#"+p.honorRank],["荣誉总数",p.honorCount],["A级荣誉",p.gradeA],["B级荣誉",p.gradeB],["荣誉积分",p.honorPoints],["GOAT指数",Number(state.goat.find(x=>x.playerId===pid)?.goatIndex||0).toFixed(1)]
+    ["荣誉排名","#"+p.honorRank],
+    ["官方荣誉总数",p.honorCount],
+    ["MSL总冠军",p.titles],
+    ["年度最有价值牌手",p.mvAwards],
+    ["官方荣誉种类",p.honorTypes],
+    ["GOAT指数",Number(state.goat.find(x=>x.playerId===pid)?.goatIndex||0).toFixed(1)]
   ].map(x=>`<div class="mini-stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
 }
+
 function renderHonors(){
   renderGoatRows("#goatRanking");
   renderHonorStats();
