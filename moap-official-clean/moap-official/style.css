@@ -873,24 +873,33 @@ body{
   .rival-summary-inline th,.rival-summary-inline td{text-align:center;white-space:nowrap}
 }
 
-/* Player profile: official honors live inside the hero card */
+/* Player profile: compact, static official-honor summary */
 .player-profile-hero{display:grid;gap:14px}
 .profile-honors-home{border-top:1px solid rgba(255,255,255,.065);padding-top:13px}
 .profile-honors-head{margin-bottom:8px}
-.profile-honor-list,.profile-honor-all-list{display:grid;gap:6px}
-.profile-honor-row{width:100%;display:grid;grid-template-columns:30px minmax(0,1fr) auto minmax(100px,auto);align-items:center;gap:9px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.022);border-radius:10px;padding:9px 10px;color:var(--text);text-align:left;cursor:pointer;font:inherit}
-.profile-honor-row:hover{border-color:rgba(215,178,91,.25);background:rgba(215,178,91,.04)}
+.profile-honor-list{display:grid;gap:6px}
+.profile-honor-row{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(100px,auto);
+  align-items:center;
+  gap:9px;
+  border:1px solid rgba(215,178,91,.18);
+  background:rgba(215,178,91,.035);
+  border-radius:10px;
+  padding:9px 10px;
+  color:var(--text);
+}
 .profile-honor-row>strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .profile-honor-row>b{font-size:11px;color:var(--gold2)}
 .profile-honor-row>small{font-size:10px;color:var(--muted);text-align:right;white-space:nowrap}
-.profile-honors-all{margin-top:8px;border:0;background:transparent;color:var(--gold2);padding:5px 2px;cursor:pointer;font:inherit;font-size:11px}
 @media(min-width:621px){
-  .profile-honor-row{grid-template-columns:30px 230px 52px 230px;justify-content:start}
+  .profile-honor-row{grid-template-columns:230px 52px 230px;justify-content:start}
   .profile-honor-row>strong,.profile-honor-row>b,.profile-honor-row>small{text-align:left}
 }
 @media(max-width:620px){
-  .profile-honor-row{grid-template-columns:28px minmax(0,1fr) auto}
-  .profile-honor-row>small{grid-column:2/-1;text-align:left}
+  .profile-honor-row{grid-template-columns:minmax(0,1fr) auto}
+  .profile-honor-row>small{grid-column:1/-1;text-align:left}
 }
 
 /* Integrated honor ranking/evidence */
@@ -1033,16 +1042,17 @@ button:not(:disabled):active,
 }
 
 
-/* Phase 2 · player archive, honor hierarchy and GOAT ranking motion */
+/* Official honor cards · unified hierarchy and restrained motion */
 .honor-board-card{
   overflow:hidden;
   isolation:isolate;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
 }
 .honor-board-card > *{
   position:relative;
   z-index:1;
 }
-.honor-board-card.honor-tier-a::after{
+.honor-board-card::after{
   content:"";
   position:absolute;
   z-index:0;
@@ -1052,7 +1062,7 @@ button:not(:disabled):active,
   background:linear-gradient(105deg,transparent 38%,rgba(215,178,91,.12) 50%,transparent 62%);
   transform:translate3d(-72%,0,0) skewX(-14deg);
 }
-.honor-board-card.honor-tier-a.honor-shine-once::after{
+.honor-board-card.honor-shine-once::after{
   animation:moap-honor-shine 1.25s ease-out 1 both;
 }
 @keyframes moap-honor-shine{
@@ -1062,37 +1072,17 @@ button:not(:disabled):active,
   100%{opacity:0;transform:translate3d(72%,0,0) skewX(-14deg)}
 }
 @media (hover:hover) and (pointer:fine){
-  .honor-board-card.honor-tier-a{
-    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,filter .2s ease;
-  }
-  .honor-board-card.honor-tier-a:hover{
+  .honor-board-card:hover{
     transform:translate3d(0,-3px,0);
     border-color:rgba(215,178,91,.34);
     box-shadow:0 18px 42px rgba(0,0,0,.25),0 0 24px rgba(215,178,91,.035);
-    filter:brightness(1.035);
-  }
-  .honor-board-card.honor-tier-b{
-    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
-  }
-  .honor-board-card.honor-tier-b:hover{
-    transform:translate3d(0,-2px,0);
-    border-color:rgba(119,185,255,.24);
-    box-shadow:0 14px 34px rgba(0,0,0,.2);
-  }
-  .honor-board-card.honor-tier-c{
-    transition:border-color .18s ease,filter .18s ease;
-  }
-  .honor-board-card.honor-tier-c:hover{
-    transform:none;
-    border-color:rgba(255,255,255,.13);
-    filter:brightness(1.025);
   }
 }
 @media(max-width:760px){
-  .honor-board-card.honor-tier-a::after{display:none}
+  .honor-board-card::after{display:none}
 }
 @media(prefers-reduced-motion:reduce){
-  .honor-board-card.honor-tier-a::after{
+  .honor-board-card::after{
     display:none!important;
     animation:none!important;
   }
@@ -1136,41 +1126,6 @@ button:not(:disabled):active,
 #honorModalBackdrop .honor-modal-header p{color:var(--muted)}
 #honorModalBackdrop .honor-modal-header h2{color:var(--text)}
 #honorModalBackdrop .honor-modal-header strong{color:var(--gold2)}
-#honorModalBackdrop .honor-modal-header:has(+ .honor-modal-section .profile-honor-all-list) .honor-modal-grade{
-  display:none;
-}
-#honorModalBackdrop .honor-modal-section h3{color:var(--muted)}
-#honorModalBackdrop .honor-modal-section p{color:#d7e2dd}
-#honorModalBackdrop .honor-modal-summary{color:var(--gold2)!important}
-#honorModalBackdrop .honor-modal-footer{color:var(--muted)}
-#honorModalBackdrop .profile-honor-row{
-  border-color:rgba(85,214,156,.11);
-  background:rgba(10,32,27,.68);
-  color:var(--text);
-}
-#honorModalBackdrop .profile-honor-row:hover{
-  border-color:rgba(215,178,91,.28);
-  background:rgba(215,178,91,.055);
-}
-#honorModalBackdrop .profile-honor-row[data-honor-grade="A"]{
-  border-color:rgba(215,178,91,.2);
-  background:rgba(215,178,91,.04);
-}
-#honorModalBackdrop .profile-honor-row>b{color:var(--gold2)}
-#honorModalBackdrop .profile-honor-row>small{color:var(--muted)}
-#honorModalBackdrop .grade.A{
-  background:rgba(215,178,91,.18);
-  color:var(--gold2);
-}
-#honorModalBackdrop .grade.B{
-  background:rgba(85,214,156,.11);
-  color:#a8d7c0;
-}
-#honorModalBackdrop .grade.C,
-#honorModalBackdrop .grade.D{
-  background:rgba(168,183,177,.1);
-  color:#c5d1cc;
-}
 #honorModalBackdrop .honor-ranking-table{
   border-color:rgba(85,214,156,.12);
   background:rgba(10,32,27,.5);
@@ -1219,44 +1174,23 @@ button:not(:disabled):active,
 #honorModalBackdrop .honor-calc-chain{background:rgba(215,178,91,.06)}
 
 
-/* Honor rows · stable luminance with continuous directional flow */
+/* Official honor rows · stable luminance with one shared directional flow */
 .profile-honor-row,
-#honorModalBackdrop .honor-season-detail,
-#honorModalBackdrop .honor-ranking-card{--honor-flow-delay:.2s}
-.profile-honor-row:nth-child(4n+2),
-#honorModalBackdrop .honor-season-detail:nth-child(4n+2),
-#honorModalBackdrop .honor-ranking-card:nth-child(4n+2){--honor-flow-delay:.35s}
-.profile-honor-row:nth-child(4n+3),
-#honorModalBackdrop .honor-season-detail:nth-child(4n+3),
-#honorModalBackdrop .honor-ranking-card:nth-child(4n+3){--honor-flow-delay:.5s}
-.profile-honor-row:nth-child(4n),
-#honorModalBackdrop .honor-season-detail:nth-child(4n),
-#honorModalBackdrop .honor-ranking-card:nth-child(4n){--honor-flow-delay:.6s}
-
-.profile-honor-row[data-honor-grade="A"],
-.profile-honor-row[data-honor-grade="B"],
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner{
+#honorModalBackdrop .honor-ranking-card.is-winner{
+  --honor-flow-delay:.2s;
   position:relative;
   overflow:hidden;
   isolation:isolate;
 }
-
-.profile-honor-row[data-honor-grade="A"]>*,
-.profile-honor-row[data-honor-grade="B"]>*,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail>*,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail>*,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner>*,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner>*{
+.profile-honor-row:nth-child(2n),
+#honorModalBackdrop .honor-ranking-card.is-winner:nth-child(2n){--honor-flow-delay:.48s}
+.profile-honor-row>*,
+#honorModalBackdrop .honor-ranking-card.is-winner>*{
   position:relative;
   z-index:1;
 }
-
-.profile-honor-row[data-honor-grade="A"]::after,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail::after,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner::after{
+.profile-honor-row::after,
+#honorModalBackdrop .honor-ranking-card.is-winner::after{
   content:"";
   position:absolute;
   z-index:0;
@@ -1269,58 +1203,22 @@ button:not(:disabled):active,
   animation:honorRowFlow 5s linear infinite;
   animation-delay:var(--honor-flow-delay);
 }
-#honorModalBackdrop .profile-honor-row[data-honor-grade="A"]::after,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail::after,
-#honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner::after{
+#honorModalBackdrop .honor-ranking-card.is-winner::after{
   animation-delay:calc(1.05s + var(--honor-flow-delay));
 }
-
-.profile-honor-row[data-honor-grade="B"]::after,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail::after,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner::after{
-  content:"";
-  position:absolute;
-  z-index:0;
-  inset:0 auto 0 0;
-  width:26%;
-  pointer-events:none;
-  background:linear-gradient(90deg,transparent 0%,rgba(85,214,156,.008) 18%,rgba(85,214,156,.034) 42%,rgba(85,214,156,.055) 50%,rgba(85,214,156,.034) 58%,rgba(85,214,156,.008) 82%,transparent 100%);
-  transform:translate3d(-115%,0,0);
-  will-change:transform;
-  animation:honorRowFlow 5.8s linear infinite;
-  animation-delay:var(--honor-flow-delay);
-}
-#honorModalBackdrop .profile-honor-row[data-honor-grade="B"]::after,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail::after,
-#honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner::after{
-  animation-delay:calc(1.05s + var(--honor-flow-delay));
-}
-
 @keyframes honorRowFlow{
   from{transform:translate3d(-115%,0,0)}
   to{transform:translate3d(475%,0,0)}
 }
-
 @media(max-width:760px){
-  .profile-honor-row[data-honor-grade="A"]::after,
-  #honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail::after,
-  #honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner::after{
+  .profile-honor-row::after,
+  #honorModalBackdrop .honor-ranking-card.is-winner::after{
     background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.012) 18%,rgba(215,178,91,.055) 42%,rgba(215,178,91,.085) 50%,rgba(215,178,91,.055) 58%,rgba(215,178,91,.012) 82%,transparent 100%);
   }
-  .profile-honor-row[data-honor-grade="B"]::after,
-  #honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail::after,
-  #honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner::after{
-    background:linear-gradient(90deg,transparent 0%,rgba(85,214,156,.006) 18%,rgba(85,214,156,.022) 42%,rgba(85,214,156,.035) 50%,rgba(85,214,156,.022) 58%,rgba(85,214,156,.006) 82%,transparent 100%);
-  }
 }
-
 @media(prefers-reduced-motion:reduce){
-  .profile-honor-row[data-honor-grade="A"]::after,
-  .profile-honor-row[data-honor-grade="B"]::after,
-  #honorModalBody:has(.honor-modal-grade.grade.A) .honor-season-detail::after,
-  #honorModalBody:has(.honor-modal-grade.grade.B) .honor-season-detail::after,
-  #honorModalBody:has(.honor-modal-grade.grade.A) .honor-ranking-card.is-winner::after,
-  #honorModalBody:has(.honor-modal-grade.grade.B) .honor-ranking-card.is-winner::after{
+  .profile-honor-row::after,
+  #honorModalBackdrop .honor-ranking-card.is-winner::after{
     display:none!important;
     animation:none!important;
   }
