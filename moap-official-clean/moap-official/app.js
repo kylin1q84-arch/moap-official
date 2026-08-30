@@ -15,6 +15,7 @@ import {
   animateNumbers,
   animateRecordDetails,
   animatePlayerCenterEntry,
+  animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
   animateHonorCenterEntry,
@@ -664,17 +665,26 @@ function playerTimeline(pid){
   return arr;
 }
 function drawTrend(pid){
-  const svg=$("#trendChart"), arr=playerTimeline(pid);
+  const svg=$("#trendChart"),arr=playerTimeline(pid);
+  const wrap=svg?.closest?.(".trend-wrap");
+  if(wrap&&!wrap.querySelector(".trend-tooltip")){
+    wrap.insertAdjacentHTML("beforeend",'<div class="trend-tooltip" role="tooltip" aria-hidden="true"><strong data-trend-title></strong><span data-trend-date></span><span data-trend-score></span><span data-trend-total></span></div>');
+  }
   if(!arr.length){svg.innerHTML="";return}
   const W=760,H=250,pad={l:42,r:18,t:18,b:30};
-  const vals=arr.map(x=>x.cumulative), min=Math.min(0,...vals), max=Math.max(0,...vals), range=(max-min)||1;
+  const vals=arr.map(x=>x.cumulative),min=Math.min(0,...vals),max=Math.max(0,...vals),range=(max-min)||1;
   const x=i=>pad.l+(W-pad.l-pad.r)*(i/(arr.length-1||1));
   const y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-min)/range);
   const pts=arr.map((d,i)=>`${x(i)},${y(d.cumulative)}`).join(" ");
   const area=`${x(0)},${y(0)} ${pts} ${x(arr.length-1)},${y(0)}`;
   const grid=[0,.25,.5,.75,1].map(t=>{const v=min+range*t;return `<line class="axis" x1="${pad.l}" y1="${y(v)}" x2="${W-pad.r}" y2="${y(v)}"/><text class="chart-label" x="3" y="${y(v)+3}">${Math.round(v)}</text>`}).join("");
-  const dots=arr.map((d,i)=>i===arr.length-1||d.isMvp?`<circle class="trend-dot" cx="${x(i)}" cy="${y(d.cumulative)}" r="${d.isMvp?4:3}"><title>${d.date} · ${fmtScore(d.score)} · 累计 ${fmtScore(d.cumulative)}</title></circle>`:"").join("");
-  svg.innerHTML=`<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d7b25b" stop-opacity=".24"/><stop offset="100%" stop-color="#d7b25b" stop-opacity="0"/></linearGradient></defs>${grid}<polygon class="trend-area" points="${area}"/><polyline class="trend-line" points="${pts}"/>${dots}<text class="chart-label" x="${pad.l}" y="${H-7}">${arr[0].season} · 第1场</text><text class="chart-label" text-anchor="end" x="${W-pad.r}" y="${H-7}">${arr[arr.length-1].season} · 第${arr[arr.length-1].round}场</text>`;
+  const dots=arr.map((d,i)=>{
+    const latest=i===arr.length-1;
+    const classes=["trend-dot",d.isMvp?"is-mvp":"",latest?"is-latest":""].filter(Boolean).join(" ");
+    const radius=latest?4:d.isMvp?3.4:2;
+    return `<circle class="${classes}" cx="${x(i)}" cy="${y(d.cumulative)}" r="${radius}" data-season="${escapeHtml(d.season||"")}" data-round="${escapeHtml(String(d.round??""))}" data-date="${escapeHtml(d.date||"")}" data-score="${escapeHtml(fmtScore(d.score))}" data-score-value="${Number(d.score)}" data-cumulative="${escapeHtml(fmtScore(d.cumulative))}"><title>${escapeHtml([d.season,d.round?`第${d.round}场`:"",d.date,fmtScore(d.score),`累计 ${fmtScore(d.cumulative)}`].filter(Boolean).join(" · "))}</title></circle>`;
+  }).join("");
+  svg.innerHTML=`<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d7b25b" stop-opacity=".24"/><stop offset="100%" stop-color="#d7b25b" stop-opacity="0"/></linearGradient><clipPath id="trendAreaClip"><rect class="trend-area-reveal" x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${H-pad.t-pad.b}"/></clipPath></defs>${grid}<polygon class="trend-area" clip-path="url(#trendAreaClip)" points="${area}"/><polyline class="trend-line" points="${pts}"/><line class="trend-guide" x1="${x(arr.length-1)}" y1="${pad.t}" x2="${x(arr.length-1)}" y2="${H-pad.b}"/>${dots}<text class="chart-label" x="${pad.l}" y="${H-7}">${arr[0].season} · 第1场</text><text class="chart-label" text-anchor="end" x="${W-pad.r}" y="${H-7}">${arr[arr.length-1].season} · 第${arr[arr.length-1].round}场</text>`;
   $("#chartCaption").textContent=`${arr.length}场 · 当前累计 ${fmtScore(arr[arr.length-1].cumulative)}`;
 }
 function seasonGrade(rating){return rating>=92?"S":rating>=86?"A+":rating>=80?"A":rating>=74?"B+":rating>=68?"B":rating>=62?"C+":"C";}
@@ -711,6 +721,15 @@ function renderPlayerSeasonData(pid){
     head.innerHTML=`<tr><th>赛季</th><th>场次</th><th>${cols[0]}</th><th>${cols[1]}</th><th>${cols[2]}</th><th>${cols[3]}</th></tr>`;
     body.innerHTML=scopes.map(scope=>{const r=playerSeasonDataRow(pid,scope,playerSeasonMatchType,playerSeasonMetric);if(!r)return `<tr><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td colspan="5" class="muted">暂无参赛数据</td></tr>`;const x=r[playerSeasonMetric];return `<tr class="${scope==="all"?"season-total-row":""}"><td><span class="chip ${scope==="all"?"":"gold"}">${labels(scope)}</span></td><td>${r.games}</td><td>${x.count}</td><td class="${scoreClass(x.points)}">${fmtScore(x.points)}</td><td>${x.count?fmtAvg(x.average):"—"}</td><td>${fmtPct(x.rate)}</td></tr>`;}).join("");
   }
+  [...body.querySelectorAll("tr")].forEach((row,rowIndex)=>{
+    const scope=scopes[rowIndex]||("row-"+rowIndex);
+    [...row.children].forEach((cell,cellIndex)=>{
+      if(cellIndex===0||cell.classList.contains("muted"))return;
+      const target=cell.querySelector(":scope > b")||cell;
+      target.setAttribute("data-player-number","");
+      target.dataset.animationKey=`player-season-${scope}-${cellIndex}`;
+    });
+  });
 }
 
 function renderPlayer(){
@@ -726,7 +745,7 @@ function renderPlayer(){
   renderPlayerSeasonData(pid);
   drawTrend(pid);
   const rec=playerTimeline(pid).slice(-5).reverse();
-  $("#recentMatchesPlayer").innerHTML=rec.map(r=>`<div class="score-row ${r.isMvp?"mvp":""}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold">MVP</span>':""}</div><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b></div>`).join("");
+  $("#recentMatchesPlayer").innerHTML=rec.map((r,index)=>`<div class="score-row ${r.isMvp?"mvp":""} ${index===0?"recent-latest":""}" data-recent-match data-recent-index="${index}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold recent-mvp-badge">MVP</span>':""}</div><b class="${scoreClass(r.score)}" data-player-number data-animation-key="player-recent-${index}">${fmtScore(r.score)}</b></div>`).join("");
   renderPlayerScouting(pid);
 }
 
@@ -744,7 +763,7 @@ $("#playerSeasonMatchType")?.addEventListener("change",e=>{
   transitionPlayerData({
     target,
     update:()=>{playerSeasonMatchType=nextType;renderPlayerSeasonData(currentPlayer);},
-    onUpdated:()=>animateNumbers(target)
+    onUpdated:()=>animatePlayerSeasonNumbers(target)
   });
 });
 $("#playerSeasonMetric")?.addEventListener("change",e=>{
@@ -752,7 +771,7 @@ $("#playerSeasonMetric")?.addEventListener("change",e=>{
   transitionPlayerData({
     target,
     update:()=>{playerSeasonMetric=nextMetric;renderPlayerSeasonData(currentPlayer);},
-    onUpdated:()=>animateNumbers(target)
+    onUpdated:()=>animatePlayerSeasonNumbers(target)
   });
 });
 
