@@ -319,7 +319,7 @@ export function animateNumbers(root=document,{duration}={}){
   animateNumberCandidates(candidates,root,{duration});
 }
 
-export function animatePlayerSeasonNumbers(root=document){
+export function animatePlayerSeasonNumbers(root=document,{baseDelay=0}={}){
   const table=root?.matches?.("#playerSeasonTable")?root:root?.querySelector?.("#playerSeasonTable");
   if(!table)return;
   const rows=[...table.querySelectorAll("tr")];
@@ -329,12 +329,12 @@ export function animatePlayerSeasonNumbers(root=document){
     delayFor:element=>{
       const row=element.closest("tr");
       const rowIndex=Math.max(0,rows.indexOf(row));
-      return row?.classList.contains("season-total-row")?.16:rowIndex*.04;
+      return baseDelay+(row?.classList.contains("season-total-row")?.16:rowIndex*.04);
     }
   });
 }
 
-function animatePlayerRecentNumbers(root=document){
+function animatePlayerRecentNumbers(root=document,{baseDelay=0}={}){
   const holder=root?.matches?.("#recentMatchesPlayer")?root:root?.querySelector?.("#recentMatchesPlayer");
   if(!holder)return;
   const rows=[...holder.querySelectorAll("[data-recent-match]")];
@@ -343,7 +343,7 @@ function animatePlayerRecentNumbers(root=document){
     duration:mobileMotion()?.42:.52,
     delayFor:element=>{
       const rowIndex=Math.max(0,rows.indexOf(element.closest("[data-recent-match]")));
-      return .1+rowIndex*.06;
+      return baseDelay+.1+rowIndex*.06;
     }
   });
 }
@@ -476,7 +476,7 @@ function bindPlayerTrendInteraction(root){
   };
 }
 
-export function animatePlayerTrend(root){
+export function animatePlayerTrend(root,{delay=0}={}){
   const chart=root?.querySelector?.("#trendChart")||root;
   const line=chart?.querySelector?.(".trend-line");
   const reveal=chart?.querySelector?.(".trend-area-reveal");
@@ -507,6 +507,7 @@ export function animatePlayerTrend(root){
   if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.84,transformOrigin:"center"});
 
   playerTrendTimeline=gsap.timeline({
+    delay,
     onComplete:()=>{
       clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
       playerTrendTimeline=null;
@@ -521,7 +522,7 @@ export function animatePlayerTrend(root){
   }
 }
 
-function animateRecentMatches(root){
+function animateRecentMatches(root,{delay=0}={}){
   const holder=root?.querySelector?.("#recentMatchesPlayer")||root;
   const rows=holder?.querySelectorAll ? [...holder.querySelectorAll("[data-recent-match]")] : [];
   const badges=holder?.querySelectorAll ? [...holder.querySelectorAll(".recent-mvp-badge")] : [];
@@ -530,7 +531,7 @@ function animateRecentMatches(root){
   clearMotionProps(rows);
   clearExtendedMotionProps(badges);
   latest?.classList.remove("recent-glow-once");
-  animatePlayerRecentNumbers(root);
+  animatePlayerRecentNumbers(root,{baseDelay:delay});
 
   if(!rows.length||motionDisabled())return;
 
@@ -542,6 +543,7 @@ function animateRecentMatches(root){
   if(badges.length)gsap.set(badges,{autoAlpha:0,scale:.9,transformOrigin:"center"});
 
   playerRecentTimeline=gsap.timeline({
+    delay,
     onComplete:()=>{
       clearMotionProps(rows);
       clearExtendedMotionProps(badges);
@@ -565,10 +567,10 @@ function animateRecentMatches(root){
   });
 }
 
-function animatePlayerDataExperience(root){
-  animatePlayerSeasonNumbers(root);
-  animatePlayerTrend(root);
-  animateRecentMatches(root);
+function animatePlayerDataExperience(root,{delay=0}={}){
+  animatePlayerSeasonNumbers(root,{baseDelay:delay+.08});
+  animatePlayerTrend(root,{delay:delay+.16});
+  animateRecentMatches(root,{delay:delay+.22});
 }
 
 function stopPlayerDataExperience(root){
@@ -613,12 +615,12 @@ export function animatePlayerCenterEntry(root){
   }
   const mobile=mobileMotion();
   clearMotionProps(layers);
+  animatePlayerDataExperience(root);
   playerEntryTimeline=gsap.timeline({
     defaults:{ease:MOAP_MOTION.ease.enter},
     onComplete:()=>{
       clearMotionProps(layers);
       playerEntryTimeline=null;
-      animatePlayerDataExperience(root);
     }
   }).fromTo(
     layers,
@@ -647,13 +649,13 @@ export function transitionPlayerProfile({root,update,onUpdated}){
     onComplete:()=>{
       clearMotionProps(playerLayers(root));
       playerSwitchTimeline=null;
-      animatePlayerDataExperience(root);
     }
   })
     .to(before,{autoAlpha:0,y:mobile?2:4,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
     .call(()=>{
       update();
       onUpdated?.();
+      animatePlayerDataExperience(root);
     })
     .fromTo(
       playerLayers(root),
