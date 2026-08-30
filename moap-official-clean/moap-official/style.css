@@ -1326,13 +1326,17 @@ button:not(:disabled):active,
 #trendChart{position:relative;z-index:1}
 .trend-area-reveal{transform-box:fill-box;transform-origin:left center}
 .trend-dot{
+  opacity:0;
+  visibility:hidden;
   transform-box:fill-box;
   transform-origin:center;
   pointer-events:none;
 }
-.trend-dot.is-mvp{stroke:rgba(215,178,91,.72);stroke-width:2.2}
-.trend-dot.is-latest{fill:var(--gold);stroke:rgba(236,212,146,.88);stroke-width:2.4}
-.trend-dot.is-active{fill:var(--gold2)}
+.trend-dot.is-active{
+  fill:var(--gold2);
+  stroke:#08241d;
+  stroke-width:2.2;
+}
 .trend-guide{
   stroke:rgba(215,178,91,.16);
   stroke-width:1;
@@ -1365,6 +1369,7 @@ button:not(:disabled):active,
 .trend-tooltip span{font-size:10px;line-height:1.55;color:var(--muted)}
 .trend-tooltip [data-trend-score].score-pos{color:var(--green)}
 .trend-tooltip [data-trend-score].score-neg{color:var(--red)}
+.trend-tooltip [data-trend-mvp]{color:var(--gold2);font-weight:700}
 .trend-tooltip [data-trend-total]{color:var(--text)}
 
 #recentMatchesPlayer .score-row{position:relative}
