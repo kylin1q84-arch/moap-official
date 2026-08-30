@@ -381,19 +381,22 @@ function bindPlayerTrendInteraction(root){
 
   const gsap=motionEngine();
   const reduced=motionDisabled();
+  const baseRadius=Number(dots[0]?.getAttribute("r")||3.2);
+  const activeRadius=4.35;
   let activeDot=null;
   const title=tooltip.querySelector("[data-trend-title]");
   const date=tooltip.querySelector("[data-trend-date]");
   const mvp=tooltip.querySelector("[data-trend-mvp]");
   const score=tooltip.querySelector("[data-trend-score]");
   const total=tooltip.querySelector("[data-trend-total]");
+  gsap.set(dots,{attr:{r:baseRadius},clearProps:"transform,transformOrigin"});
 
   const hide=()=>{
     if(activeDot){
       activeDot.classList.remove("is-active");
       gsap.killTweensOf(activeDot);
-      if(reduced)gsap.set(activeDot,{autoAlpha:0,scale:1,clearProps:"transform"});
-      else gsap.to(activeDot,{autoAlpha:0,scale:1,duration:.12,ease:"power1.out",overwrite:true,clearProps:"transform"});
+      if(reduced)gsap.set(activeDot,{autoAlpha:0,attr:{r:baseRadius}});
+      else gsap.to(activeDot,{autoAlpha:0,attr:{r:baseRadius},duration:.12,ease:"power1.out",overwrite:true});
       activeDot=null;
     }
     tooltip.setAttribute("aria-hidden","true");
@@ -411,12 +414,12 @@ function bindPlayerTrendInteraction(root){
       if(activeDot){
         activeDot.classList.remove("is-active");
         gsap.killTweensOf(activeDot);
-        gsap.to(activeDot,{autoAlpha:0,scale:1,duration:reduced?0:.1,ease:"power1.out",overwrite:true,clearProps:"transform"});
+        gsap.to(activeDot,{autoAlpha:0,attr:{r:baseRadius},duration:reduced?0:.1,ease:"power1.out",overwrite:true});
       }
       activeDot=dot;
       activeDot.classList.add("is-active");
       gsap.killTweensOf(activeDot);
-      gsap.to(activeDot,{autoAlpha:1,scale:reduced?1:1.35,duration:reduced?0:.16,ease:"power2.out",transformOrigin:"center",overwrite:true});
+      gsap.to(activeDot,{autoAlpha:1,attr:{r:reduced?baseRadius:activeRadius},duration:reduced?0:.16,ease:"power2.out",overwrite:true});
     }
 
     const season=dot.dataset.season||"";
@@ -435,11 +438,10 @@ function bindPlayerTrendInteraction(root){
     if(total)total.textContent="累计积分 "+(dot.dataset.cumulative||"");
 
     const cx=Number(dot.getAttribute("cx")||0);
-    const cy=Number(dot.getAttribute("cy")||0);
-    const chartRect=chart.getBoundingClientRect();
+    const dotRect=dot.getBoundingClientRect();
     const wrapRect=wrap.getBoundingClientRect();
-    const px=cx/760*chartRect.width+(chartRect.left-wrapRect.left);
-    const py=cy/250*chartRect.height+(chartRect.top-wrapRect.top);
+    const px=dotRect.left+dotRect.width/2-wrapRect.left;
+    const py=dotRect.top+dotRect.height/2-wrapRect.top;
     const tooltipWidth=tooltip.offsetWidth||160;
     const tooltipHeight=tooltip.offsetHeight||82;
     const x=Math.max(8,Math.min(wrapRect.width-tooltipWidth-8,px-tooltipWidth/2));
@@ -459,16 +461,13 @@ function bindPlayerTrendInteraction(root){
 
   const handleMove=event=>{
     if(event.pointerType==="touch")return;
-    const rect=chart.getBoundingClientRect();
-    if(!rect.width||!rect.height)return;
-    const pointerX=event.clientX-rect.left;
-    const pointerY=event.clientY-rect.top;
     let nearest=null;
     let nearestDistance=Infinity;
     dots.forEach(dot=>{
-      const nodeX=Number(dot.getAttribute("cx")||0)/760*rect.width;
-      const nodeY=Number(dot.getAttribute("cy")||0)/250*rect.height;
-      const distance=Math.hypot(nodeX-pointerX,nodeY-pointerY);
+      const rect=dot.getBoundingClientRect();
+      const nodeX=rect.left+rect.width/2;
+      const nodeY=rect.top+rect.height/2;
+      const distance=Math.hypot(nodeX-event.clientX,nodeY-event.clientY);
       if(distance<nearestDistance){
         nearest=dot;
         nearestDistance=distance;
@@ -481,13 +480,21 @@ function bindPlayerTrendInteraction(root){
     show(nearest);
   };
   const handleLeave=()=>hide();
+  const handleResize=()=>{if(activeDot)show(activeDot);};
+  const resizeObserver=typeof ResizeObserver==="function"?new ResizeObserver(handleResize):null;
 
   chart.addEventListener("pointermove",handleMove,{passive:true});
   chart.addEventListener("pointerleave",handleLeave,{passive:true});
+  window.addEventListener("resize",handleResize,{passive:true});
+  resizeObserver?.observe(chart);
   playerTrendInteractionCleanup=()=>{
     chart.removeEventListener("pointermove",handleMove);
     chart.removeEventListener("pointerleave",handleLeave);
+    window.removeEventListener("resize",handleResize);
+    resizeObserver?.disconnect();
     hide();
+    gsap.killTweensOf(dots);
+    gsap.set(dots,{attr:{r:baseRadius},clearProps:"opacity,visibility,transform,transformOrigin"});
     gsap.set([tooltip,guide],{clearProps:"opacity,visibility,transform"});
   };
 }
