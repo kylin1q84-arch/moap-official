@@ -64,6 +64,11 @@ function normalizedVenue(matchId, venue){ return VENUE_OVERRIDES[String(matchId|
 const HONOR_NAME_OVERRIDES = {};
 function honorCatalogItem(honorId){ return HONOR_CATALOG.find(x => x.honorId === honorId); }
 function honorDisplayName(honorId, fallback=""){ return HONOR_NAME_OVERRIDES[honorId] || honorCatalogItem(honorId)?.name || fallback || honorId; }
+function safeHonorName(item={}){
+  const candidate=String(item?.name??"").trim();
+  if(candidate&&candidate!=="undefined"&&candidate!=="null")return candidate;
+  return honorDisplayName(item?.honorId,"官方荣誉");
+}
 function officialHonorStats(honors=[]){
   const official=honors.filter(h=>h.honorId==="H001"||h.honorId==="H003");
   return {
@@ -1108,7 +1113,7 @@ function scopeOrder(scope){if(scope==="CAREER")return 999;const n=Number(String(
 function groupPlayerHonors(honors){
   const map=new Map();
   honors.filter(h=>h.honorId==="H001"||h.honorId==="H003").forEach(h=>{
-    if(!map.has(h.honorId))map.set(h.honorId,{honorId:h.honorId,name:h.name,awards:[]});
+    if(!map.has(h.honorId))map.set(h.honorId,{honorId:h.honorId,name:safeHonorName(h),awards:[]});
     map.get(h.honorId).awards.push(h);
   });
   const catalogOrder=Object.fromEntries(HONOR_CATALOG.map((item,index)=>[item.honorId,index]));
@@ -1118,7 +1123,7 @@ function groupPlayerHonors(honors){
 }
 function profileHonorRowHtml(group){
   const scopes=group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · ");
-  return `<div class="profile-honor-row"><strong>${escapeHtml(group.name)}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></div>`;
+  return `<div class="profile-honor-row"><strong>${escapeHtml(safeHonorName(group))}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small></div>`;
 }
 function formatHonorValue(value,unit=""){if(value===null||value===undefined)return "—";if(unit==="%")return `${(Number(value)*100).toFixed(1)}%`;if(typeof value==="number"&&!Number.isInteger(value))return `${value.toFixed(2)}${unit}`;return `${value}${unit}`;}
 function ensureHonorModal(){
@@ -1174,12 +1179,12 @@ function honorDetailSections(h){
 
 function openHonorModal(h){
   ensureHonorModal();const d=h.details||{};
-  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(h.scope)} · 官方荣誉</p><h2 id="honorModalTitle">${escapeHtml(h.name)}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header>${honorDetailSections(h)}`;
+  $("#honorModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(h.scope)} · 官方荣誉</p><h2 id="honorModalTitle">${escapeHtml(safeHonorName(h))}</h2><strong>${escapeHtml(d.winner||"—")} · ${escapeHtml(formatHonorValue(h.value,d.unit))}</strong></div></header>${honorDetailSections(h)}`;
   revealHonorModal();
 }
 function openHonorBoardModal(season,honorId){
   const row=(state.honorBoard||[]).find(x=>x.scope===season&&x.honorId===honorId);if(!row)return;
-  const synthetic={ownerPlayerId:row.winnerIds?.[0]||"",scope:row.scope,honorId:row.honorId,name:row.name,value:row.value,status:row.status,details:row.details||{rule:honorCatalogItem(row.honorId)?.rule||"",unit:row.unit,winner:row.winners?.join(" / ")||"—",winners:row.winners||[],ranking:[],formula:[],evidence:[],summary:row.summary||""}};
+  const synthetic={ownerPlayerId:row.winnerIds?.[0]||"",scope:row.scope,honorId:row.honorId,name:safeHonorName(row),value:row.value,status:row.status,details:row.details||{rule:honorCatalogItem(row.honorId)?.rule||"",unit:row.unit,winner:row.winners?.join(" / ")||"—",winners:row.winners||[],ranking:[],formula:[],evidence:[],summary:row.summary||""}};
   openHonorModal(synthetic);
 }
 document.addEventListener("click",e=>{
@@ -1205,7 +1210,7 @@ function renderHonorSeasonBoard(){
     const status=r?.status||"未计算";
     const winner=r?.winners?.length?r.winners.join(" / "):status==="PENDING_TIEBREAK"?"待定":status==="NOT_AWARDED"?"本季不颁发":"—";
     const statusClass=status==="PENDING_TIEBREAK"?"pending":status==="NOT_AWARDED"?"empty-state":"awarded";
-    return `<button type="button" class="honor-board-card honor-board-clickable ${statusClass}" data-honor-board="${escapeHtml(`${season}|${c.honorId}`)}"><div class="honor-top"><strong>${escapeHtml(c.name)}</strong><span class="chip gold">${escapeHtml(season)}</span></div><b>${escapeHtml(winner)}</b><small>${escapeHtml(c.rule)}</small><span class="honor-open-hint">点击查看评选详情与过程证据</span><span class="unique-note">唯一获奖</span></button>`;
+    return `<button type="button" class="honor-board-card honor-board-clickable ${statusClass}" data-honor-board="${escapeHtml(`${season}|${c.honorId}`)}"><div class="honor-top"><strong>${escapeHtml(safeHonorName(c))}</strong><span class="chip gold">${escapeHtml(season)}</span></div><b>${escapeHtml(winner)}</b><small>${escapeHtml(c.rule)}</small><span class="honor-open-hint">点击查看评选详情与过程证据</span><span class="unique-note">唯一获奖</span></button>`;
   }).join("");
 }
 function renderHonorStats(){
