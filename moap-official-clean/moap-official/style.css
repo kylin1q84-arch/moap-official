@@ -176,7 +176,6 @@
 /* MOAP Honor Detail Interaction */
 .honor-clickable{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
 .honor-clickable:hover{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.055);transform:translateY(-1px)}
-.honor-open-hint{display:block;margin-top:8px;color:#facc15;font-size:11px}
 body.modal-open{overflow:hidden}
 .honor-modal-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(3,7,18,.78);backdrop-filter:blur(8px)}
 .honor-modal-backdrop[hidden]{display:none}
@@ -220,23 +219,10 @@ body.modal-open{overflow:hidden}
 .leaderboard-dynamic-table th:nth-child(2),.leaderboard-dynamic-table td:nth-child(2){position:sticky;left:46px;z-index:2;background:#0c2a22;min-width:130px}
 .leaderboard-dynamic-table thead th:first-child,.leaderboard-dynamic-table thead th:nth-child(2){z-index:5}
 .leaderboard-dynamic-table td{white-space:nowrap}
-.honor-count-cell{display:grid;gap:2px;text-align:center;min-width:58px}
-.honor-count-cell b{font-size:14px}.honor-count-cell small{color:var(--muted);font-size:10px}
-.honor-group-card{min-height:132px}
-.honor-scope-list{margin-top:9px;color:var(--gold2);font-size:12px;line-height:1.55}
-.honor-season-stack{display:grid;gap:10px}
-.honor-season-detail{border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(148,163,184,.05);overflow:hidden}
-.honor-season-detail summary{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 14px;cursor:pointer;color:#e2e8f0}
-.honor-season-detail summary span:last-child{color:#94a3b8;font-size:12px;text-align:right}
-.honor-season-body{padding:0 14px 15px;border-top:1px solid rgba(255,255,255,.08)}
-.honor-season-body .honor-modal-section:first-child{margin-top:15px}
-.honor-season-body .honor-modal-footer{margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08)}
 select:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:680px){
   .leaderboard-filters{grid-template-columns:1fr 1fr}
   .leaderboard-table-scroll{max-height:none}
-  .honor-season-detail summary{align-items:flex-start;flex-direction:column}
-  .honor-season-detail summary span:last-child{text-align:left}
 }
 
 /* v1.7.1 MSL Form Center & Unique Honor System */
@@ -254,9 +240,8 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .analysis-method p{margin:0 0 14px;line-height:1.75}.analysis-method>small{display:block;margin-top:13px;color:var(--muted)}.method-bars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.method-bars span{display:flex;justify-content:space-between;padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.035);font-size:12px}.method-bars b{color:var(--gold2)}
 .scouting-report{border:1px solid rgba(215,178,91,.17);border-radius:16px;padding:17px;background:linear-gradient(135deg,rgba(215,178,91,.055),rgba(119,185,255,.035))}.scouting-report header{display:grid;grid-template-columns:1fr 90px;gap:18px;align-items:start}.scouting-report h3{margin:10px 0 6px;font-size:20px}.scouting-report header p{margin:0;color:#dce6e2;line-height:1.75}.scouting-index{text-align:center;padding:12px;border-radius:14px;background:rgba(0,0,0,.16)}.scouting-index b{display:block;font-size:32px;color:var(--gold2)}.scouting-index small{color:var(--muted)}
 .scouting-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:17px}.scouting-columns section{padding:13px;border-radius:12px;background:rgba(255,255,255,.035)}.scouting-columns h4{margin:0 0 9px;font-size:13px;color:var(--gold2)}.scouting-columns span{display:block;margin:7px 0;font-size:12px;line-height:1.55}.scouting-columns p{margin:0;font-size:12px;line-height:1.65}.scouting-report footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2);color:var(--muted);font-size:11px}
-.honor-board-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.honor-board-card{position:relative;padding:14px;border:1px solid var(--line2);border-radius:14px;background:rgba(255,255,255,.025)}.honor-board-card>b{display:block;margin:13px 0 7px;font-size:17px}.honor-board-card>small{display:block;color:var(--muted);line-height:1.55;font-size:11px}.honor-board-card.pending{border-color:rgba(255,190,92,.35);background:rgba(255,190,92,.055)}.honor-board-card.empty-state{opacity:.62}.unique-note,.tie-note{display:inline-flex;margin-top:10px;padding:4px 7px;border-radius:999px;font-size:10px}.unique-note{color:#acd4ff;background:rgba(119,185,255,.1)}.tie-note{color:#f2d990;background:rgba(215,178,91,.1)}
-@media(max-width:980px){.honor-board-grid{grid-template-columns:repeat(2,1fr)}.scouting-columns{grid-template-columns:1fr}.status-main-grid{grid-template-columns:1fr}}
-@media(max-width:680px){.storyline-grid,.honor-board-grid,.method-bars{grid-template-columns:1fr}.power-card{grid-template-columns:36px 1fr 48px;padding:11px}.power-card-title{align-items:flex-start;flex-direction:column}.scouting-report header{grid-template-columns:1fr}.scouting-index{display:flex;align-items:center;gap:8px;justify-content:center}.scouting-index b{font-size:25px}.ai-recap h3{font-size:18px}}
+@media(max-width:980px){.scouting-columns{grid-template-columns:1fr}.status-main-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.storyline-grid,.method-bars{grid-template-columns:1fr}.power-card{grid-template-columns:36px 1fr 48px;padding:11px}.power-card-title{align-items:flex-start;flex-direction:column}.scouting-report header{grid-template-columns:1fr}.scouting-index{display:flex;align-items:center;gap:8px;justify-content:center}.scouting-index b{font-size:25px}.ai-recap h3{font-size:18px}}
 
 /* v1.7.2 current-season player evaluation */
 .season-evaluation{margin-top:17px;padding:15px;border:1px solid rgba(119,185,255,.17);border-radius:14px;background:rgba(119,185,255,.045)}
@@ -471,9 +456,6 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .record-table tbody tr{transition:background .15s ease}.record-table tbody tr:hover{background:rgba(255,255,255,.018)}
 .explosion-table{min-width:1120px}
 
-.honor-board-card.honor-board-clickable{appearance:none;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
-.honor-board-card.honor-board-clickable:hover,.honor-board-card.honor-board-clickable:focus-visible{border-color:rgba(215,178,91,.38);background:rgba(215,178,91,.045);outline:none}
-.honor-open-hint{display:block;margin-top:7px;font-size:9px;color:var(--gold);opacity:.78}
 
 @media(max-width:900px){
   .monthly-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -902,39 +884,6 @@ body{
   .profile-honor-row>small{grid-column:1/-1;text-align:left}
 }
 
-/* Integrated honor ranking/evidence */
-.honor-ranking-cards{display:grid;gap:10px}
-.honor-ranking-card{border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.024);border-radius:14px;padding:12px}
-.honor-ranking-card.is-winner{border-color:rgba(215,178,91,.3);background:rgba(215,178,91,.055)}
-.honor-ranking-card>header{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:9px}
-.honor-ranking-card>header>div strong{display:block;font-size:13px}.honor-ranking-card>header>div small{display:block;margin-top:2px;color:var(--gold);font-size:9px}
-.honor-ranking-card>header>b{font-size:13px;color:var(--gold2);white-space:nowrap}
-.honor-contribution-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0}
-.honor-contribution-strip span{display:flex;justify-content:space-between;gap:5px;padding:6px 7px;border-radius:8px;background:rgba(255,255,255,.028);font-size:9px;color:var(--muted)}
-.honor-contribution-strip b{color:var(--text)}
-.honor-score-details>summary,.honor-process-detail>summary{cursor:pointer;color:var(--gold2);font-size:10px;list-style:none;padding:6px 0}
-.honor-score-details>summary::-webkit-details-marker,.honor-process-detail>summary::-webkit-details-marker{display:none}
-.honor-score-details>summary:after,.honor-process-detail>summary:after{content:" ▾";color:var(--muted)}
-.honor-score-details[open]>summary:after,.honor-process-detail[open]>summary:after{content:" ▴"}
-.honor-metric-list{display:grid;gap:7px;margin-top:6px}
-.honor-metric-item{padding:9px 10px;border-radius:10px;background:rgba(0,0,0,.09);border:1px solid rgba(255,255,255,.045)}
-.honor-metric-main{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
-.honor-metric-main span{font-size:10px;color:var(--muted)}.honor-metric-main span b{color:var(--gold2);font-weight:700;margin-right:5px}.honor-metric-main>strong{font-size:11px;white-space:nowrap}.honor-metric-main>em{font-style:normal;font-size:9px;color:var(--gold)}
-.honor-process-detail-body{display:grid;gap:8px;margin-top:6px}
-.honor-metric-evidence{display:grid;gap:5px}
-.honor-evidence-match{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.018);border-radius:8px;padding:7px 8px;color:var(--text);text-align:left;cursor:pointer;font:inherit}
-.honor-evidence-match:hover{border-color:rgba(215,178,91,.25)}
-.honor-evidence-match span strong{display:block;font-size:10px}.honor-evidence-match span small{display:block;color:var(--gold);font-size:8px;margin-top:2px}.honor-evidence-match span em{display:block;font-style:normal;color:var(--muted);font-size:9px;margin-top:2px}.honor-evidence-match>b{font-size:11px;white-space:nowrap}
-.honor-calc-chain{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:7px 8px;border-radius:8px;background:rgba(215,178,91,.055);font-size:9px;color:var(--muted)}
-.honor-calc-chain b{color:var(--text)}.honor-calc-chain i{font-style:normal;color:var(--gold)}
-.empty.compact{padding:8px;font-size:10px}
-@media(max-width:620px){
-  .honor-ranking-card>header{grid-template-columns:38px minmax(0,1fr)}
-  .honor-ranking-card>header>b{grid-column:2;text-align:left}
-  .honor-contribution-strip{grid-template-columns:1fr 1fr}
-  .honor-metric-main{grid-template-columns:1fr auto}.honor-metric-main>em{grid-column:1/-1}
-}
-
 /* v2.3.1 hotfix · match player multi-select checkbox layout */
 .match-player-options{
   display:grid;
@@ -1042,50 +991,7 @@ button:not(:disabled):active,
 }
 
 
-/* Official honor cards · unified hierarchy and restrained motion */
-.honor-board-card{
-  overflow:hidden;
-  isolation:isolate;
-  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
-}
-.honor-board-card > *{
-  position:relative;
-  z-index:1;
-}
-.honor-board-card::after{
-  content:"";
-  position:absolute;
-  z-index:0;
-  inset:-28% -42%;
-  pointer-events:none;
-  opacity:0;
-  background:linear-gradient(105deg,transparent 38%,rgba(215,178,91,.12) 50%,transparent 62%);
-  transform:translate3d(-72%,0,0) skewX(-14deg);
-}
-.honor-board-card.honor-shine-once::after{
-  animation:moap-honor-shine 1.25s ease-out 1 both;
-}
-@keyframes moap-honor-shine{
-  0%{opacity:0;transform:translate3d(-72%,0,0) skewX(-14deg)}
-  18%{opacity:.52}
-  78%{opacity:.24}
-  100%{opacity:0;transform:translate3d(72%,0,0) skewX(-14deg)}
-}
-@media (hover:hover) and (pointer:fine){
-  .honor-board-card:hover{
-    transform:translate3d(0,-3px,0);
-    border-color:rgba(215,178,91,.34);
-    box-shadow:0 18px 42px rgba(0,0,0,.25),0 0 24px rgba(215,178,91,.035);
-  }
-}
-@media(max-width:760px){
-  .honor-board-card::after{display:none}
-}
 @media(prefers-reduced-motion:reduce){
-  .honor-board-card::after{
-    display:none!important;
-    animation:none!important;
-  }
   .trend-line{
     stroke-dasharray:none!important;
     stroke-dashoffset:0!important;
@@ -1093,104 +999,33 @@ button:not(:disabled):active,
 }
 
 
-/* Honor detail system · deep green visual unification */
-#honorModalBackdrop{
-  background:rgba(2,9,7,.84);
-  backdrop-filter:blur(9px);
-  -webkit-backdrop-filter:blur(9px);
-}
-#honorModalBackdrop .honor-modal{
-  border-color:rgba(215,178,91,.22);
-  background:linear-gradient(180deg,rgba(10,32,27,.995),rgba(6,20,17,.995));
-  color:var(--text);
-  box-shadow:0 30px 90px rgba(0,0,0,.52);
-}
-#honorModalBackdrop .honor-modal,
+/* Record detail scrollbar */
 #recordModalBackdrop .record-modal{
   scrollbar-width:thin;
   scrollbar-color:rgba(215,178,91,.42) rgba(4,16,13,.72);
 }
-#honorModalBackdrop .honor-modal::-webkit-scrollbar,
 #recordModalBackdrop .record-modal::-webkit-scrollbar{width:10px}
-#honorModalBackdrop .honor-modal::-webkit-scrollbar-track,
 #recordModalBackdrop .record-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
-#honorModalBackdrop .honor-modal::-webkit-scrollbar-thumb,
 #recordModalBackdrop .record-modal::-webkit-scrollbar-thumb{
   border:2px solid rgba(4,16,13,.72);
   border-radius:999px;
   background:rgba(215,178,91,.38);
 }
-#honorModalBackdrop .honor-modal-close{color:var(--gold2)}
-#honorModalBackdrop .honor-modal-header{align-items:flex-start}
-#honorModalBackdrop .honor-modal-header>div{flex:1;min-width:0}
-#honorModalBackdrop .honor-modal-header p{color:var(--muted)}
-#honorModalBackdrop .honor-modal-header h2{color:var(--text)}
-#honorModalBackdrop .honor-modal-header strong{color:var(--gold2)}
-#honorModalBackdrop .honor-ranking-table{
-  border-color:rgba(85,214,156,.12);
-  background:rgba(10,32,27,.5);
-}
-#honorModalBackdrop .honor-ranking-table>div{border-top-color:rgba(85,214,156,.09)}
-#honorModalBackdrop .honor-ranking-table .is-winner{background:rgba(215,178,91,.075)}
-#honorModalBackdrop .honor-ranking-table small{color:var(--muted)}
-#honorModalBackdrop .honor-chip-list span{
-  background:rgba(85,214,156,.07);
-  color:#d7e2dd;
-}
-#honorModalBackdrop .honor-evidence-list article{
-  border:1px solid rgba(85,214,156,.08);
-  background:rgba(10,32,27,.58);
-}
-#honorModalBackdrop .honor-evidence-list article span{color:var(--muted)}
-#honorModalBackdrop .honor-season-detail{
-  border-color:rgba(85,214,156,.12);
-  background:rgba(10,32,27,.62);
-}
-#honorModalBackdrop .honor-season-detail summary{color:var(--text)}
-#honorModalBackdrop .honor-season-detail summary span:last-child{color:var(--muted)}
-#honorModalBackdrop .honor-season-body{border-top-color:rgba(85,214,156,.1)}
-#honorModalBackdrop .honor-season-body .honor-modal-footer{border-top-color:rgba(215,178,91,.14)}
-#honorModalBackdrop .honor-ranking-card{
-  border-color:rgba(85,214,156,.1);
-  background:rgba(10,32,27,.62);
-}
-#honorModalBackdrop .honor-ranking-card.is-winner{
-  border-color:rgba(215,178,91,.28);
-  background:rgba(215,178,91,.055);
-}
-#honorModalBackdrop .honor-contribution-strip span{
-  background:rgba(85,214,156,.045);
-  color:var(--muted);
-}
-#honorModalBackdrop .honor-metric-item{
-  border-color:rgba(85,214,156,.08);
-  background:rgba(6,20,17,.48);
-}
-#honorModalBackdrop .honor-evidence-match{
-  border-color:rgba(85,214,156,.08);
-  background:rgba(10,32,27,.55);
-}
-#honorModalBackdrop .honor-evidence-match:hover{border-color:rgba(215,178,91,.26)}
-#honorModalBackdrop .honor-calc-chain{background:rgba(215,178,91,.06)}
 
 
-/* Official honor rows · stable luminance with one shared directional flow */
-.profile-honor-row,
-#honorModalBackdrop .honor-ranking-card.is-winner{
+/* Player profile official-honor flow */
+.profile-honor-row{
   --honor-flow-delay:.2s;
   position:relative;
   overflow:hidden;
   isolation:isolate;
 }
-.profile-honor-row:nth-child(2n),
-#honorModalBackdrop .honor-ranking-card.is-winner:nth-child(2n){--honor-flow-delay:.48s}
-.profile-honor-row>*,
-#honorModalBackdrop .honor-ranking-card.is-winner>*{
+.profile-honor-row:nth-child(2n){--honor-flow-delay:.48s}
+.profile-honor-row>*{
   position:relative;
   z-index:1;
 }
-.profile-honor-row::after,
-#honorModalBackdrop .honor-ranking-card.is-winner::after{
+.profile-honor-row::after{
   content:"";
   position:absolute;
   z-index:0;
@@ -1203,22 +1038,17 @@ button:not(:disabled):active,
   animation:honorRowFlow 5s linear infinite;
   animation-delay:var(--honor-flow-delay);
 }
-#honorModalBackdrop .honor-ranking-card.is-winner::after{
-  animation-delay:calc(1.05s + var(--honor-flow-delay));
-}
 @keyframes honorRowFlow{
   from{transform:translate3d(-115%,0,0)}
   to{transform:translate3d(475%,0,0)}
 }
 @media(max-width:760px){
-  .profile-honor-row::after,
-  #honorModalBackdrop .honor-ranking-card.is-winner::after{
+  .profile-honor-row::after{
     background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.012) 18%,rgba(215,178,91,.055) 42%,rgba(215,178,91,.085) 50%,rgba(215,178,91,.055) 58%,rgba(215,178,91,.012) 82%,transparent 100%);
   }
 }
 @media(prefers-reduced-motion:reduce){
-  .profile-honor-row::after,
-  #honorModalBackdrop .honor-ranking-card.is-winner::after{
+  .profile-honor-row::after{
     display:none!important;
     animation:none!important;
   }
@@ -1323,4 +1153,11 @@ button:not(:disabled):active,
     display:none!important;
     animation:none!important;
   }
+}
+
+/* Overview GOAT ranking placement */
+.overview-goat-ranking{overflow:hidden}
+@media(max-width:620px){
+  .overview-goat-ranking .goat-row{grid-template-columns:34px minmax(0,1fr) 64px;gap:8px}
+  .overview-goat-ranking .goat-breakdown-mini{gap:5px}
 }
