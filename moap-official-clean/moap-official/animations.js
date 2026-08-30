@@ -46,6 +46,8 @@ let playerEntryTimeline = null;
 let playerSwitchTimeline = null;
 let playerDataTimeline = null;
 let playerTrendTimeline = null;
+let playerRecentTimeline = null;
+let playerTrendInteractionCleanup = null;
 let honorEntryTimeline = null;
 let honorCardTimeline = null;
 let honorFilterTimeline = null;
@@ -252,6 +254,8 @@ function formatAnimatedNumber(value,format){
 }
 
 function numberKey(element,index,root){
+  const explicit=element.dataset.animationKey;
+  if(explicit)return explicit;
   const view=element.closest(".view")?.dataset.view||"global";
   const row=element.closest("tr");
   const cell=element.closest("td,th");
@@ -263,12 +267,10 @@ function numberKey(element,index,root){
   return [view,scope,rowLabel,label,cellIndex,index].join("|");
 }
 
-export function animateNumbers(root=document,{duration}={}){
-  if(!root?.querySelectorAll)return;
+function animateNumberCandidates(candidates,root,{duration,delayFor}={}){
   const gsap=motionEngine();
   const mobile=window.matchMedia?.("(max-width: 760px)")?.matches;
   const tweenDuration=duration??(mobile?.65:.78);
-  const candidates=[...root.querySelectorAll(NUMBER_SELECTOR)].filter(element=>element.children.length===0);
 
   candidates.forEach((element,index)=>{
     const original=element.textContent;
@@ -276,6 +278,7 @@ export function animateNumbers(root=document,{duration}={}){
     if(!format)return;
     const key=numberKey(element,index,root);
     const previous=numberHistory.has(key)?numberHistory.get(key):0;
+    const delay=Math.max(0,Number(delayFor?.(element,index)||0));
     numberHistory.set(key,format.target);
 
     numberTweens.get(key)?.kill();
@@ -290,6 +293,7 @@ export function animateNumbers(root=document,{duration}={}){
     tween=gsap.to(proxy,{
       value:format.target,
       duration:tweenDuration,
+      delay,
       ease:"power2.out",
       overwrite:true,
       onUpdate:()=>{
@@ -308,6 +312,41 @@ export function animateNumbers(root=document,{duration}={}){
   });
 }
 
+export function animateNumbers(root=document,{duration}={}){
+  if(!root?.querySelectorAll)return;
+  const candidates=[...root.querySelectorAll(NUMBER_SELECTOR)]
+    .filter(element=>element.children.length===0&&!element.hasAttribute("data-player-number"));
+  animateNumberCandidates(candidates,root,{duration});
+}
+
+export function animatePlayerSeasonNumbers(root=document){
+  const table=root?.matches?.("#playerSeasonTable")?root:root?.querySelector?.("#playerSeasonTable");
+  if(!table)return;
+  const rows=[...table.querySelectorAll("tr")];
+  const candidates=[...table.querySelectorAll("[data-player-number]")];
+  animateNumberCandidates(candidates,table,{
+    duration:mobileMotion()?.62:.78,
+    delayFor:element=>{
+      const row=element.closest("tr");
+      const rowIndex=Math.max(0,rows.indexOf(row));
+      return row?.classList.contains("season-total-row")?.16:rowIndex*.04;
+    }
+  });
+}
+
+function animatePlayerRecentNumbers(root=document){
+  const holder=root?.matches?.("#recentMatchesPlayer")?root:root?.querySelector?.("#recentMatchesPlayer");
+  if(!holder)return;
+  const rows=[...holder.querySelectorAll("[data-recent-match]")];
+  const candidates=[...holder.querySelectorAll("[data-player-number]")];
+  animateNumberCandidates(candidates,holder,{
+    duration:mobileMotion()?.42:.52,
+    delayFor:element=>{
+      const rowIndex=Math.max(0,rows.indexOf(element.closest("[data-recent-match]")));
+      return .1+rowIndex*.06;
+    }
+  });
+}
 
 function mobileMotion(){
   return Boolean(window.matchMedia?.("(max-width: 760px)")?.matches);
@@ -325,14 +364,128 @@ function clearExtendedMotionProps(elements,extra=""){
   gsap.set(list,{clearProps:props});
 }
 
+function clearPlayerTrendInteraction(){
+  playerTrendInteractionCleanup?.();
+  playerTrendInteractionCleanup=null;
+}
+
+function bindPlayerTrendInteraction(root){
+  clearPlayerTrendInteraction();
+  const chart=root?.querySelector?.("#trendChart")||root;
+  const wrap=chart?.closest?.(".trend-wrap");
+  const tooltip=wrap?.querySelector?.(".trend-tooltip");
+  const guide=chart?.querySelector?.(".trend-guide");
+  const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
+  const finePointer=window.matchMedia?.("(hover:hover) and (pointer:fine)")?.matches;
+  if(!chart||!wrap||!tooltip||!guide||!dots.length||!finePointer)return;
+
+  const gsap=motionEngine();
+  const reduced=motionDisabled();
+  let activeDot=null;
+  const title=tooltip.querySelector("[data-trend-title]");
+  const date=tooltip.querySelector("[data-trend-date]");
+  const score=tooltip.querySelector("[data-trend-score]");
+  const total=tooltip.querySelector("[data-trend-total]");
+
+  const hide=()=>{
+    if(activeDot){
+      activeDot.classList.remove("is-active");
+      gsap.killTweensOf(activeDot);
+      if(reduced)gsap.set(activeDot,{clearProps:"transform"});
+      else gsap.to(activeDot,{scale:1,duration:.14,ease:"power1.out",clearProps:"transform"});
+      activeDot=null;
+    }
+    tooltip.setAttribute("aria-hidden","true");
+    gsap.killTweensOf([tooltip,guide]);
+    if(reduced){
+      gsap.set([tooltip,guide],{autoAlpha:0});
+    }else{
+      gsap.to(tooltip,{autoAlpha:0,duration:.12,ease:"power1.out",overwrite:true});
+      gsap.to(guide,{autoAlpha:0,duration:.1,ease:"power1.out",overwrite:true});
+    }
+  };
+
+  const show=dot=>{
+    if(activeDot!==dot){
+      if(activeDot){
+        activeDot.classList.remove("is-active");
+        gsap.killTweensOf(activeDot);
+        gsap.to(activeDot,{scale:1,duration:reduced?0:.12,ease:"power1.out",clearProps:"transform"});
+      }
+      activeDot=dot;
+      activeDot.classList.add("is-active");
+      gsap.killTweensOf(activeDot);
+      gsap.to(activeDot,{scale:reduced?1:1.35,duration:reduced?0:.16,ease:"power2.out",transformOrigin:"center",overwrite:true});
+    }
+
+    const season=dot.dataset.season||"";
+    const round=dot.dataset.round||"";
+    const dateValue=dot.dataset.date||"";
+    if(title)title.textContent=[season,round?("第"+round+"场"):""].filter(Boolean).join(" · ");
+    if(date){date.textContent=dateValue;date.hidden=!dateValue;}
+    if(score){
+      score.textContent="本场积分 "+(dot.dataset.score||"");
+      const raw=Number(dot.dataset.scoreValue);
+      score.classList.toggle("score-pos",raw>=0);
+      score.classList.toggle("score-neg",raw<0);
+    }
+    if(total)total.textContent="累计积分 "+(dot.dataset.cumulative||"");
+
+    const cx=Number(dot.getAttribute("cx")||0);
+    const cy=Number(dot.getAttribute("cy")||0);
+    guide.setAttribute("x1",String(cx));
+    guide.setAttribute("x2",String(cx));
+    const chartRect=chart.getBoundingClientRect();
+    const wrapRect=wrap.getBoundingClientRect();
+    const px=cx/760*chartRect.width+(chartRect.left-wrapRect.left);
+    const py=cy/250*chartRect.height+(chartRect.top-wrapRect.top);
+    const tooltipWidth=tooltip.offsetWidth||160;
+    const tooltipHeight=tooltip.offsetHeight||82;
+    const x=Math.max(8,Math.min(wrapRect.width-tooltipWidth-8,px-tooltipWidth/2));
+    const above=py-tooltipHeight-12;
+    const y=above>=8?above:Math.min(wrapRect.height-tooltipHeight-8,py+14);
+
+    tooltip.setAttribute("aria-hidden","false");
+    gsap.killTweensOf([tooltip,guide]);
+    if(reduced){
+      gsap.set(tooltip,{x,y,autoAlpha:1});
+      gsap.set(guide,{autoAlpha:1});
+    }else{
+      gsap.to(tooltip,{x,y,autoAlpha:1,duration:.16,ease:"power2.out",overwrite:true});
+      gsap.to(guide,{autoAlpha:1,duration:.12,ease:"power1.out",overwrite:true});
+    }
+  };
+
+  const handleMove=event=>{
+    if(event.pointerType==="touch")return;
+    const rect=chart.getBoundingClientRect();
+    if(!rect.width)return;
+    const ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+    const index=Math.max(0,Math.min(dots.length-1,Math.round(ratio*(dots.length-1))));
+    show(dots[index]);
+  };
+  const handleLeave=()=>hide();
+
+  chart.addEventListener("pointermove",handleMove,{passive:true});
+  chart.addEventListener("pointerleave",handleLeave,{passive:true});
+  playerTrendInteractionCleanup=()=>{
+    chart.removeEventListener("pointermove",handleMove);
+    chart.removeEventListener("pointerleave",handleLeave);
+    hide();
+    gsap.set([tooltip,guide],{clearProps:"opacity,visibility,transform"});
+  };
+}
+
 export function animatePlayerTrend(root){
   const chart=root?.querySelector?.("#trendChart")||root;
   const line=chart?.querySelector?.(".trend-line");
-  const area=chart?.querySelector?.(".trend-area");
+  const reveal=chart?.querySelector?.(".trend-area-reveal");
   const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
-  const animated=[line,area,...dots].filter(Boolean);
+  const animated=[line,reveal,...dots].filter(Boolean);
   playerTrendTimeline?.kill();
-  if(!line||motionDisabled()){
+  clearPlayerTrendInteraction();
+
+  if(!line){
     clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
     return;
   }
@@ -340,21 +493,98 @@ export function animatePlayerTrend(root){
   let length=0;
   try{length=line.getTotalLength();}catch{return;}
   const gsap=motionEngine();
-  const mobile=mobileMotion();
   clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+
+  if(motionDisabled()){
+    bindPlayerTrendInteraction(root);
+    return;
+  }
+
+  const mobile=mobileMotion();
+  const duration=mobile?1.2:1.55;
   gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
-  if(area)gsap.set(area,{autoAlpha:0});
-  if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.9,transformOrigin:"center"});
+  if(reveal)gsap.set(reveal,{scaleX:0,transformOrigin:"left center"});
+  if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.84,transformOrigin:"center"});
 
   playerTrendTimeline=gsap.timeline({
     onComplete:()=>{
       clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
       playerTrendTimeline=null;
+      bindPlayerTrendInteraction(root);
     }
   })
-    .to(line,{strokeDashoffset:0,duration:mobile?.5:.72,ease:MOAP_MOTION.ease.enter});
-  if(area)playerTrendTimeline.to(area,{autoAlpha:1,duration:.28},"-=.4");
-  if(dots.length)playerTrendTimeline.to(dots,{autoAlpha:1,scale:1,duration:.24,stagger:mobile?.025:.04},"-=.3");
+    .to(line,{strokeDashoffset:0,duration,ease:"power1.inOut"},0);
+  if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:duration*.94,ease:"none"},.04);
+  if(dots.length){
+    const dotStagger=(duration-.12)/Math.max(1,dots.length-1);
+    playerTrendTimeline.to(dots,{autoAlpha:1,scale:1,duration:mobile?.1:.14,stagger:dotStagger,ease:"power1.out"},.06);
+  }
+}
+
+function animateRecentMatches(root){
+  const holder=root?.querySelector?.("#recentMatchesPlayer")||root;
+  const rows=holder?.querySelectorAll ? [...holder.querySelectorAll("[data-recent-match]")] : [];
+  const badges=holder?.querySelectorAll ? [...holder.querySelectorAll(".recent-mvp-badge")] : [];
+  const latest=rows[0];
+  playerRecentTimeline?.kill();
+  clearMotionProps(rows);
+  clearExtendedMotionProps(badges);
+  latest?.classList.remove("recent-glow-once");
+  animatePlayerRecentNumbers(root);
+
+  if(!rows.length||motionDisabled())return;
+
+  const gsap=motionEngine();
+  const mobile=mobileMotion();
+  const rowDuration=mobile?.28:.34;
+  const stagger=mobile?.05:.06;
+  gsap.set(rows,{autoAlpha:0,y:mobile?5:8});
+  if(badges.length)gsap.set(badges,{autoAlpha:0,scale:.9,transformOrigin:"center"});
+
+  playerRecentTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps(rows);
+      clearExtendedMotionProps(badges);
+      if(latest?.isConnected){
+        latest.classList.remove("recent-glow-once");
+        void latest.offsetWidth;
+        latest.classList.add("recent-glow-once");
+      }
+      playerRecentTimeline=null;
+    }
+  }).to(rows,{autoAlpha:1,y:0,duration:rowDuration,stagger,ease:MOAP_MOTION.ease.enter},0);
+
+  badges.forEach(badge=>{
+    const rowIndex=Math.max(0,rows.indexOf(badge.closest("[data-recent-match]")));
+    playerRecentTimeline.fromTo(
+      badge,
+      {autoAlpha:0,scale:.9},
+      {autoAlpha:1,scale:1,duration:mobile?.2:.24,ease:MOAP_MOTION.ease.enter},
+      rowDuration+rowIndex*stagger+.07
+    );
+  });
+}
+
+function animatePlayerDataExperience(root){
+  animatePlayerSeasonNumbers(root);
+  animatePlayerTrend(root);
+  animateRecentMatches(root);
+}
+
+function stopPlayerDataExperience(root){
+  playerTrendTimeline?.kill();
+  playerTrendTimeline=null;
+  playerRecentTimeline?.kill();
+  playerRecentTimeline=null;
+  clearPlayerTrendInteraction();
+  const chart=root?.querySelector?.("#trendChart");
+  const trendParts=chart?[chart.querySelector(".trend-line"),chart.querySelector(".trend-area-reveal"),...chart.querySelectorAll(".trend-dot")].filter(Boolean):[];
+  clearExtendedMotionProps(trendParts,"strokeDasharray,strokeDashoffset,transformOrigin");
+  const recentRows=root?.querySelectorAll ? [...root.querySelectorAll("#recentMatchesPlayer [data-recent-match]")] : [];
+  const recentBadges=root?.querySelectorAll ? [...root.querySelectorAll("#recentMatchesPlayer .recent-mvp-badge")] : [];
+  clearMotionProps(recentRows);
+  clearExtendedMotionProps(recentBadges);
+  recentRows[0]?.classList.remove("recent-glow-once");
 }
 
 function playerLayers(root){
@@ -375,9 +605,10 @@ export function animatePlayerCenterEntry(root){
   const gsap=motionEngine();
   playerEntryTimeline?.kill();
   playerSwitchTimeline?.kill();
+  stopPlayerDataExperience(root);
   const layers=playerLayers(root);
   if(!root||motionDisabled()||!layers.length){
-    animatePlayerTrend(root);
+    animatePlayerDataExperience(root);
     return;
   }
   const mobile=mobileMotion();
@@ -387,27 +618,27 @@ export function animatePlayerCenterEntry(root){
     onComplete:()=>{
       clearMotionProps(layers);
       playerEntryTimeline=null;
+      animatePlayerDataExperience(root);
     }
   }).fromTo(
     layers,
     {autoAlpha:0,y:mobile?8:MOAP_MOTION.distance.enter},
     {autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:MOAP_MOTION.stagger.normal}
   );
-  animatePlayerTrend(root);
 }
 
 export function transitionPlayerProfile({root,update,onUpdated}){
   const gsap=motionEngine();
   playerEntryTimeline?.kill();
   playerSwitchTimeline?.kill();
-  playerTrendTimeline?.kill();
+  stopPlayerDataExperience(root);
   const before=playerLayers(root);
   clearMotionProps(before);
 
   if(motionDisabled()||!before.length){
     update();
     onUpdated?.();
-    animatePlayerTrend(root);
+    animatePlayerDataExperience(root);
     return;
   }
 
@@ -416,13 +647,13 @@ export function transitionPlayerProfile({root,update,onUpdated}){
     onComplete:()=>{
       clearMotionProps(playerLayers(root));
       playerSwitchTimeline=null;
+      animatePlayerDataExperience(root);
     }
   })
     .to(before,{autoAlpha:0,y:mobile?2:4,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
     .call(()=>{
       update();
       onUpdated?.();
-      animatePlayerTrend(root);
     })
     .fromTo(
       playerLayers(root),
