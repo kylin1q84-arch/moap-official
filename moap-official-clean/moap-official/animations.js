@@ -26,8 +26,7 @@ const NUMBER_SELECTOR = [
   ".split-stats strong",
   ".rival-summary-inline td",
   ".goat-score-v2 > b",
-  ".scouting-index > b",
-  ".honor-ranking-card > header > b"
+  ".scouting-index > b"
 ].join(",");
 
 const MOAP_MOTION = Object.freeze({
@@ -48,13 +47,7 @@ let playerDataTimeline = null;
 let playerTrendTimeline = null;
 let playerRecentTimeline = null;
 let playerTrendInteractionCleanup = null;
-let honorEntryTimeline = null;
-let honorCardTimeline = null;
-let honorFilterTimeline = null;
-let honorDetailTimeline = null;
 let goatRankingTimeline = null;
-let honorShineObserver = null;
-const honorShineHistory = new Set();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -706,38 +699,6 @@ export function transitionPlayerData({target,update,onUpdated}){
     .fromTo(elements,{autoAlpha:0,y:mobileMotion()?3:6},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
 }
 
-function playHonorShine(card,key){
-  if(!card?.isConnected||honorShineHistory.has(key)||prefersReducedMotion()||mobileMotion())return;
-  honorShineHistory.add(key);
-  card.classList.remove("honor-shine-once");
-  void card.offsetWidth;
-  card.classList.add("honor-shine-once");
-}
-
-function queueHonorShine(cards){
-  if(prefersReducedMotion()||mobileMotion())return;
-  const eligible=cards.filter(card=>{
-    const key=card.dataset.honorBoard||card.dataset.honorKey||card.textContent?.trim()||"";
-    return key&&!honorShineHistory.has(key);
-  });
-  if(!eligible.length)return;
-
-  if(!("IntersectionObserver" in window)){
-    eligible.forEach(card=>playHonorShine(card,card.dataset.honorBoard||card.dataset.honorKey||card.textContent.trim()));
-    return;
-  }
-
-  honorShineObserver ||= new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(!entry.isIntersecting)return;
-      honorShineObserver?.unobserve(entry.target);
-      const key=entry.target.dataset.honorBoard||entry.target.dataset.honorKey||entry.target.textContent.trim();
-      playHonorShine(entry.target,key);
-    });
-  },{threshold:.24});
-  eligible.forEach(card=>honorShineObserver.observe(card));
-}
-
 export function animateGoatRanking(root){
   const gsap=motionEngine();
   const rows=directChildren(root,".goat-row");
@@ -759,138 +720,6 @@ export function animateGoatRanking(root){
   }).to(rows,{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter,stagger:mobile?.035:MOAP_MOTION.stagger.fast});
 }
 
-export function animateHonorCards(root){
-  const gsap=motionEngine();
-  const cards=directChildren(root,".honor-board-card");
-  honorCardTimeline?.kill();
-  clearMotionProps(cards);
-  if(!cards.length||motionDisabled())return;
-
-  const mobile=mobileMotion();
-  honorCardTimeline=gsap.timeline({
-    onComplete:()=>{
-      clearMotionProps(cards);
-      queueHonorShine(cards);
-      honorCardTimeline=null;
-    }
-  }).fromTo(
-    cards,
-    {autoAlpha:0,y:mobile?5:8,scale:mobile?1:.98},
-    {autoAlpha:1,y:0,scale:1,duration:mobile?.32:MOAP_MOTION.duration.slow,ease:MOAP_MOTION.ease.enter,stagger:mobile?.04:MOAP_MOTION.stagger.fast}
-  );
-}
-export function animateHonorCenterEntry(root){
-  const gsap=motionEngine();
-  honorEntryTimeline?.kill();
-  honorFilterTimeline?.kill();
-  const hero=root?.querySelector?.(".hero");
-  const topCards=directChildren(root,":scope > .grid-2 > .card");
-  const boardSection=root?.querySelector?.("#honorSeasonBoard")?.closest?.(".card");
-  const regions=[hero,...topCards,boardSection].filter(Boolean);
-  clearMotionProps(regions);
-
-  if(!root||motionDisabled()){
-    animateGoatRanking(root?.querySelector?.("#goatRanking"));
-    animateHonorCards(root?.querySelector?.("#honorSeasonBoard"));
-    return;
-  }
-
-  const mobile=mobileMotion();
-  honorEntryTimeline=gsap.timeline({
-    defaults:{ease:MOAP_MOTION.ease.enter},
-    onComplete:()=>{
-      clearMotionProps(regions);
-      honorEntryTimeline=null;
-      animateGoatRanking(root.querySelector("#goatRanking"));
-      animateHonorCards(root.querySelector("#honorSeasonBoard"));
-    }
-  }).fromTo(
-    regions,
-    {autoAlpha:0,y:mobile?7:MOAP_MOTION.distance.enter},
-    {autoAlpha:1,y:0,duration:mobile?.32:.4,stagger:mobile?.04:MOAP_MOTION.stagger.normal}
-  );
-}
-
-export function transitionHonorContent({targets,update,onUpdated,onComplete}){
-  const gsap=motionEngine();
-  const elements=toElements(targets);
-  honorFilterTimeline?.kill();
-  clearMotionProps(elements);
-  if(motionDisabled()||!elements.length){
-    update();
-    onUpdated?.();
-    onComplete?.();
-    return;
-  }
-
-  honorFilterTimeline=gsap.timeline({
-    onComplete:()=>{
-      clearMotionProps(elements);
-      honorFilterTimeline=null;
-      onComplete?.();
-    }
-  })
-    .to(elements,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit,stagger:.01})
-    .call(()=>{
-      update();
-      onUpdated?.();
-    })
-    .fromTo(
-      elements,
-      {autoAlpha:0,y:mobileMotion()?3:6},
-      {autoAlpha:1,y:0,duration:.22,ease:MOAP_MOTION.ease.enter,stagger:.02}
-    );
-}
-
-export function animateHonorDetails(backdrop,{open,onComplete}={}){
-  const gsap=motionEngine();
-  const panel=backdrop?.querySelector?.(".honor-modal");
-  honorDetailTimeline?.kill();
-  if(!backdrop||!panel||motionDisabled()){
-    if(!open)onComplete?.();
-    return;
-  }
-
-  const headerParts=directChildren(panel,".honor-modal-header > div > *");
-  const sections=directChildren(panel,".honor-modal-section, .honor-modal-footer");
-  const animated=[...headerParts,...sections];
-
-  if(open){
-    clearExtendedMotionProps(animated);
-    gsap.set(backdrop,{autoAlpha:0});
-    gsap.set(panel,{height:0,autoAlpha:0,y:mobileMotion()?5:9,overflow:"hidden"});
-    gsap.set(animated,{autoAlpha:0,y:mobileMotion()?3:7});
-    honorDetailTimeline=gsap.timeline({
-      onComplete:()=>{
-        gsap.set(backdrop,{clearProps:"opacity,visibility"});
-        gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
-        clearExtendedMotionProps(animated);
-        honorDetailTimeline=null;
-        onComplete?.();
-      }
-    })
-      .to(backdrop,{autoAlpha:1,duration:.13,ease:"power1.out"})
-      .to(panel,{height:"auto",autoAlpha:1,y:0,duration:mobileMotion()?.28:.36,ease:MOAP_MOTION.ease.enter},"-=.05");
-    if(headerParts.length)honorDetailTimeline.to(headerParts,{autoAlpha:1,y:0,duration:.24,stagger:.035,ease:MOAP_MOTION.ease.enter},"-=.23");
-    if(sections.length)honorDetailTimeline.to(sections,{autoAlpha:1,y:0,duration:.28,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},"-=.2");
-    return;
-  }
-
-  gsap.set(panel,{overflow:"hidden"});
-  honorDetailTimeline=gsap.timeline({
-    onComplete:()=>{
-      gsap.set(backdrop,{clearProps:"opacity,visibility"});
-      gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
-      clearExtendedMotionProps(animated);
-      honorDetailTimeline=null;
-      onComplete?.();
-    }
-  });
-  if(sections.length)honorDetailTimeline.to(sections,{autoAlpha:0,y:4,duration:.1,stagger:.008,ease:MOAP_MOTION.ease.exit});
-  honorDetailTimeline
-    .to(panel,{height:0,autoAlpha:0,y:mobileMotion()?4:7,duration:.22,ease:MOAP_MOTION.ease.exit},"-=.04")
-    .to(backdrop,{autoAlpha:0,duration:.12,ease:MOAP_MOTION.ease.exit},"-=.08");
-}
 export function animateRecordDetails(backdrop,{open,onComplete}={}){
   const gsap=motionEngine();
   const panel=backdrop?.querySelector(".record-modal");
