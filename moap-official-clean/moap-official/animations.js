@@ -384,6 +384,7 @@ function bindPlayerTrendInteraction(root){
   let activeDot=null;
   const title=tooltip.querySelector("[data-trend-title]");
   const date=tooltip.querySelector("[data-trend-date]");
+  const mvp=tooltip.querySelector("[data-trend-mvp]");
   const score=tooltip.querySelector("[data-trend-score]");
   const total=tooltip.querySelector("[data-trend-total]");
 
@@ -391,8 +392,8 @@ function bindPlayerTrendInteraction(root){
     if(activeDot){
       activeDot.classList.remove("is-active");
       gsap.killTweensOf(activeDot);
-      if(reduced)gsap.set(activeDot,{clearProps:"transform"});
-      else gsap.to(activeDot,{scale:1,duration:.14,ease:"power1.out",clearProps:"transform"});
+      if(reduced)gsap.set(activeDot,{autoAlpha:0,scale:1,clearProps:"transform"});
+      else gsap.to(activeDot,{autoAlpha:0,scale:1,duration:.12,ease:"power1.out",overwrite:true,clearProps:"transform"});
       activeDot=null;
     }
     tooltip.setAttribute("aria-hidden","true");
@@ -410,19 +411,21 @@ function bindPlayerTrendInteraction(root){
       if(activeDot){
         activeDot.classList.remove("is-active");
         gsap.killTweensOf(activeDot);
-        gsap.to(activeDot,{scale:1,duration:reduced?0:.12,ease:"power1.out",clearProps:"transform"});
+        gsap.to(activeDot,{autoAlpha:0,scale:1,duration:reduced?0:.1,ease:"power1.out",overwrite:true,clearProps:"transform"});
       }
       activeDot=dot;
       activeDot.classList.add("is-active");
       gsap.killTweensOf(activeDot);
-      gsap.to(activeDot,{scale:reduced?1:1.35,duration:reduced?0:.16,ease:"power2.out",transformOrigin:"center",overwrite:true});
+      gsap.to(activeDot,{autoAlpha:1,scale:reduced?1:1.35,duration:reduced?0:.16,ease:"power2.out",transformOrigin:"center",overwrite:true});
     }
 
     const season=dot.dataset.season||"";
     const round=dot.dataset.round||"";
     const dateValue=dot.dataset.date||"";
+    const isMvp=dot.dataset.mvp==="true";
     if(title)title.textContent=[season,round?("第"+round+"场"):""].filter(Boolean).join(" · ");
     if(date){date.textContent=dateValue;date.hidden=!dateValue;}
+    if(mvp){mvp.textContent="MVP";mvp.hidden=!isMvp;}
     if(score){
       score.textContent="本场积分 "+(dot.dataset.score||"");
       const raw=Number(dot.dataset.scoreValue);
@@ -433,8 +436,6 @@ function bindPlayerTrendInteraction(root){
 
     const cx=Number(dot.getAttribute("cx")||0);
     const cy=Number(dot.getAttribute("cy")||0);
-    guide.setAttribute("x1",String(cx));
-    guide.setAttribute("x2",String(cx));
     const chartRect=chart.getBoundingClientRect();
     const wrapRect=wrap.getBoundingClientRect();
     const px=cx/760*chartRect.width+(chartRect.left-wrapRect.left);
@@ -449,20 +450,35 @@ function bindPlayerTrendInteraction(root){
     gsap.killTweensOf([tooltip,guide]);
     if(reduced){
       gsap.set(tooltip,{x,y,autoAlpha:1});
-      gsap.set(guide,{autoAlpha:1});
+      gsap.set(guide,{attr:{x1:cx,x2:cx},autoAlpha:1});
     }else{
       gsap.to(tooltip,{x,y,autoAlpha:1,duration:.16,ease:"power2.out",overwrite:true});
-      gsap.to(guide,{autoAlpha:1,duration:.12,ease:"power1.out",overwrite:true});
+      gsap.to(guide,{attr:{x1:cx,x2:cx},autoAlpha:1,duration:.16,ease:"power2.out",overwrite:true});
     }
   };
 
   const handleMove=event=>{
     if(event.pointerType==="touch")return;
     const rect=chart.getBoundingClientRect();
-    if(!rect.width)return;
-    const ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
-    const index=Math.max(0,Math.min(dots.length-1,Math.round(ratio*(dots.length-1))));
-    show(dots[index]);
+    if(!rect.width||!rect.height)return;
+    const pointerX=event.clientX-rect.left;
+    const pointerY=event.clientY-rect.top;
+    let nearest=null;
+    let nearestDistance=Infinity;
+    dots.forEach(dot=>{
+      const nodeX=Number(dot.getAttribute("cx")||0)/760*rect.width;
+      const nodeY=Number(dot.getAttribute("cy")||0)/250*rect.height;
+      const distance=Math.hypot(nodeX-pointerX,nodeY-pointerY);
+      if(distance<nearestDistance){
+        nearest=dot;
+        nearestDistance=distance;
+      }
+    });
+    if(!nearest||nearestDistance>44){
+      hide();
+      return;
+    }
+    show(nearest);
   };
   const handleLeave=()=>hide();
 
@@ -480,8 +496,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
   const chart=root?.querySelector?.("#trendChart")||root;
   const line=chart?.querySelector?.(".trend-line");
   const reveal=chart?.querySelector?.(".trend-area-reveal");
-  const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
-  const animated=[line,reveal,...dots].filter(Boolean);
+  const animated=[line,reveal].filter(Boolean);
   playerTrendTimeline?.kill();
   clearPlayerTrendInteraction();
 
@@ -504,7 +519,6 @@ export function animatePlayerTrend(root,{delay=0}={}){
   const duration=mobile?1.2:1.55;
   gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
   if(reveal)gsap.set(reveal,{scaleX:0,transformOrigin:"left center"});
-  if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.84,transformOrigin:"center"});
 
   playerTrendTimeline=gsap.timeline({
     delay,
@@ -516,10 +530,6 @@ export function animatePlayerTrend(root,{delay=0}={}){
   })
     .to(line,{strokeDashoffset:0,duration,ease:"power1.inOut"},0);
   if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:duration*.94,ease:"none"},.04);
-  if(dots.length){
-    const dotStagger=(duration-.12)/Math.max(1,dots.length-1);
-    playerTrendTimeline.to(dots,{autoAlpha:1,scale:1,duration:mobile?.1:.14,stagger:dotStagger,ease:"power1.out"},.06);
-  }
 }
 
 function animateRecentMatches(root,{delay=0}={}){
