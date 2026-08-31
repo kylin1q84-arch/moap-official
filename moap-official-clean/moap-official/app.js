@@ -584,9 +584,11 @@ function renderDataLeaderboard(){
   if(!rows.length)body.innerHTML=`<tr><td colspan="10" class="empty">当前筛选范围暂无数据。</td></tr>`;
 }
 function renderRecords({includeLeaderboard=true}={}){
-  const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const seasonSel=$("#recordSeasonFilter");if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
+  const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const sectionSel=$("#recordSectionFilter"),seasonSel=$("#recordSeasonFilter"),typeSel=$("#recordTypeFilter");
+  if(sectionSel){recordSection=sectionSel.value||recordSection;sectionSel.value=recordSection;}
+  if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
+  if(typeSel){recordType=typeSel.value||recordType;typeSel.value=recordType;}
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
-  $$('[data-record-section]').forEach(button=>button.classList.toggle('active',button.dataset.recordSection===recordSection));const typeSel=$("#recordTypeFilter");if(typeSel)typeSel.value=recordType;
   const sectionNames={single:"单场记录",continuous:"连续记录"},typeNames={all:"全部比赛",four:"四人局",five:"五人局"},seasonName=recordSeason==="all"?"全部赛季":recordSeason;
   $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${seasonName} · ${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
@@ -625,7 +627,8 @@ function refreshDataLeaderboard(updateState){
     onUpdated:()=>animateNumbers(root?.querySelector(".record-data-leaderboard"))
   });
 }
-document.addEventListener("click",event=>{const sectionButton=event.target.closest("[data-record-section]");if(sectionButton){refreshRecordResults(()=>{recordSection=sectionButton.dataset.recordSection;});return;}const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
+document.addEventListener("click",event=>{const detailButton=event.target.closest("[data-record-id]");if(detailButton&&currentView==="records"){openRecordModal(detailButton.dataset.recordId);return;}});
+$("#recordSectionFilter")?.addEventListener("change",e=>refreshRecordResults(()=>{recordSection=e.target.value;}));
 $("#recordSeasonFilter")?.addEventListener("change",e=>refreshRecordResults(()=>{recordSeason=e.target.value;}));
 $("#recordTypeFilter")?.addEventListener("change",e=>refreshRecordResults(()=>{recordType=e.target.value;}));
 $("#dataSeasonFilter")?.addEventListener("change",e=>refreshDataLeaderboard(()=>{dataSeason=e.target.value;}));
