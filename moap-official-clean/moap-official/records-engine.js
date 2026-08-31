@@ -21,11 +21,6 @@ function resultFor(match, playerId) {
   return (match.results || []).find(result => result.playerId === playerId);
 }
 
-function bgrValue(score) {
-  score = num(score);
-  return score >= 100 ? 12 : score >= 90 ? 8 : score >= 80 ? 5 : score >= 70 ? 3 : score >= 60 ? 2 : score >= 50 ? 1 : 0;
-}
-
 function displayNumber(value, unit, forcePlus = false) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
   const number = Number(value);
@@ -315,7 +310,6 @@ function summaryRows(players, matches, season, type) {
       soloLoss: make(soloLoss),
       explosion: make(explosion),
       explosionBins: bins,
-      bgr: sum(explosion.map(item => bgrValue(item.score))),
       entries
     };
   }).filter(Boolean);
@@ -340,17 +334,9 @@ export function buildDataLeaderboard(players, matches, { season = "all", type = 
   } else if (metric === "soloLoss") {
     comparator = (a,b)=>b.soloLoss.count-a.soloLoss.count || b.soloLoss.rate-a.soloLoss.rate || a.soloLoss.points-b.soloLoss.points || cmpText(a,b);
     sameRank = (a,b)=>a.soloLoss.count===b.soloLoss.count && eq(a.soloLoss.rate,b.soloLoss.rate) && eq(a.soloLoss.points,b.soloLoss.points);
-  } else if (metric === "explosion") {
-    comparator = (a,b)=>b.explosion.count-a.explosion.count || b.explosion.rate-a.explosion.rate || b.explosion.points-a.explosion.points || b.explosion.average-a.explosion.average || cmpText(a,b);
-    sameRank = (a,b)=>a.explosion.count===b.explosion.count && eq(a.explosion.rate,b.explosion.rate) && eq(a.explosion.points,b.explosion.points) && eq(a.explosion.average,b.explosion.average);
-  } else if (metric === "explosionTier") {
-    const tier = row => [row.bgr,row.explosionBins.over100,row.explosionBins.over90,row.explosionBins.over80,row.explosionBins.over70,row.explosionBins.over60,row.explosionBins.over50];
-    comparator = (a,b)=>{
-      const av=tier(a),bv=tier(b);
-      for(let i=0;i<av.length;i++) if(av[i]!==bv[i]) return bv[i]-av[i];
-      return cmpText(a,b);
-    };
-    sameRank = (a,b)=>tier(a).every((value,index)=>value===tier(b)[index]);
+  } else if (metric === "explosion" || metric === "explosionTier") {
+    comparator = (a,b)=>b.explosion.count-a.explosion.count || b.explosion.points-a.explosion.points || b.explosion.average-a.explosion.average || cmpText(a,b);
+    sameRank = (a,b)=>a.explosion.count===b.explosion.count && eq(a.explosion.points,b.explosion.points) && eq(a.explosion.average,b.explosion.average);
   } else {
     comparator = (a,b)=>b.total-a.total || b.average-a.average || cmpText(a,b);
     sameRank = (a,b)=>eq(a.total,b.total) && eq(a.average,b.average);
@@ -383,13 +369,12 @@ export function buildExplosionLeaderboard(players, matches, { season = "all", ty
       explosionPoints: sum(explosions.map(item => item.score)),
       explosionAverage: mean(explosions.map(item => item.score)),
       explosionRate: entries.length ? explosions.length / entries.length : 0,
-      bgr: sum(explosions.map(item => bgrValue(item.score))),
       ...bins
     };
   }).filter(Boolean);
   return rankedRows(rows,
-    (a,b)=>b.explosionCount-a.explosionCount || b.bgr-a.bgr || b.explosionPoints-a.explosionPoints || b.explosionAverage-a.explosionAverage || String(a.playerId).localeCompare(String(b.playerId)),
-    (a,b)=>a.explosionCount===b.explosionCount && a.bgr===b.bgr && eq(a.explosionPoints,b.explosionPoints) && eq(a.explosionAverage,b.explosionAverage)
+    (a,b)=>b.explosionCount-a.explosionCount || b.explosionPoints-a.explosionPoints || b.explosionAverage-a.explosionAverage || String(a.playerId).localeCompare(String(b.playerId)),
+    (a,b)=>a.explosionCount===b.explosionCount && eq(a.explosionPoints,b.explosionPoints) && eq(a.explosionAverage,b.explosionAverage)
   );
 }
 
