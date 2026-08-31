@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
-  <link rel="stylesheet" href="/style.css?v=2.4.1-honor-flow">
+  <link rel="stylesheet" href="/style.css?v=2.4.2-record-filter-select">
 </head>
 <body>
 
@@ -87,11 +87,8 @@
 
         <div class="card section record-center-card" style="margin-bottom:16px">
           <div class="record-toolbar">
-            <div class="record-section-tabs" role="tablist" aria-label="记录板块">
-              <button type="button" class="record-tab active" data-record-section="single">单场记录</button>
-              <button type="button" class="record-tab" data-record-section="continuous">连续记录</button>
-            </div>
             <div class="record-filter-row compact">
+              <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
               <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
             </div>
@@ -263,6 +260,6 @@
 <div class="toast" id="toast"></div>
 
 
-<script type="module" src="/app.js?v=2.4.0-name-prefix-cleanup"></script>
+<script type="module" src="/app.js?v=2.4.2-record-filter-select"></script>
 </body>
 </html>
