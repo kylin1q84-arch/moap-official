@@ -1391,3 +1391,63 @@ button:not(:disabled):active,
 }
 #matchModalBackdrop .match-detail-note{color:var(--muted)}
 
+/* v2.3.9 · shared matchup matrix cell states */
+#netMatrix .matrix-cell,
+.match-detail-matrix .matrix-cell{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:72px;
+  min-width:72px;
+  max-width:72px;
+  height:34px;
+  min-height:34px;
+  padding:7px 8px;
+  box-sizing:border-box;
+  border:1px solid var(--line2);
+  border-radius:9px;
+  font-size:12px;
+  line-height:1;
+  text-align:center;
+}
+#netMatrix .matrix-cell.pos,
+.match-detail-matrix .matrix-cell.pos{
+  border-color:rgba(85,214,156,.18);
+}
+#netMatrix .matrix-cell.neg,
+.match-detail-matrix .matrix-cell.neg{
+  border-color:rgba(255,118,118,.18);
+}
+#netMatrix .matrix-cell.neutral:not(.diagonal):not(.empty),
+.match-detail-matrix .matrix-cell.neutral:not(.diagonal):not(.empty){
+  border-color:var(--line2);
+  background:rgba(255,255,255,.035);
+  color:var(--muted);
+}
+#netMatrix .matrix-cell.diagonal,
+.match-detail-matrix .matrix-cell.diagonal{
+  border-color:var(--line2);
+  background:var(--bg);
+  color:var(--muted);
+  cursor:default;
+}
+#netMatrix .matrix-cell.empty,
+.match-detail-matrix .matrix-cell.empty{
+  border-color:var(--line2);
+  background:var(--bg2);
+  color:var(--muted);
+  cursor:default;
+}
+@media(hover:hover) and (pointer:fine){
+  #netMatrix .matrix-cell.diagonal:hover,
+  .match-detail-matrix .matrix-cell.diagonal:hover{
+    outline:none;
+    background:var(--bg2);
+  }
+  #netMatrix .matrix-cell.empty:hover,
+  .match-detail-matrix .matrix-cell.empty:hover{
+    outline:none;
+    background:var(--panel);
+  }
+}
+
