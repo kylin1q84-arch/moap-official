@@ -69,8 +69,6 @@
     .rank{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.05);font-weight:700}
     .rank.top{background:rgba(215,178,91,.17);color:var(--gold2);border:1px solid rgba(215,178,91,.28)}
     .player-cell{display:flex;align-items:center;gap:9px;font-weight:650}
-    .avatar{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,#28624f,#123b30);
-      border:1px solid rgba(255,255,255,.08);font-size:12px;color:#fff}
     .score-pos{color:var(--green);font-weight:750}.score-neg{color:var(--red);font-weight:750}
     .muted{color:var(--muted)}
     .chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:11px;background:rgba(255,255,255,.055);border:1px solid var(--line2)}
@@ -128,7 +126,6 @@
     .health-item{padding:13px;border:1px solid var(--line2);border-radius:13px;display:flex;justify-content:space-between;gap:12px}
     .status-pass{color:var(--green);font-weight:700}
     .player-head{display:flex;align-items:center;gap:14px}
-    .player-head .avatar{width:52px;height:52px;border-radius:16px;font-size:17px}
     .split-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
     .mini-stat{padding:12px;border-radius:12px;background:rgba(255,255,255,.035)}
     .mini-stat span{font-size:11px;color:var(--muted);display:block}
