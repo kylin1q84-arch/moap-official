@@ -1318,3 +1318,76 @@ button:not(:disabled):active,
 .profile-honor-ranking th,.profile-honor-ranking td{padding:8px 9px;border-top:1px solid rgba(85,214,156,.07);font-size:9px;text-align:center;white-space:nowrap}
 .profile-honor-ranking thead th{border-top:0;background:rgba(4,16,13,.55);color:var(--muted)}
 .profile-honor-ranking tbody td:nth-child(2){color:var(--text);font-weight:700}
+
+/* v2.3.7 · match detail MOAP green theme */
+#matchModalBackdrop{
+  background:rgba(2,9,7,.84);
+}
+#matchModalBackdrop .match-detail-modal{
+  border-color:var(--line);
+  background:linear-gradient(180deg,var(--panel),var(--bg));
+  color:var(--text);
+  box-shadow:0 30px 90px rgba(0,0,0,.52);
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,178,91,.42) rgba(4,16,13,.72);
+}
+#matchModalBackdrop .match-detail-modal::-webkit-scrollbar{width:10px}
+#matchModalBackdrop .match-detail-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
+#matchModalBackdrop .match-detail-modal::-webkit-scrollbar-thumb{
+  border:2px solid rgba(4,16,13,.72);
+  border-radius:999px;
+  background:rgba(215,178,91,.38);
+}
+#matchModalBackdrop .honor-modal-close{color:var(--muted)}
+#matchModalBackdrop .honor-modal-close:hover{color:var(--gold2)}
+#matchModalBackdrop .honor-modal-header p,
+#matchModalBackdrop .honor-modal-header strong{color:var(--muted)}
+#matchModalBackdrop .honor-modal-header h2{color:var(--text)}
+#matchModalBackdrop .honor-modal-grade.grade.A{
+  border:1px solid var(--line);
+  background:rgba(215,178,91,.14);
+  color:var(--gold2);
+}
+#matchModalBackdrop .honor-modal-section h3{color:var(--gold2)}
+#matchModalBackdrop .match-scores .score-pill{
+  border:1px solid var(--line2);
+  background:rgba(4,16,13,.48);
+}
+#matchModalBackdrop .match-scores .score-pill.mvp{
+  border-color:var(--line);
+  background:rgba(215,178,91,.075);
+  color:var(--gold2);
+}
+#matchModalBackdrop .matrix-wrap{
+  overflow:auto;
+  border:1px solid var(--line2);
+  border-radius:13px;
+  background:var(--bg2);
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,178,91,.34) rgba(4,16,13,.55);
+}
+#matchModalBackdrop .matrix-wrap::-webkit-scrollbar{width:8px;height:8px}
+#matchModalBackdrop .matrix-wrap::-webkit-scrollbar-track{background:rgba(4,16,13,.55)}
+#matchModalBackdrop .matrix-wrap::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(215,178,91,.34);
+}
+#matchModalBackdrop .match-detail-matrix th{
+  background:rgba(4,16,13,.72);
+  color:var(--muted);
+  border-color:rgba(85,214,156,.09);
+}
+#matchModalBackdrop .match-detail-matrix td{
+  border-color:rgba(85,214,156,.075);
+}
+#matchModalBackdrop .match-detail-matrix th:first-child,
+#matchModalBackdrop .match-detail-matrix td:first-child{
+  background:var(--panel2);
+}
+#matchModalBackdrop .match-detail-matrix .matchup-diagonal,
+#matchModalBackdrop .match-detail-matrix .matrix-cell.neutral{
+  background:rgba(4,16,13,.66);
+  color:var(--muted);
+}
+#matchModalBackdrop .match-detail-note{color:var(--muted)}
+
