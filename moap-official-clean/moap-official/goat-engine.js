@@ -5,11 +5,6 @@ const mean = values => values.length ? sum(values) / values.length : 0;
 const seasonNumber = value => Number(String(value || "").replace(/\D/g, "")) || 0;
 const eq = (a, b) => Math.abs(num(a) - num(b)) <= EPS;
 
-function bgrValue(score) {
-  score = num(score);
-  return score >= 100 ? 12 : score >= 90 ? 8 : score >= 80 ? 5 : score >= 70 ? 3 : score >= 60 ? 2 : score >= 50 ? 1 : 0;
-}
-
 function sortedMatches(matches) {
   return [...(matches || [])].sort((a, b) =>
     String(a.date).localeCompare(String(b.date)) ||
@@ -114,8 +109,6 @@ function careerMetrics(players, matches) {
       positiveRate: entries.length ? entries.filter(item => item.score >= 0).length / entries.length : 0,
       mvps,
       mvpRate: entries.length ? mvps / entries.length : 0,
-      bgr: sum(scores.map(bgrValue)),
-      bgrPerGame: entries.length ? sum(scores.map(bgrValue)) / entries.length : 0,
       activeSeasons,
       eligibleSeasons,
       seasonCoverage: eligibleSeasons ? activeSeasons / eligibleSeasons * 100 : 0,
@@ -237,12 +230,11 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
   const nAverage = minmaxNormalizer(merged, row => row.careerRaw.average);
   const nPositive = minmaxNormalizer(merged, row => row.careerRaw.positiveRate);
   const nMvp = minmaxNormalizer(merged, row => row.careerRaw.mvpRate);
-  const nBgr = minmaxNormalizer(merged, row => row.careerRaw.bgrPerGame);
   const nRecord = minmaxNormalizer(merged, row => row.recordRaw.recordValue);
 
   let rows = merged.map(row => {
     const honorsScore = nHonor(row) * .40;
-    const careerScore = nTotal(row) * .10 + nAverage(row) * .07 + nPositive(row) * .05 + nMvp(row) * .05 + nBgr(row) * .03;
+    const careerScore = nTotal(row) * .11 + nAverage(row) * .07 + nPositive(row) * .05 + nMvp(row) * .07;
     const recordsScore = nRecord(row) * .15;
     const longevityScore = row.careerRaw.seasonCoverage * .04 + row.careerRaw.seasonCompetitiveness * .05 + row.careerRaw.participationRate * .03 + row.careerRaw.adaptability * .03;
     const breakdown = {
@@ -283,7 +275,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
 
   return {
     rows,
-    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。官方荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
+    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。生涯表现30分由累计积分11分、场均积分7分、正分率5分、MVP率7分构成；官方荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
   };
 }
 
