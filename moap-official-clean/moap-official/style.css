@@ -1191,6 +1191,7 @@ button:not(:disabled):active,
 }
 .profile-honor-modal{
   width:min(920px,100%);
+  overflow-x:hidden;
   border-color:rgba(215,178,91,.22);
   background:linear-gradient(180deg,rgba(10,32,27,.995),rgba(6,20,17,.995));
   color:var(--text);
@@ -1211,8 +1212,9 @@ button:not(:disabled):active,
 .profile-honor-modal-header h2{margin:0 0 7px;font-size:27px;color:var(--text)}
 .profile-honor-modal-header strong{display:block;color:var(--gold2);font-size:15px}
 .profile-honor-modal-header small{display:block;margin-top:6px;color:var(--muted);font-size:11px}
-.profile-honor-season-list{display:grid;gap:14px;margin-top:20px}
+.profile-honor-season-list{display:grid;gap:14px;margin-top:20px;min-width:0}
 .profile-honor-season-card{
+  min-width:0;
   padding:16px;
   border:1px solid rgba(85,214,156,.11);
   border-radius:15px;
@@ -1256,9 +1258,10 @@ button:not(:disabled):active,
   .profile-honor-clickable{transition:none!important}
 }
 
-.profile-honor-ranking{margin-top:14px}
+.profile-honor-ranking{min-width:0;margin-top:14px}
 .profile-honor-ranking h4{margin:0 0 8px;color:var(--gold2);font-size:12px}
 .profile-honor-ranking-scroll{
+  max-width:100%;
   overflow:auto;
   border:1px solid rgba(85,214,156,.09);
   border-radius:10px;
