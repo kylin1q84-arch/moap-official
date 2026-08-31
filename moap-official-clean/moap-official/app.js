@@ -1148,19 +1148,27 @@ function championRankingHtml(award){
 }
 function mvpRankingHtml(award){
   const rows=award?.details?.ranking||[];
-  return `<section class="profile-honor-ranking"><h4>赛季完整排名</h4><div class="profile-honor-ranking-scroll"><table class="mvp-ranking-table"><thead><tr><th>排名</th><th>牌手</th><th>累计MVP星数</th><th>MVP次数</th><th>★★★★★</th><th>★★★★</th><th>★★★</th><th>★★</th><th>★</th><th>MVP场次累计积分</th><th>MVP率</th></tr></thead><tbody>${rows.map(row=>{const m=row.metrics||{};return `<tr><td>#${row.rank}</td><td>${escapeHtml(row.player)}</td><td>${Number(m.totalStars||0)}★</td><td>${Number(m.mvpCount||0)}</td><td>${Number(m.fiveStar||0)}</td><td>${Number(m.fourStar||0)}</td><td>${Number(m.threeStar||0)}</td><td>${Number(m.twoStar||0)}</td><td>${Number(m.oneStar||0)}</td><td class="${scoreClass(m.mvpPoints)}">${escapeHtml(fmtScore(m.mvpPoints||0))}</td><td>${escapeHtml(fmtPct(m.mvpRate||0))}</td></tr>`}).join("")}</tbody></table></div></section>`;
+  return `<section class="profile-honor-ranking"><h4>赛季完整排名</h4><div class="profile-honor-ranking-scroll"><table class="mvp-ranking-table"><thead><tr><th>排名</th><th>牌手</th><th>累计MVP星数</th><th>MVP次数</th><th>★</th><th>★★</th><th>★★★</th><th>★★★★</th><th>★★★★★</th><th>MVP场次累计积分</th><th>MVP率</th></tr></thead><tbody>${rows.map(row=>{const m=row.metrics||{};return `<tr><td>#${row.rank}</td><td>${escapeHtml(row.player)}</td><td>${Number(m.totalStars||0)}★</td><td>${Number(m.mvpCount||0)}</td><td>${Number(m.oneStar||0)}</td><td>${Number(m.twoStar||0)}</td><td>${Number(m.threeStar||0)}</td><td>${Number(m.fourStar||0)}</td><td>${Number(m.fiveStar||0)}</td><td class="${scoreClass(m.mvpPoints)}">${escapeHtml(fmtScore(m.mvpPoints||0))}</td><td>${escapeHtml(fmtPct(m.mvpRate||0))}</td></tr>`}).join("")}</tbody></table></div></section>`;
 }
-function championSeasonDetailHtml(award){
+function profileHonorSeasonCardHtml({award,title,summary,body,isOpen=false}){
+  const panelId=`profile-honor-season-${award.honorId||"honor"}-${award.scope||"season"}`.replace(/[^A-Za-z0-9_-]/g,"-");
+  return `<article class="profile-honor-season-card ${isOpen?"is-open":""}" data-profile-honor-season><button type="button" class="profile-honor-season-toggle" data-profile-honor-season-toggle aria-expanded="${isOpen?"true":"false"}" aria-controls="${escapeHtml(panelId)}"><span class="profile-honor-season-title"><small>${escapeHtml(award.scope)}</small><strong>${escapeHtml(title)}</strong></span><b class="profile-honor-season-summary">${escapeHtml(summary)}</b><span class="profile-honor-season-chevron" aria-hidden="true"></span></button><div class="profile-honor-season-collapse" id="${escapeHtml(panelId)}" aria-hidden="${isOpen?"false":"true"}" ${isOpen?"":"inert"}><div class="profile-honor-season-clip"><div class="profile-honor-season-content">${body}</div></div></div></article>`;
+}
+function championSeasonDetailHtml(award,isOpen=false){
   const row=honorWinnerRow(award),m=row?.metrics||{},tie=award?.details?.tiebreak||{},basis=tie.triggered?(tie.decidedLabel||"全部条件相同"):"累计总积分";
-  return `<article class="profile-honor-season-card"><header><div><span>${escapeHtml(award.scope)}</span><h3>MSL总冠军</h3></div><b>赛季排名 #${row?.rank||1}</b></header><div class="profile-honor-winner">获奖者：<strong>${escapeHtml(award.details?.winner||"—")}</strong></div><div class="profile-honor-metric-grid champion-metrics">${honorStatHtml("累计总积分",fmtScore(m.total||0),scoreClass(m.total||0))}${honorStatHtml("场均积分",fmtAvg(m.average||0))}${honorStatHtml("MVP场次积分",fmtScore(m.mvpPoints||0),scoreClass(m.mvpPoints||0))}${honorStatHtml("正分场次积分",fmtScore(m.positivePoints||0),scoreClass(m.positivePoints||0))}${honorStatHtml("爆发场次积分",fmtScore(m.explosionPoints||0),scoreClass(m.explosionPoints||0))}</div><div class="profile-honor-decision"><span>同分决胜：<b>${tie.triggered?"已触发":"未触发"}</b></span><span>最终依据：<b>${escapeHtml(basis)}</b></span><p>${escapeHtml(tie.summary||"本赛季由累计总积分直接决出冠军，未触发同分决胜。")}</p></div>${championRankingHtml(award)}<details class="profile-honor-rule"><summary>查看官方规则</summary><p>${escapeHtml(award.details?.rule||honorCatalogItem("H001")?.rule||"")}</p></details></article>`;
+  const winner=award.details?.winner||"—";
+  const body=`<div class="profile-honor-winner">获奖者：<strong>${escapeHtml(winner)}</strong> · 赛季排名 #${row?.rank||1}</div><div class="profile-honor-metric-grid champion-metrics">${honorStatHtml("累计总积分",fmtScore(m.total||0),scoreClass(m.total||0))}${honorStatHtml("场均积分",fmtAvg(m.average||0))}${honorStatHtml("MVP场次积分",fmtScore(m.mvpPoints||0),scoreClass(m.mvpPoints||0))}${honorStatHtml("正分场次积分",fmtScore(m.positivePoints||0),scoreClass(m.positivePoints||0))}${honorStatHtml("爆发场次积分",fmtScore(m.explosionPoints||0),scoreClass(m.explosionPoints||0))}</div><div class="profile-honor-decision"><span>同分决胜：<b>${tie.triggered?"已触发":"未触发"}</b></span><span>最终依据：<b>${escapeHtml(basis)}</b></span><p>${escapeHtml(tie.summary||"本赛季由累计总积分直接决出冠军，未触发同分决胜。")}</p></div>${championRankingHtml(award)}<details class="profile-honor-rule"><summary>查看官方规则</summary><p>${escapeHtml(award.details?.rule||honorCatalogItem("H001")?.rule||"")}</p></details>`;
+  return profileHonorSeasonCardHtml({award,title:"MSL总冠军",summary:winner,body,isOpen});
 }
 function mvpMatchDetailHtml(match){
   const label=[match.matchId,match.round? `第${match.round}场`:""].filter(Boolean).join(" · ");
   return `<div class="profile-mvp-match"><div><strong>${escapeHtml(label||"—")}</strong><span>${escapeHtml(match.date||"—")} · ${escapeHtml(match.matchType||"—")}</span></div><b class="${scoreClass(match.score)}">${escapeHtml(fmtScore(match.score))}</b><em aria-label="${match.starLevel}星">${escapeHtml(match.starText||formatMvpStars(match.starLevel))}</em></div>`;
 }
-function mvpSeasonDetailHtml(award){
+function mvpSeasonDetailHtml(award,isOpen=false){
   const row=honorWinnerRow(award),m=row?.metrics||{},matches=row?.mvpMatches||[],tie=award?.details?.tiebreak||{},basis=tie.triggered?(tie.decidedLabel||"全部条件相同"):"累计MVP星数";
-  return `<article class="profile-honor-season-card"><header><div><span>${escapeHtml(award.scope)}</span><h3>MSL年度最有价值牌手</h3></div><b>${Number(m.totalStars||0)}★</b></header><div class="profile-honor-winner">获奖者：<strong>${escapeHtml(award.details?.winner||"—")}</strong> · 赛季排名 #${row?.rank||1}</div><div class="profile-honor-metric-grid mvp-star-metrics">${honorStatHtml("累计MVP星数",`${Number(m.totalStars||0)}★`)}${honorStatHtml("MVP次数",`${Number(m.mvpCount||0)}次`)}${honorStatHtml("★★★★★",`${Number(m.fiveStar||0)}次`)}${honorStatHtml("★★★★",`${Number(m.fourStar||0)}次`)}${honorStatHtml("★★★",`${Number(m.threeStar||0)}次`)}${honorStatHtml("★★",`${Number(m.twoStar||0)}次`)}${honorStatHtml("★",`${Number(m.oneStar||0)}次`)}${honorStatHtml("MVP场次累计积分",fmtScore(m.mvpPoints||0),scoreClass(m.mvpPoints||0))}${honorStatHtml("MVP率",fmtPct(m.mvpRate||0))}</div><div class="profile-honor-decision"><span>同星决胜：<b>${tie.triggered?"已触发":"未触发"}</b></span><span>最终依据：<b>${escapeHtml(basis)}</b></span><p>${escapeHtml(tie.summary||"本赛季由累计MVP星数直接决出年度最有价值牌手，未触发同星决胜。")}</p></div>${mvpRankingHtml(award)}<section class="profile-mvp-matches"><h4>每场MVP明细</h4>${matches.map(mvpMatchDetailHtml).join("")||'<div class="empty compact">暂无MVP明细</div>'}</section><details class="profile-honor-rule"><summary>查看官方规则</summary><p>${escapeHtml(award.details?.rule||honorCatalogItem("H003")?.rule||"")}</p></details></article>`;
+  const stars=`${Number(m.totalStars||0)}★`;
+  const body=`<div class="profile-honor-winner">获奖者：<strong>${escapeHtml(award.details?.winner||"—")}</strong> · 赛季排名 #${row?.rank||1}</div><div class="profile-honor-metric-grid mvp-star-metrics">${honorStatHtml("累计MVP星数",stars)}${honorStatHtml("MVP次数",`${Number(m.mvpCount||0)}次`)}${honorStatHtml("★",`${Number(m.oneStar||0)}次`)}${honorStatHtml("★★",`${Number(m.twoStar||0)}次`)}${honorStatHtml("★★★",`${Number(m.threeStar||0)}次`)}${honorStatHtml("★★★★",`${Number(m.fourStar||0)}次`)}${honorStatHtml("★★★★★",`${Number(m.fiveStar||0)}次`)}${honorStatHtml("MVP场次累计积分",fmtScore(m.mvpPoints||0),scoreClass(m.mvpPoints||0))}${honorStatHtml("MVP率",fmtPct(m.mvpRate||0))}</div><div class="profile-honor-decision"><span>同星决胜：<b>${tie.triggered?"已触发":"未触发"}</b></span><span>最终依据：<b>${escapeHtml(basis)}</b></span><p>${escapeHtml(tie.summary||"本赛季由累计MVP星数直接决出年度最有价值牌手，未触发同星决胜。")}</p></div>${mvpRankingHtml(award)}<section class="profile-mvp-matches"><h4>每场MVP明细</h4>${matches.map(mvpMatchDetailHtml).join("")||'<div class="empty compact">暂无MVP明细</div>'}</section><details class="profile-honor-rule"><summary>查看官方规则</summary><p>${escapeHtml(award.details?.rule||honorCatalogItem("H003")?.rule||"")}</p></details>`;
+  return profileHonorSeasonCardHtml({award,title:"MSL年度最有价值牌手",summary:stars,body,isOpen});
 }
 function openProfileHonorModal(honorId){
   const group=groupPlayerHonors(state.honors[currentPlayer]||[]).find(item=>item.honorId===honorId);
@@ -1168,11 +1176,22 @@ function openProfileHonorModal(honorId){
   ensureProfileHonorModal();
   const player=state.players.find(item=>item.playerId===currentPlayer);
   const seasonSummary=group.awards.map(award=>award.honorId==="H003"?`${award.scope} · ${Number(honorWinnerRow(award)?.metrics?.totalStars||0)}★`:award.scope).join(" · ");
-  $("#profileHonorModalBody").innerHTML=`<header class="profile-honor-modal-header"><p>${escapeHtml(player?.name||"牌手")} · 官方荣誉履历</p><h2 id="profileHonorModalTitle">${escapeHtml(safeHonorName(group))}</h2><strong>生涯获得 ${group.awards.length} 次</strong><small>${escapeHtml(seasonSummary)}</small></header><div class="profile-honor-season-list">${group.awards.map(award=>award.honorId==="H001"?championSeasonDetailHtml(award):mvpSeasonDetailHtml(award)).join("")}</div>`;
+  $("#profileHonorModalBody").innerHTML=`<header class="profile-honor-modal-header"><p>${escapeHtml(player?.name||"牌手")} · 官方荣誉履历</p><h2 id="profileHonorModalTitle">${escapeHtml(safeHonorName(group))}</h2><strong>生涯获得 ${group.awards.length} 次</strong><small>${escapeHtml(seasonSummary)}</small></header><div class="profile-honor-season-list">${group.awards.map((award,index)=>{const isLatest=index===group.awards.length-1;return award.honorId==="H001"?championSeasonDetailHtml(award,isLatest):mvpSeasonDetailHtml(award,isLatest)}).join("")}</div>`;
   const backdrop=$("#profileHonorModalBackdrop");backdrop.hidden=false;document.body.classList.add("modal-open");
   const panel=backdrop.querySelector(".profile-honor-modal");if(panel)panel.scrollTop=0;
 }
 document.addEventListener("click",e=>{
+  const toggle=e.target.closest("[data-profile-honor-season-toggle]");
+  if(toggle){
+    const card=toggle.closest("[data-profile-honor-season]"),panel=card?.querySelector(".profile-honor-season-collapse");
+    if(!card||!panel)return;
+    const isOpen=!card.classList.contains("is-open");
+    card.classList.toggle("is-open",isOpen);
+    toggle.setAttribute("aria-expanded",isOpen?"true":"false");
+    panel.setAttribute("aria-hidden",isOpen?"false":"true");
+    panel.toggleAttribute("inert",!isOpen);
+    return;
+  }
   const trigger=e.target.closest("[data-profile-honor]");if(trigger)openProfileHonorModal(trigger.dataset.profileHonor);
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProfileHonorModal();});
