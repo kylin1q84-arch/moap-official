@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
-  <link rel="stylesheet" href="/style.css?v=2.4.2-record-filter-select">
+  <link rel="stylesheet" href="/style.css?v=2.4.3-status-center-ia">
 </head>
 <body>
 
@@ -105,27 +105,22 @@
 
       <section class="view" data-view="status">
         <div class="hero">
-          <div><h2>MSL状态中心</h2><p>围绕近期状态、赛季表现与比赛走势，追踪每位牌手的手感和竞争态势。</p></div>
-          <span class="chip gold">MSL 数据分析</span>
+          <div><h2>MSL状态中心</h2><p>聚焦最近5场表现与即时走势，快速了解每位牌手的当前状态。</p></div>
+          <span class="chip gold">近期状态看板</span>
         </div>
-        <div class="kpis" id="statusKpis"></div>
-        <div class="grid-2 status-main-grid">
-          <div class="card section">
-            <div class="section-head"><h3>MSL实力榜</h3><small>最近5场 · 每场结束自动更新</small></div>
-            <div class="power-list" id="powerRanking"></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>牌手行情</h3><small>行情上涨 / 下跌 / 观望</small></div>
-            <div class="list" id="stockWatch"></div>
-          </div>
+        <div class="section-head status-section-head"><h3>状态摘要</h3><small>最近5场 · 即时概览</small></div>
+        <div class="kpis status-kpis" id="statusKpis"></div>
+        <div class="card section status-ranking-section">
+          <div class="section-head"><h3>MSL状态实力榜</h3><small>状态指数、排名变化与指数变化</small></div>
+          <div class="power-list" id="powerRanking"></div>
         </div>
-        <div class="grid-2">
+        <div class="grid-2 status-secondary-grid">
           <div class="card section">
-            <div class="section-head"><h3>联盟故事线</h3><small>下一轮值得关注</small></div>
-            <div class="storyline-grid" id="statusStorylines"></div>
+            <div class="section-head"><h3>状态观察</h3><small>近期表现的补充信号</small></div>
+            <div class="storyline-grid status-observation-grid" id="statusStorylines"></div>
           </div>
           <div class="card section">
-            <div class="section-head"><h3>计算口径</h3><small>可解释、可复核</small></div>
+            <div class="section-head"><h3>状态指数说明</h3><small>仅解释近期状态</small></div>
             <div class="analysis-method" id="statusMethodology"></div>
           </div>
         </div>
@@ -260,6 +255,6 @@
 <div class="toast" id="toast"></div>
 
 
-<script type="module" src="/app.js?v=2.4.2-record-filter-select"></script>
+<script type="module" src="/app.js?v=2.4.3-status-center-ia"></script>
 </body>
 </html>
