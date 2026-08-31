@@ -13,11 +13,6 @@ const std = values => {
 };
 const eq = (a, b) => Math.abs(num(a) - num(b)) <= EPS;
 
-export function bgrValue(score) {
-  score = num(score);
-  return score >= 100 ? 12 : score >= 90 ? 8 : score >= 80 ? 5 : score >= 70 ? 3 : score >= 60 ? 2 : score >= 50 ? 1 : 0;
-}
-
 export function getMvpStarLevel(score) {
   score = num(score);
   if (score >= 100) return 5;
@@ -316,9 +311,10 @@ function seasonMetrics(players, matches, season) {
       soloTotal: sum(soloEntries.map(entry => entry.score)),
       soloAverage: mean(soloEntries.map(entry => entry.score)),
       soloEntries,
-      bgr: sum(scores.map(bgrValue)),
       bigStageCount: entries.filter(entry => entry.score >= 50).length,
+      bigStageRate: entries.length ? entries.filter(entry => entry.score >= 50).length / entries.length : 0,
       explosionTotal: sum(entries.filter(entry => entry.score >= 50).map(entry => entry.score)),
+      explosionAverage: mean(entries.filter(entry => entry.score >= 50).map(entry => entry.score)),
       longestBigStage: bigStage.maxLength,
       longestBigStageEvidence: bigStage.bestGroup.map(item => ({ matchId:item.match.matchId,date:item.match.date,round:item.match.round,season:item.match.season,matchType:item.match.matchType,venue:item.match.venue||"未填写场地",score:item.score,isMvp:item.isMvp })),
       bigWinCount: bigWins.length,
@@ -371,14 +367,14 @@ export function buildCurrentSeasonRatings(players, matches) {
 
   const nTotal = scale("total"), nAverage = scale("average"), nPositiveRate = scale("positiveRate"), nPositiveAverage = scale("positiveAverage");
   const nMvps = scale("mvps"), nMvpRate = scale("mvpRate"), nMvpTotal = scale("mvpTotal");
-  const nBgr = scale("bgr"), nBigStageCount = scale("bigStageCount"), nBest = scale("best");
+  const nBigStageRate = scale("bigStageRate"), nBigStageCount = scale("bigStageCount"), nExplosionAverage = scale("explosionAverage");
   const nVolatility = scale("volatility", true), nPositiveStreak = scale("longestStreak"), nCrash = scale("crashCount", true);
 
   let rows = active.map(row => {
     const scoring = 100 * (nTotal(row) * 0.50 + nAverage(row) * 0.50);
     const quality = 100 * (nPositiveRate(row) * 0.60 + nPositiveAverage(row) * 0.40);
     const mvpImpact = 100 * (nMvps(row) * 0.40 + nMvpRate(row) * 0.30 + nMvpTotal(row) * 0.30);
-    const bigStage = 100 * (nBgr(row) * 0.40 + nBigStageCount(row) * 0.30 + nBest(row) * 0.30);
+    const bigStage = 100 * (nBigStageRate(row) * 0.45 + nBigStageCount(row) * 0.25 + nExplosionAverage(row) * 0.30);
     const stability = 100 * (nVolatility(row) * 0.45 + nPositiveStreak(row) * 0.35 + nCrash(row) * 0.20);
     const composite = scoring * 0.30 + quality * 0.25 + mvpImpact * 0.20 + bigStage * 0.15 + stability * 0.10;
     const rating = Math.round(50 + 49 * composite / 100);
@@ -409,7 +405,7 @@ export function buildCurrentSeasonRatings(players, matches) {
   return {
     season: latestSeason,
     rows,
-    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋爆发能力15%（BGR、爆发场次、单场最高）＋稳定性10%（波动、连续正分、极端负分）。各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
+    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋爆发能力15%（爆发率、爆发场次、爆发场均）＋稳定性10%（波动、连续正分、极端负分）。爆发统一定义为单场积分≥50；各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
   };
 }
 
@@ -508,7 +504,7 @@ function metricEvidenceFor(honorId, row, item) {
   });
   const positive = all.filter(entry => entry.score >= 0);
   const explosion = all.filter(entry => entry.score >= 50);
-  const withTag = (entries, tag="") => entries.map(entry => ({ ...entry, processTag:tag, bgr:bgrValue(entry.score) }));
+  const withTag = (entries, tag="") => entries.map(entry => ({ ...entry, processTag:tag }));
   if (honorId === "H001") {
     if (label.includes("累计总积分")) return withTag(all,"逐场积分累计");
     if (label.includes("场均积分")) return withTag(all,`${formatMetric(row.total,"分")} ÷ ${formatMetric(row.games,"场")}`);
@@ -648,7 +644,7 @@ export function calculateHonorSystem(players, matches) {
 function recentEntries(matches,pid,n=5){const arr=[];for(const m of sortedMatches(matches)){const r=playerResult(m,pid);if(r&&!r.isAbsent&&r.score!=null)arr.push({matchId:m.matchId,season:m.season,round:m.round,date:m.date,matchType:m.matchType,venue:m.venue||'未填写场地',score:num(r.score),isMvp:!!r.isMvp});}return arr.slice(-n);}
 function slope(values){if(values.length<2)return 0;const xs=values.map((_,i)=>i),xm=mean(xs),ym=mean(values);const den=sum(xs.map(x=>(x-xm)**2));return den?sum(xs.map((x,i)=>(x-xm)*(values[i]-ym)))/den:0;}
 function minmax(rows,key){const vals=rows.map(x=>num(x[key])),lo=Math.min(...vals),hi=Math.max(...vals);return x=>eq(hi,lo)?.5:(num(x[key])-lo)/(hi-lo);}
-function weightedRecent(entries){const base=[.10,.15,.20,.25,.30].slice(5-entries.length),ws=sum(base);return {score:entries.length?sum(entries.map((x,i)=>x.score*base[i]))/ws:0,positive:entries.length?sum(entries.map((x,i)=>(x.score>=0?1:0)*base[i]))/ws:0,mvp:entries.length?sum(entries.map((x,i)=>(x.isMvp?1:0)*base[i]))/ws:0,bgr:entries.length?sum(entries.map((x,i)=>bgrValue(x.score)*base[i]))/ws:0};}
+function weightedRecent(entries){const base=[.10,.15,.20,.25,.30].slice(5-entries.length),ws=sum(base),explosions=entries.filter(x=>x.score>=50);return {score:entries.length?sum(entries.map((x,i)=>x.score*base[i]))/ws:0,positive:entries.length?sum(entries.map((x,i)=>(x.score>=0?1:0)*base[i]))/ws:0,mvp:entries.length?sum(entries.map((x,i)=>(x.isMvp?1:0)*base[i]))/ws:0,explosionRate:entries.length?sum(entries.map((x,i)=>(x.score>=50?1:0)*base[i]))/ws:0,explosionAverage:mean(explosions.map(x=>x.score))};}
 function ordinalRanks(rows,key,dir='desc'){const sorted=[...rows].sort((a,b)=>dir==='asc'?num(a[key])-num(b[key]):num(b[key])-num(a[key])||String(a.playerId).localeCompare(String(b.playerId)));let rank=0,prev=null;const out={};sorted.forEach((row,index)=>{const value=num(row[key]);if(index===0||!eq(value,prev))rank=index+1;prev=value;out[row.playerId]=rank;});return out;}
 function officialHonorRanks(rows){
   const sorted=[...rows].sort((a,b)=>num(b.titles)-num(a.titles)||num(b.mvAwards)-num(a.mvAwards)||num(b.officialHonorCount)-num(a.officialHonorCount)||String(a.playerId).localeCompare(String(b.playerId)));
@@ -670,12 +666,13 @@ function careerMetrics(players,matches,honors={}){
   seasons.forEach(season=>{
     const rows=players.map(p=>{
       const entries=recentEntries(matches.filter(m=>m.season===season),p.playerId,999),scores=entries.map(x=>x.score),games=entries.length,mvps=entries.filter(x=>x.isMvp).length;
-      return {playerId:p.playerId,player:p.name,season,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,bgr:sum(scores.map(bgrValue)),bgrPerGame:games?sum(scores.map(bgrValue))/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores)};
+      const explosions=entries.filter(x=>x.score>=50);
+      return {playerId:p.playerId,player:p.name,season,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,explosionCount:explosions.length,explosionPoints:sum(explosions.map(x=>x.score)),explosionAverage:mean(explosions.map(x=>x.score)),explosionRate:games?explosions.length/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores)};
     });
     const active=rows.filter(x=>x.games>0);
     if(active.length){
-      const nTotal=minmax(active,'total'),nAvg=minmax(active,'average'),nPos=minmax(active,'positiveRate'),nMvp=minmax(active,'mvpRate'),nBgr=minmax(active,'bgrPerGame'),nGames=minmax(active,'games');
-      active.forEach(x=>{x.rating=Math.round(50+49*(nTotal(x)*.35+nAvg(x)*.20+nPos(x)*.15+nMvp(x)*.15+nBgr(x)*.10+nGames(x)*.05));x.ratingLabel=seasonRatingLabel(x.rating);});
+      const nTotal=minmax(active,'total'),nAvg=minmax(active,'average'),nPos=minmax(active,'positiveRate'),nMvp=minmax(active,'mvpRate'),nGames=minmax(active,'games');
+      active.forEach(x=>{x.rating=Math.round(50+49*(nTotal(x)*.40+nAvg(x)*.20+nPos(x)*.15+nMvp(x)*.20+nGames(x)*.05));x.ratingLabel=seasonRatingLabel(x.rating);});
       const ratingRanks=ordinalRanks(active,'rating'),totalRanks=ordinalRanks(active,'total');
       active.forEach(x=>{x.ratingRank=ratingRanks[x.playerId];x.totalRank=totalRanks[x.playerId];});
     }
@@ -685,11 +682,12 @@ function careerMetrics(players,matches,honors={}){
     const entries=recentEntries(matches,p.playerId,999),scores=entries.map(x=>x.score),games=entries.length,mvps=entries.filter(x=>x.isMvp).length;
     const hs=(honors?.[p.playerId]||[]).filter(h=>h.honorId==='H001'||h.honorId==='H003');
     const seasonHistory=seasons.map(s=>seasonRows[s].find(x=>x.playerId===p.playerId)).filter(x=>x&&x.games>0);
-    return {playerId:p.playerId,player:p.name,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,bgr:sum(scores.map(bgrValue)),bgrPerGame:games?sum(scores.map(bgrValue))/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores),officialHonorCount:hs.length,titles:hs.filter(h=>h.honorId==='H001').length,mvAwards:hs.filter(h=>h.honorId==='H003').length,seasonHistory};
+    const explosions=entries.filter(x=>x.score>=50);
+    return {playerId:p.playerId,player:p.name,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,explosionCount:explosions.length,explosionPoints:sum(explosions.map(x=>x.score)),explosionAverage:mean(explosions.map(x=>x.score)),explosionRate:games?explosions.length/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores),officialHonorCount:hs.length,titles:hs.filter(h=>h.honorId==='H001').length,mvAwards:hs.filter(h=>h.honorId==='H003').length,seasonHistory};
   });
-  const active=rows.filter(x=>x.games>0),nTotal=minmax(active,'total'),nAvg=minmax(active,'average'),nPos=minmax(active,'positiveRate'),nMvp=minmax(active,'mvpRate'),nBgr=minmax(active,'bgrPerGame'),nHonor=minmax(active,'officialHonorCount');
-  rows=rows.map(r=>({...r,overallRating:r.games?Math.round(50+49*(nTotal(r)*.25+nAvg(r)*.20+nPos(r)*.15+nMvp(r)*.15+nBgr(r)*.10+nHonor(r)*.15)):50}));
-  const ratingRanks=ordinalRanks(rows,'overallRating'),totalRanks=ordinalRanks(rows,'total'),avgRanks=ordinalRanks(rows,'average'),positiveRanks=ordinalRanks(rows,'positiveRate'),mvpRanks=ordinalRanks(rows,'mvpRate'),bgrRanks=ordinalRanks(rows,'bgrPerGame'),honorRanks=officialHonorRanks(rows);
+  const active=rows.filter(x=>x.games>0),nTotal=minmax(active,'total'),nAvg=minmax(active,'average'),nPos=minmax(active,'positiveRate'),nMvp=minmax(active,'mvpRate'),nHonor=minmax(active,'officialHonorCount');
+  rows=rows.map(r=>({...r,overallRating:r.games?Math.round(50+49*(nTotal(r)*.30+nAvg(r)*.20+nPos(r)*.15+nMvp(r)*.20+nHonor(r)*.15)):50}));
+  const ratingRanks=ordinalRanks(rows,'overallRating'),totalRanks=ordinalRanks(rows,'total'),avgRanks=ordinalRanks(rows,'average'),positiveRanks=ordinalRanks(rows,'positiveRate'),mvpRanks=ordinalRanks(rows,'mvpRate'),honorRanks=officialHonorRanks(rows);
   return Object.fromEntries(rows.map(r=>{
     const history=[...r.seasonHistory].sort((a,b)=>seasonNumber(a.season)-seasonNumber(b.season)),bestSeason=[...history].sort((a,b)=>b.rating-a.rating||b.total-a.total)[0]||null;
     let trend='跨赛季表现整体平稳';const ratings=history.map(x=>x.rating);
@@ -697,7 +695,7 @@ function careerMetrics(players,matches,honors={}){
     else if(ratings.length>=2&&ratings.every((x,i)=>i===0||x<ratings[i-1]))trend='跨赛季评分呈下降趋势';
     else if(bestSeason&&bestSeason.season===history.at(-1)?.season)trend='当前赛季达到生涯阶段高点';
     else if(bestSeason)trend=`生涯峰值出现在${bestSeason.season}`;
-    return [r.playerId,{...r,overallRank:ratingRanks[r.playerId],totalRank:totalRanks[r.playerId],averageRank:avgRanks[r.playerId],positiveRank:positiveRanks[r.playerId],mvpRank:mvpRanks[r.playerId],bgrRank:bgrRanks[r.playerId],honorRank:honorRanks[r.playerId],ratingLabel:careerRatingLabel(r.overallRating),bestSeason,trend,seasonRange:history.length?`${history[0].season}–${history.at(-1).season}`:'—'}];
+    return [r.playerId,{...r,overallRank:ratingRanks[r.playerId],totalRank:totalRanks[r.playerId],averageRank:avgRanks[r.playerId],positiveRank:positiveRanks[r.playerId],mvpRank:mvpRanks[r.playerId],honorRank:honorRanks[r.playerId],ratingLabel:careerRatingLabel(r.overallRating),bestSeason,trend,seasonRange:history.length?`${history[0].season}–${history.at(-1).season}`:'—'}];
   }));
 }
 function seasonStyleMetrics(matches,pid,season){
@@ -721,30 +719,31 @@ function computePower(players,matches){
     const recent=recentEntries(matches,p.playerId,5),w=weightedRecent(recent);
     const seasonEntries=recentEntries(matches.filter(m=>m.season===latestSeason),p.playerId,999);
     const seasonScores=seasonEntries.map(x=>x.score),seasonTotal=sum(seasonScores),seasonGames=seasonScores.length;
-    const season={id:latestSeason||'—',games:seasonGames,total:seasonTotal,average:mean(seasonScores),positiveRate:seasonGames?seasonEntries.filter(x=>x.score>=0).length/seasonGames:0,mvps:seasonEntries.filter(x=>x.isMvp).length,bgr:sum(seasonScores.map(bgrValue)),best:seasonGames?Math.max(...seasonScores):null,worst:seasonGames?Math.min(...seasonScores):null,volatility:std(seasonScores)};
+    const seasonExplosions=seasonEntries.filter(x=>x.score>=50);
+    const season={id:latestSeason||'—',games:seasonGames,total:seasonTotal,average:mean(seasonScores),positiveRate:seasonGames?seasonEntries.filter(x=>x.score>=0).length/seasonGames:0,mvps:seasonEntries.filter(x=>x.isMvp).length,explosionCount:seasonExplosions.length,explosionPoints:sum(seasonExplosions.map(x=>x.score)),explosionAverage:mean(seasonExplosions.map(x=>x.score)),explosionRate:seasonGames?seasonExplosions.length/seasonGames:0,best:seasonGames?Math.max(...seasonScores):null,worst:seasonGames?Math.min(...seasonScores):null,volatility:std(seasonScores)};
     const seasonStyle=seasonStyleMetrics(matches,p.playerId,latestSeason);
-    return {playerId:p.playerId,player:p.name,recent,weightedScore:w.score,recentPositive:w.positive,recentMvp:w.mvp,recentBgr:w.bgr,trend:slope(recent.map(x=>x.score)),vsSeason:w.score-season.average,recentTotal:sum(recent.map(x=>x.score)),recentAverage:mean(recent.map(x=>x.score)),recentStd:std(recent.map(x=>x.score)),seasonAverage:season.average,season,seasonStyle,latest:recent.at(-1)||null};
+    return {playerId:p.playerId,player:p.name,recent,weightedScore:w.score,recentPositive:w.positive,recentMvp:w.mvp,recentExplosionRate:w.explosionRate,recentExplosionAverage:w.explosionAverage,trend:slope(recent.map(x=>x.score)),vsSeason:w.score-season.average,recentTotal:sum(recent.map(x=>x.score)),recentAverage:mean(recent.map(x=>x.score)),recentStd:std(recent.map(x=>x.score)),seasonAverage:season.average,season,seasonStyle,latest:recent.at(-1)||null};
   });
   const totalRanks=ordinalRanks(rows.map(r=>({...r,seasonTotal:r.season.total})),'seasonTotal');
   const avgRanks=ordinalRanks(rows.map(r=>({...r,seasonAvg:r.season.average})),'seasonAvg');
   const positiveRanks=ordinalRanks(rows.map(r=>({...r,seasonPositive:r.season.positiveRate})),'seasonPositive');
   const mvpRanks=ordinalRanks(rows.map(r=>({...r,seasonMvps:r.season.mvps})),'seasonMvps');
-  const bgrRanks=ordinalRanks(rows.map(r=>({...r,seasonBgr:r.season.bgr})),'seasonBgr');
-  rows=rows.map(r=>({...r,season:{...r.season,totalRank:totalRanks[r.playerId],averageRank:avgRanks[r.playerId],positiveRank:positiveRanks[r.playerId],mvpRank:mvpRanks[r.playerId],bgrRank:bgrRanks[r.playerId]}}));
-  const nScore=minmax(rows,'weightedScore'),nPos=minmax(rows,'recentPositive'),nMvp=minmax(rows,'recentMvp'),nBgr=minmax(rows,'recentBgr'),nTrend=minmax(rows,'trend'),nVs=minmax(rows,'vsSeason');
-  rows=rows.map(r=>({...r,powerIndex:Math.round(100*(nScore(r)*.35+nPos(r)*.20+nMvp(r)*.15+nBgr(r)*.10+nTrend(r)*.10+nVs(r)*.10))})).sort((a,b)=>b.powerIndex-a.powerIndex||b.weightedScore-a.weightedScore||a.playerId.localeCompare(b.playerId));
+  const explosionRanks=ordinalRanks(rows.map(r=>({...r,seasonExplosionCount:r.season.explosionCount})),'seasonExplosionCount');
+  rows=rows.map(r=>({...r,season:{...r.season,totalRank:totalRanks[r.playerId],averageRank:avgRanks[r.playerId],positiveRank:positiveRanks[r.playerId],mvpRank:mvpRanks[r.playerId],explosionRank:explosionRanks[r.playerId]}}));
+  const nScore=minmax(rows,'weightedScore'),nPos=minmax(rows,'recentPositive'),nMvp=minmax(rows,'recentMvp'),nExplosionRate=minmax(rows,'recentExplosionRate'),nExplosionAverage=minmax(rows,'recentExplosionAverage'),nTrend=minmax(rows,'trend'),nVs=minmax(rows,'vsSeason');
+  rows=rows.map(r=>({...r,powerIndex:Math.round(100*(nScore(r)*.35+nPos(r)*.20+nMvp(r)*.15+(nExplosionRate(r)*.70+nExplosionAverage(r)*.30)*.10+nTrend(r)*.10+nVs(r)*.10))})).sort((a,b)=>b.powerIndex-a.powerIndex||b.weightedScore-a.weightedScore||a.playerId.localeCompare(b.playerId));
   return rows.map((r,i)=>({...r,rank:i+1}));
 }
 function statusLabel(r){if(r.recent.length<3)return '🕒 样本不足';const last3=r.recent.slice(-3).map(x=>x.score);if(r.latest?.isMvp&&r.powerIndex>=55)return '👑 MVP状态';if(last3.length===3&&last3.every(x=>x>=0))return '🎯 连续正分';if(last3.length===3&&last3[0]<last3[1]&&last3[1]<last3[2])return r.powerIndex>=45?'🚀 强势上升':'📈 回暖中';if(last3.length===3&&last3[0]>last3[1]&&last3[1]>last3[2])return r.powerIndex>=55?'🎢 高开低走':'📉 状态下滑';if(r.recent.filter(x=>x.score>=50).length>=2)return '⚡ 爆发模式';if(r.recentStd>=35)return '🌊 表现起伏';if(r.powerIndex>=85)return '🔥 炙手可热';if(r.powerIndex>=70)return '🔥 手感火热';if(r.powerIndex>=55)return '✅ 状态稳定';if(r.powerIndex>=45)return '➖ 状态平平';if(r.powerIndex>=30)return '🌧 状态低迷';return '🧊 深陷低谷';}
 function archetypes(rows){
   const norm=getter=>{const vals=rows.map(r=>num(getter(r))),lo=Math.min(...vals),hi=Math.max(...vals);return r=>eq(hi,lo)?.5:(num(getter(r))-lo)/(hi-lo);};
-  const nTotal=norm(r=>r.season.total),nAvg=norm(r=>r.season.average),nPos=norm(r=>r.season.positiveRate),nMvp=norm(r=>r.season.mvps),nBgr=norm(r=>r.season.bgr),nBest=norm(r=>r.season.best??0),nVol=norm(r=>r.season.volatility),nComeback=norm(r=>r.seasonStyle?.maxComeback||0),nSolo=norm(r=>r.seasonStyle?.soloWins||0),nDom=norm(r=>r.seasonStyle?.maxDominance||0),nRange=norm(r=>r.seasonStyle?.range||0);
+  const nTotal=norm(r=>r.season.total),nAvg=norm(r=>r.season.average),nPos=norm(r=>r.season.positiveRate),nMvp=norm(r=>r.season.mvps),nExplosionRate=norm(r=>r.season.explosionRate),nExplosionAverage=norm(r=>r.season.explosionAverage),nVol=norm(r=>r.season.volatility),nComeback=norm(r=>r.seasonStyle?.maxComeback||0),nSolo=norm(r=>r.seasonStyle?.soloWins||0),nDom=norm(r=>r.seasonStyle?.maxDominance||0),nRange=norm(r=>r.seasonStyle?.range||0);
   return Object.fromEntries(rows.map(r=>{
     const dims=Object.values(r.seasonPerformance?.dimensionScores||{}).map(Number).filter(Number.isFinite),avgDim=dims.length?mean(dims):50,spread=dims.length?Math.max(...dims)-Math.min(...dims):50,balance=Math.max(0,1-spread/100);
     const scores={
       '全能型':(avgDim/100)*.62+balance*.38,
       '稳健型':(1-nVol(r))*.62+nPos(r)*.38,
-      '爆发型':nBgr(r)*.55+nBest(r)*.45,
+      '爆发型':nExplosionRate(r)*.55+nExplosionAverage(r)*.45,
       '进攻型':nTotal(r)*.38+nAvg(r)*.27+nMvp(r)*.35,
       '韧性型':nComeback(r)*.78+nPos(r)*.22,
       '统治型':nMvp(r)*.35+nSolo(r)*.30+nDom(r)*.35,
@@ -763,7 +762,7 @@ function seasonAssessment(r){
   const dims=perf.dimensionScores||{};
   const weak=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
   const strong=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
-  const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，联盟第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP，BGR指数${s.bgr}。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
+  const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，联盟第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP；爆发${s.explosionCount}场，爆发率${(s.explosionRate*100).toFixed(1)}%。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
   const outlook=weak?`当前最需要提升的是${weak[0]}（${Number(weak[1]).toFixed(1)}）；赛季OVR只跟随${s.id}数据变化，不受历史赛季成绩影响。`:'继续积累当前赛季正式比赛样本。';
   return {label,summary,outlook};
 }
@@ -781,7 +780,7 @@ function careerAssessment(r){
   if(c.volatility>=35)risks.push(`生涯波动指数${c.volatility.toFixed(1)}，比赛上下限差距较大`);
   if(!risks.length)risks.push('长期数据结构较均衡，主要观察能否继续抬高个人峰值');
   const best=c.bestSeason;
-  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、BGR ${c.bgr}，获得${c.officialHonorCount}次官方荣誉（总冠军${c.titles}次、年度MVP${c.mvAwards}次）。`;
+  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、${c.explosionCount}场爆发，获得${c.officialHonorCount}次官方荣誉（总冠军${c.titles}次、年度MVP${c.mvAwards}次）。`;
   const evaluation=`${r.player}的MSL生涯定位为“${c.ratingLabel}”，综合评分${c.overallRating}，联盟排名第${c.overallRank}。${c.trend}${best?`，其中${best.season}以${best.rating}分成为目前评分最高的单赛季。`:''}${strengths.length?`长期优势主要体现在${strengths.slice(0,3).join('、')}。`:''}`;
   const outlook=c.overallRank<=2?'已经进入联盟长期核心层，后续重点是把高水平赛季转化为更多总冠军与年度最有价值牌手荣誉。':c.total>=0?'具备进入长期核心层的基础，提升MVP效率与高分场次将明显拉高综合评分。':'目前仍处于生涯追赶阶段，优先目标是改善累计积分、正分率与赛季稳定性。';
   return {label:c.ratingLabel,summary,evaluation,outlook,strengths,risks};
@@ -815,5 +814,5 @@ export function buildMslStatusCenter(players,matches,honors={}){
   const latest=sortedMatches(matches).at(-1);let gameRecap=null;
   if(latest){const pp=played(latest).sort((a,b)=>num(b.score)-num(a.score)),top=pp[0],second=pp[1],bottom=pp.at(-1);gameRecap={title:`${top?.player||'本场赢家'}领跑最新一轮，${bottom?.player||'末位牌手'}承压`,meta:`${latest.season} 第${latest.round}局 · ${latest.date} · ${latest.venue||'未填写场地'}`,body:`${top?.player||'—'}以${top?`${num(top.score)>=0?'+':''}${num(top.score)}`:'—'}取得全场最高分${top?.isMvp?'并拿下MVP':''}，领先第二名${top&&second?num(top.score)-num(second.score):0}分；全场最大分差${top&&bottom?num(top.score)-num(bottom.score):0}分。`,scores:pp.map(x=>({player:x.player,score:num(x.score),isMvp:!!x.isMvp}))};}
   const storylines=[`🔥 当前最火热：${hottest.player}，状态指数${hottest.powerIndex}。`,`🧊 当前最低迷：${coldest.player}，状态指数${coldest.powerIndex}。`,`🏅 生涯综合评分最高：${overall.player}，OVR ${overall.career.overallRating}。`,`📈 行情上升最快：${riser.player}，${riser.movement>0?`实力榜上升${riser.movement}位`:`指数变化${riser.indexChange>=0?'+':''}${riser.indexChange}`}。`,`🌊 近期波动最大：${volatile.player}，波动指数${volatile.recentStd.toFixed(1)}。`];
-  return {rankings:rows,storylines,gameRecap,currentSeasonRating:seasonRatingSystem,methodology:`状态指数：最近5场加权净分35% + 正分率20% + MVP15% + BGR10% + 走势10% + 相对当前赛季表现10%。${seasonRatingSystem.methodology} 生涯综合评分（OVR）：S1至当前全部赛季累计积分25% + 生涯场均20% + 生涯正分率15% + MVP率15% + 场均BGR10% + 官方荣誉15%。近期、赛季、生涯三套评价互相独立，均不改变官方积分和荣誉。`};
+  return {rankings:rows,storylines,gameRecap,currentSeasonRating:seasonRatingSystem,methodology:`状态指数：最近5场加权净分35% + 正分率20% + MVP15% + 近期爆发表现10%（爆发率70% + 爆发场均30%）+ 走势10% + 相对当前赛季表现10%。${seasonRatingSystem.methodology} 生涯综合评分（OVR）：S1至当前全部赛季累计积分30% + 生涯场均20% + 生涯正分率15% + MVP率20% + 官方荣誉15%。近期、赛季、生涯三套评价互相独立，均不改变官方积分和荣誉。`};
 }
