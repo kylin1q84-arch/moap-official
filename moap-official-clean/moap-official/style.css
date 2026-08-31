@@ -1161,3 +1161,115 @@ button:not(:disabled):active,
   .overview-goat-ranking .goat-row{grid-template-columns:34px minmax(0,1fr) 64px;gap:8px}
   .overview-goat-ranking .goat-breakdown-mini{gap:5px}
 }
+
+
+/* Player official-honor history details · dual-track rules */
+.profile-honor-clickable{
+  appearance:none;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background-color .16s ease;
+}
+.profile-honor-row.is-unearned{
+  opacity:.52;
+  border-color:rgba(255,255,255,.07);
+  background:rgba(255,255,255,.018);
+}
+.profile-honor-row.is-unearned::after{display:none}
+@media(hover:hover) and (pointer:fine){
+  .profile-honor-clickable:hover{
+    transform:translate3d(0,-1px,0);
+    border-color:rgba(215,178,91,.3);
+    background-color:rgba(215,178,91,.045);
+  }
+}
+.profile-honor-modal-backdrop{
+  background:rgba(2,9,7,.86);
+  backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
+}
+.profile-honor-modal{
+  width:min(920px,100%);
+  border-color:rgba(215,178,91,.22);
+  background:linear-gradient(180deg,rgba(10,32,27,.995),rgba(6,20,17,.995));
+  color:var(--text);
+  box-shadow:0 30px 90px rgba(0,0,0,.52);
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,178,91,.42) rgba(4,16,13,.72);
+}
+.profile-honor-modal::-webkit-scrollbar{width:10px}
+.profile-honor-modal::-webkit-scrollbar-track{background:rgba(4,16,13,.72)}
+.profile-honor-modal::-webkit-scrollbar-thumb{
+  border:2px solid rgba(4,16,13,.72);
+  border-radius:999px;
+  background:rgba(215,178,91,.38);
+}
+.profile-honor-modal>.honor-modal-close{color:var(--gold2)}
+.profile-honor-modal-header{padding-right:40px}
+.profile-honor-modal-header p{margin:0 0 5px;color:var(--muted);font-size:12px}
+.profile-honor-modal-header h2{margin:0 0 7px;font-size:27px;color:var(--text)}
+.profile-honor-modal-header strong{display:block;color:var(--gold2);font-size:15px}
+.profile-honor-modal-header small{display:block;margin-top:6px;color:var(--muted);font-size:11px}
+.profile-honor-season-list{display:grid;gap:14px;margin-top:20px}
+.profile-honor-season-card{
+  padding:16px;
+  border:1px solid rgba(85,214,156,.11);
+  border-radius:15px;
+  background:rgba(10,32,27,.62);
+}
+.profile-honor-season-card>header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.profile-honor-season-card>header span{display:block;color:var(--muted);font-size:10px}
+.profile-honor-season-card>header h3{margin:4px 0 0;font-size:16px;color:var(--text)}
+.profile-honor-season-card>header>b{color:var(--gold2);font-size:14px;white-space:nowrap}
+.profile-honor-winner{margin-top:11px;color:var(--muted);font-size:12px}
+.profile-honor-winner strong{color:var(--text)}
+.profile-honor-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:13px}
+.profile-honor-metric-grid>div{min-width:0;padding:10px;border-radius:10px;background:rgba(4,16,13,.48)}
+.profile-honor-metric-grid span{display:block;color:var(--muted);font-size:9px;line-height:1.45}
+.profile-honor-metric-grid b{display:block;margin-top:5px;color:var(--text);font-size:13px;overflow-wrap:anywhere}
+.mvp-star-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+.profile-honor-decision{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 11px;border:1px solid rgba(215,178,91,.11);border-radius:10px;background:rgba(215,178,91,.04);font-size:10px;color:var(--muted)}
+.profile-honor-decision b{color:var(--gold2)}
+.profile-honor-decision p{flex-basis:100%;margin:0;line-height:1.65;color:#d7e2dd}
+.profile-mvp-matches{margin-top:14px}
+.profile-mvp-matches h4{margin:0 0 8px;color:var(--gold2);font-size:12px}
+.profile-mvp-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(70px,auto);gap:10px;align-items:center;padding:9px 10px;border-top:1px solid rgba(85,214,156,.08)}
+.profile-mvp-match:first-of-type{border-top:0}
+.profile-mvp-match strong{display:block;font-size:11px}
+.profile-mvp-match span{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.profile-mvp-match>b{font-size:12px}
+.profile-mvp-match em{font-style:normal;color:var(--gold2);font-size:12px;letter-spacing:1px;text-align:right;white-space:nowrap}
+.profile-honor-rule{margin-top:12px}
+.profile-honor-rule summary{cursor:pointer;color:var(--gold2);font-size:10px}
+.profile-honor-rule p{margin:8px 0 0;color:var(--muted);font-size:10px;line-height:1.7}
+@media(max-width:620px){
+  .profile-honor-modal-backdrop{padding:8px}
+  .profile-honor-modal{max-height:94vh;padding:17px;border-radius:16px}
+  .profile-honor-modal-header h2{font-size:21px}
+  .profile-honor-season-card{padding:12px}
+  .profile-honor-metric-grid,.mvp-star-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .profile-mvp-match{grid-template-columns:minmax(0,1fr) auto}
+  .profile-mvp-match em{grid-column:1/-1;text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  .profile-honor-clickable{transition:none!important}
+}
+
+.profile-honor-ranking{margin-top:14px}
+.profile-honor-ranking h4{margin:0 0 8px;color:var(--gold2);font-size:12px}
+.profile-honor-ranking-scroll{
+  overflow:auto;
+  border:1px solid rgba(85,214,156,.09);
+  border-radius:10px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,178,91,.34) rgba(4,16,13,.55);
+}
+.profile-honor-ranking-scroll::-webkit-scrollbar{height:8px}
+.profile-honor-ranking-scroll::-webkit-scrollbar-track{background:rgba(4,16,13,.55)}
+.profile-honor-ranking-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:rgba(215,178,91,.34)}
+.profile-honor-ranking table{width:100%;min-width:720px;border-collapse:collapse}
+.profile-honor-ranking .mvp-ranking-table{min-width:920px}
+.profile-honor-ranking th,.profile-honor-ranking td{padding:8px 9px;border-top:1px solid rgba(85,214,156,.07);font-size:9px;text-align:center;white-space:nowrap}
+.profile-honor-ranking thead th{border-top:0;background:rgba(4,16,13,.55);color:var(--muted)}
+.profile-honor-ranking tbody td:nth-child(2){color:var(--text);font-weight:700}
