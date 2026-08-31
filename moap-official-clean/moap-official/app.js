@@ -799,7 +799,7 @@ function openMatchModal(matchId){
   const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
   ensureMatchModal();const pp=match.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score);
   const precise=matchOrdinal(match.matchId)>=67?`<div class="honor-modal-section"><h3>本场精准对位矩阵</h3>${singleMatchMatrixHtml(match)}</div>`:"";
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><span class="honor-modal-grade grade A">局</span><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3><div class="match-scores">${pp.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></div>${precise}`;
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3><div class="match-scores">${pp.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></div>${precise}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
