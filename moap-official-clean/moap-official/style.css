@@ -1251,12 +1251,12 @@ button:not(:disabled):active,
 }
 .profile-honor-season-card.is-open .profile-honor-season-chevron{transform:rotate(-135deg) translate(-1px,-1px)}
 .profile-honor-season-collapse{
-  display:grid;
-  grid-template-rows:0fr;
+  height:0;
+  overflow:hidden;
   opacity:0;
-  transition:grid-template-rows .3s cubic-bezier(.2,.7,.2,1),opacity .24s ease;
+  transition:height .3s cubic-bezier(.2,.7,.2,1),opacity .24s ease;
 }
-.profile-honor-season-card.is-open .profile-honor-season-collapse{grid-template-rows:1fr;opacity:1}
+.profile-honor-season-card.is-open .profile-honor-season-collapse{height:auto;opacity:1}
 .profile-honor-season-clip{min-height:0;overflow:hidden}
 .profile-honor-season-content{padding:0 16px 16px}
 @media(hover:hover) and (pointer:fine){
