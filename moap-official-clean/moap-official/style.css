@@ -1012,12 +1012,12 @@ button:not(:disabled):active,
 
 /* Player profile official-honor flow */
 .profile-honor-row{
-  --honor-flow-delay:.2s;
+  --honor-flow-delay:.12s;
   position:relative;
   overflow:hidden;
   isolation:isolate;
 }
-.profile-honor-row:nth-child(2n){--honor-flow-delay:.48s}
+.profile-honor-row:nth-child(2n){--honor-flow-delay:.66s}
 .profile-honor-row>*{
   position:relative;
   z-index:1;
@@ -1027,21 +1027,21 @@ button:not(:disabled):active,
   position:absolute;
   z-index:0;
   inset:0 auto 0 0;
-  width:28%;
+  width:40%;
   pointer-events:none;
-  background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.018) 18%,rgba(215,178,91,.085) 42%,rgba(215,178,91,.13) 50%,rgba(215,178,91,.085) 58%,rgba(215,178,91,.018) 82%,transparent 100%);
-  transform:translate3d(-115%,0,0);
+  background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.032) 16%,rgba(215,178,91,.12) 38%,rgba(205,192,102,.23) 50%,rgba(215,178,91,.12) 62%,rgba(215,178,91,.032) 84%,transparent 100%);
+  transform:translate3d(-110%,0,0);
   will-change:transform;
-  animation:honorRowFlow 5s linear infinite;
+  animation:honorRowFlow 4.6s linear infinite;
   animation-delay:var(--honor-flow-delay);
 }
 @keyframes honorRowFlow{
-  from{transform:translate3d(-115%,0,0)}
-  to{transform:translate3d(475%,0,0)}
+  from{transform:translate3d(-110%,0,0)}
+  to{transform:translate3d(360%,0,0)}
 }
 @media(max-width:760px){
   .profile-honor-row::after{
-    background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.012) 18%,rgba(215,178,91,.055) 42%,rgba(215,178,91,.085) 50%,rgba(215,178,91,.055) 58%,rgba(215,178,91,.012) 82%,transparent 100%);
+    background:linear-gradient(90deg,transparent 0%,rgba(215,178,91,.028) 16%,rgba(215,178,91,.104) 38%,rgba(205,192,102,.2) 50%,rgba(215,178,91,.104) 62%,rgba(215,178,91,.028) 84%,transparent 100%);
   }
 }
 @media(prefers-reduced-motion:reduce){
