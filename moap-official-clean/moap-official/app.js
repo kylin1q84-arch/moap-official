@@ -791,7 +791,7 @@ function singleMatchMatrixHtml(match){
   let html=`<div class="matrix-wrap"><table class="matrix match-detail-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>吃分</th><th>被吃分</th><th>净积分</th><th>比赛分</th><th>校验</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cell.has(`${from}|${to}`)?cell.get(`${from}|${to}`):null),complete=values.every(v=>v!==null),eat=values.filter(v=>v>0).reduce((a,b)=>a+b,0),eaten=values.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0),net=values.filter(v=>v!==null).reduce((a,b)=>a+b,0),score=Number(participants.find(r=>r.playerId===from)?.score||0),ok=complete&&Math.abs(net-score)<1e-9;
-    html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(nameBy[from])}</span>${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td class="matchup-diagonal">—</td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td class="muted">—</td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${ok?"status-pass":"status-fail"}">${ok?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
+    html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(nameBy[from])}</span>${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${ok?"status-pass":"status-fail"}">${ok?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
   });
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
@@ -994,10 +994,14 @@ function renderMatrix(target,dataMatrix,clickable=false){
     const summary=summaryRows.find(r=>r.player===a)||{eat:0,eaten:0,total:0};
     html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a)}</span>${matchupPlayerNameHtml(a)}</div></td>`;
     names.forEach(b=>{
-      if(a===b)html+=`<td class="matchup-diagonal">—</td>`;
+      if(a===b)html+=`<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>`;
       else{
-        const v=Number(dataMatrix?.[a]?.[b]||0),cls=v>0?"pos":v<0?"neg":"neutral";
-        html+=`<td><button type="button" class="matrix-cell ${cls}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${fmtRivalValue(v)}</button></td>`;
+        const games=rivalPairGames(a,b);
+        if(!games)html+=`<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>`;
+        else{
+          const v=Number(dataMatrix?.[a]?.[b]||0),cls=v>0?"pos":v<0?"neg":"neutral";
+          html+=`<td><button type="button" class="matrix-cell ${cls}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${fmtRivalValue(v)}</button></td>`;
+        }
       }
     });
     html+=`<td class="matrix-summary-cell score-pos">${fmtRivalValue(summary.eat)}</td><td class="matrix-summary-cell score-neg">${fmtRivalEaten(summary.eaten)}</td><td class="matrix-summary-cell ${scoreClass(summary.total)}">${fmtRivalValue(summary.total)}</td></tr>`;
