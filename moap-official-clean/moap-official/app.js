@@ -791,7 +791,7 @@ function singleMatchMatrixHtml(match){
   let html=`<div class="matrix-wrap"><table class="matrix match-detail-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>吃分</th><th>被吃分</th><th>净积分</th><th>比赛分</th><th>校验</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cell.has(`${from}|${to}`)?cell.get(`${from}|${to}`):null),complete=values.every(v=>v!==null),eat=values.filter(v=>v>0).reduce((a,b)=>a+b,0),eaten=values.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0),net=values.filter(v=>v!==null).reduce((a,b)=>a+b,0),score=Number(participants.find(r=>r.playerId===from)?.score||0),ok=complete&&Math.abs(net-score)<1e-9;
-    html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(nameBy[from])}</span>${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${ok?"status-pass":"status-fail"}">${ok?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
+    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${ok?"status-pass":"status-fail"}">${ok?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
   });
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
@@ -839,7 +839,7 @@ function initEntry(){
   $("#entryDate").value=new Date().toISOString().slice(0,10);
   $("#entryPlayers").innerHTML=state.players.map(p=>`<div class="entry-player">
     <input class="entry-check" type="checkbox" id="check-${p.playerId}" data-pid="${p.playerId}" checked>
-    <label for="check-${p.playerId}" style="margin:0;color:var(--text)"><span class="player-cell"><span class="avatar">${initials(p.name)}</span>${p.name}</span></label>
+    <label for="check-${p.playerId}" style="margin:0;color:var(--text)"><span class="player-cell">${p.name}</span></label>
     <input class="entry-score" type="number" step="1" data-score="${p.playerId}" placeholder="比赛总分（可填0）">
   </div>`).join("");
   renderEntryMatchupMatrix();
@@ -856,7 +856,7 @@ function renderEntryMatchupMatrix(){
   const ps=state.players;
   let html=`<thead><tr><th>攻击方（吃分） ↓</th>${ps.map(p=>`<th>${escapeHtml(p.name)}</th>`).join("")}<th>行合计</th><th>比赛分</th></tr></thead><tbody>`;
   ps.forEach(a=>{
-    html+=`<tr data-matchup-row="${a.playerId}"><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a.name)}</span>${matchupPlayerNameHtml(a.name)}</div></td>`;
+    html+=`<tr data-matchup-row="${a.playerId}"><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a.name)}</div></td>`;
     ps.forEach(b=>{
       if(a.playerId===b.playerId)html+=`<td class="matchup-diagonal">—</td>`;
       else html+=`<td><input class="matchup-input" type="number" step="1" inputmode="numeric" data-matchup-from="${a.playerId}" data-matchup-to="${b.playerId}" aria-label="${escapeHtml(a.name)} 对 ${escapeHtml(b.name)} 的独立方向对位分"></td>`;
@@ -992,7 +992,7 @@ function renderMatrix(target,dataMatrix,clickable=false){
   const summaryRows=rivalSummaryForMode();
   names.forEach(a=>{
     const summary=summaryRows.find(r=>r.player===a)||{eat:0,eaten:0,total:0};
-    html+=`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(a)}</span>${matchupPlayerNameHtml(a)}</div></td>`;
+    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a)}</div></td>`;
     names.forEach(b=>{
       if(a===b)html+=`<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>`;
       else{
@@ -1031,7 +1031,7 @@ function renderRival(){
     ["当前口径",rivalMode==="average"?"场均":"累计",rivalMode==="average"?"方向净分÷共同记录场次":"方向原始格累计"]
   ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   const rows=rivalSummaryForMode();
-  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell"><span class="avatar">${initials(r.player)}</span>${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtRivalValue(r.eat)}</td><td class="score-neg">${fmtRivalEaten(r.eaten)}</td><td class="${scoreClass(r.total)}">${fmtRivalValue(r.total)}</td></tr>`).join("");
+  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtRivalValue(r.eat)}</td><td class="score-neg">${fmtRivalEaten(r.eaten)}</td><td class="${scoreClass(r.total)}">${fmtRivalValue(r.total)}</td></tr>`).join("");
   if(!meta.entries){
     $("#rivalDetail").className="empty";$("#rivalDetail").textContent="暂无新制对位记录。";
     return;
@@ -1092,7 +1092,7 @@ function showRivalDetail(a,b){
   let f=summarize(history),r=summarize(reverseHistory);
   if(rivalMode==="average"){if(history.length)f={eat:f.eat/history.length,eaten:f.eaten/history.length,net:f.net/history.length};if(reverseHistory.length)r={eat:r.eat/reverseHistory.length,eaten:r.eaten/reverseHistory.length,net:r.net/reverseHistory.length};}
   $("#rivalDetail").className="";
-  $("#rivalDetail").innerHTML=`<div class="player-head"><span class="avatar">${initials(a)}</span><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
+  $("#rivalDetail").innerHTML=`<div class="player-head"><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
     <div class="kpis rival-detail-kpis" style="margin-top:16px">
       <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtRivalValue(forward)}</strong></div>
       <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtRivalValue(f.eat)} / ${fmtRivalEaten(f.eaten)}</strong></div>
