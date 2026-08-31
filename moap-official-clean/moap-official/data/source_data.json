@@ -54,7 +54,6 @@
       "bestStreak": 6,
       "fourAverage": 5.32352941176471,
       "fiveAverage": 8.35483870967742,
-      "bgr": 30,
       "honorCount": 27,
       "honorPoints": 124,
       "goatIndex": 154,
@@ -72,7 +71,6 @@
       "bestStreak": 4,
       "fourAverage": 8.33333333333333,
       "fiveAverage": 6.2258064516129,
-      "bgr": 8,
       "honorCount": 9,
       "honorPoints": 50,
       "goatIndex": 73,
@@ -90,7 +88,6 @@
       "bestStreak": 6,
       "fourAverage": 0.413793103448276,
       "fiveAverage": 7.38709677419355,
-      "bgr": 16,
       "honorCount": 13,
       "honorPoints": 65,
       "goatIndex": 89,
@@ -108,7 +105,6 @@
       "bestStreak": 4,
       "fourAverage": 3.26470588235294,
       "fiveAverage": -3.67741935483871,
-      "bgr": 9,
       "honorCount": 10,
       "honorPoints": 47,
       "goatIndex": 64,
@@ -126,7 +122,6 @@
       "bestStreak": 2,
       "fourAverage": -26.6111111111111,
       "fiveAverage": -18.2903225806452,
-      "bgr": 1,
       "honorCount": 7,
       "honorPoints": 0,
       "goatIndex": 2,
@@ -139,12 +134,12 @@
         "playerId": "P001",
         "player": "罗海泓",
         "games": 26,
-        "total": 69.0,
+        "total": 69,
         "average": 2.6538,
         "positiveRate": 0.538462,
         "mvps": 4,
-        "best": 101.0,
-        "worst": -44.0,
+        "best": 101,
+        "worst": -44,
         "fourAverage": -0.7273,
         "fiveAverage": 5.1333
       },
@@ -152,12 +147,12 @@
         "playerId": "P002",
         "player": "陈丰",
         "games": 21,
-        "total": 168.0,
-        "average": 8.0,
+        "total": 168,
+        "average": 8,
         "positiveRate": 0.52381,
         "mvps": 6,
-        "best": 85.0,
-        "worst": -45.0,
+        "best": 85,
+        "worst": -45,
         "fourAverage": 8.1667,
         "fiveAverage": 7.9333
       },
@@ -165,39 +160,39 @@
         "playerId": "P003",
         "player": "陈毓圣",
         "games": 26,
-        "total": -7.0,
+        "total": -7,
         "average": -0.2692,
         "positiveRate": 0.5,
         "mvps": 9,
-        "best": 70.0,
-        "worst": -90.0,
-        "fourAverage": 13.0,
-        "fiveAverage": -10.0
+        "best": 70,
+        "worst": -90,
+        "fourAverage": 13,
+        "fiveAverage": -10
       },
       {
         "playerId": "P004",
         "player": "吴韬骏",
         "games": 25,
-        "total": 112.0,
+        "total": 112,
         "average": 4.48,
         "positiveRate": 0.64,
         "mvps": 5,
-        "best": 51.0,
-        "worst": -41.0,
-        "fourAverage": -1.0,
+        "best": 51,
+        "worst": -41,
+        "fourAverage": -1,
         "fiveAverage": 8.1333
       },
       {
         "playerId": "P005",
         "player": "陈荣升",
         "games": 21,
-        "total": -342.0,
+        "total": -342,
         "average": -16.2857,
         "positiveRate": 0.238095,
         "mvps": 2,
-        "best": 51.0,
-        "worst": -54.0,
-        "fourAverage": -29.0,
+        "best": 51,
+        "worst": -54,
+        "fourAverage": -29,
         "fiveAverage": -11.2
       }
     ],
@@ -206,12 +201,12 @@
         "playerId": "P001",
         "player": "罗海泓",
         "games": 22,
-        "total": 268.0,
+        "total": 268,
         "average": 12.1818,
         "positiveRate": 0.5,
         "mvps": 7,
-        "best": 93.0,
-        "worst": -31.0,
+        "best": 93,
+        "worst": -31,
         "fourAverage": 13.1429,
         "fiveAverage": 10.5
       },
@@ -219,25 +214,25 @@
         "playerId": "P002",
         "player": "陈丰",
         "games": 15,
-        "total": 147.0,
+        "total": 147,
         "average": 9.8,
         "positiveRate": 0.666667,
         "mvps": 5,
-        "best": 54.0,
-        "worst": -31.0,
-        "fourAverage": 17.0,
+        "best": 54,
+        "worst": -31,
+        "fourAverage": 17,
         "fiveAverage": 3.5
       },
       {
         "playerId": "P003",
         "player": "陈毓圣",
         "games": 22,
-        "total": -23.0,
+        "total": -23,
         "average": -1.0455,
         "positiveRate": 0.454545,
         "mvps": 6,
-        "best": 72.0,
-        "worst": -40.0,
+        "best": 72,
+        "worst": -40,
         "fourAverage": -11.2857,
         "fiveAverage": 16.875
       },
@@ -245,12 +240,12 @@
         "playerId": "P004",
         "player": "吴韬骏",
         "games": 22,
-        "total": 23.0,
+        "total": 23,
         "average": 1.0455,
         "positiveRate": 0.409091,
         "mvps": 5,
-        "best": 72.0,
-        "worst": -53.0,
+        "best": 72,
+        "worst": -53,
         "fourAverage": -1.0714,
         "fiveAverage": 4.75
       },
@@ -258,12 +253,12 @@
         "playerId": "P005",
         "player": "陈荣升",
         "games": 15,
-        "total": -415.0,
+        "total": -415,
         "average": -27.6667,
         "positiveRate": 0.133333,
         "mvps": 0,
-        "best": 12.0,
-        "worst": -77.0,
+        "best": 12,
+        "worst": -77,
         "fourAverage": -18.5714,
         "fiveAverage": -35.625
       }
@@ -273,12 +268,12 @@
         "playerId": "P001",
         "player": "罗海泓",
         "games": 17,
-        "total": 103.0,
+        "total": 103,
         "average": 6.0588,
         "positiveRate": 0.647059,
         "mvps": 9,
-        "best": 76.0,
-        "worst": -71.0,
+        "best": 76,
+        "worst": -71,
         "fourAverage": 0.5556,
         "fiveAverage": 12.25
       },
@@ -286,12 +281,12 @@
         "playerId": "P002",
         "player": "陈丰",
         "games": 16,
-        "total": 53.0,
+        "total": 53,
         "average": 3.3125,
         "positiveRate": 0.5625,
         "mvps": 2,
-        "best": 34.0,
-        "worst": -49.0,
+        "best": 34,
+        "worst": -49,
         "fourAverage": 0.875,
         "fiveAverage": 5.75
       },
@@ -299,25 +294,25 @@
         "playerId": "P003",
         "player": "陈毓圣",
         "games": 17,
-        "total": 27.0,
+        "total": 27,
         "average": 1.5882,
         "positiveRate": 0.470588,
         "mvps": 2,
-        "best": 69.0,
-        "worst": -47.0,
-        "fourAverage": 14.0,
+        "best": 69,
+        "worst": -47,
+        "fourAverage": 14,
         "fiveAverage": -12.375
       },
       {
         "playerId": "P004",
         "player": "吴韬骏",
         "games": 13,
-        "total": 106.0,
+        "total": 106,
         "average": 8.1538,
         "positiveRate": 0.384615,
         "mvps": 4,
-        "best": 90.0,
-        "worst": -43.0,
+        "best": 90,
+        "worst": -43,
         "fourAverage": 7.4,
         "fiveAverage": 8.625
       },
@@ -325,13 +320,13 @@
         "playerId": "P005",
         "player": "陈荣升",
         "games": 13,
-        "total": -289.0,
+        "total": -289,
         "average": -22.2308,
         "positiveRate": 0.153846,
         "mvps": 0,
-        "best": 21.0,
-        "worst": -51.0,
-        "fourAverage": -35.0,
+        "best": 21,
+        "worst": -51,
+        "fourAverage": -35,
         "fiveAverage": -14.25
       }
     ]
@@ -3404,7 +3399,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -9,
         "isMvp": false,
-        "cumulative": -9.0
+        "cumulative": -9
       },
       {
         "matchId": "MSL0002",
@@ -3415,7 +3410,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 3,
         "isMvp": false,
-        "cumulative": -6.0
+        "cumulative": -6
       },
       {
         "matchId": "MSL0003",
@@ -3426,7 +3421,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": 12,
         "isMvp": false,
-        "cumulative": 6.0
+        "cumulative": 6
       },
       {
         "matchId": "MSL0004",
@@ -3437,7 +3432,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": 9,
         "isMvp": false,
-        "cumulative": 15.0
+        "cumulative": 15
       },
       {
         "matchId": "MSL0005",
@@ -3448,7 +3443,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": -6,
         "isMvp": false,
-        "cumulative": 9.0
+        "cumulative": 9
       },
       {
         "matchId": "MSL0006",
@@ -3459,7 +3454,7 @@
         "venue": "茶话荟茶馆",
         "score": 23,
         "isMvp": true,
-        "cumulative": 32.0
+        "cumulative": 32
       },
       {
         "matchId": "MSL0007",
@@ -3470,7 +3465,7 @@
         "venue": "茶话荟茶馆",
         "score": 15,
         "isMvp": false,
-        "cumulative": 47.0
+        "cumulative": 47
       },
       {
         "matchId": "MSL0008",
@@ -3481,7 +3476,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 2,
         "isMvp": false,
-        "cumulative": 49.0
+        "cumulative": 49
       },
       {
         "matchId": "MSL0009",
@@ -3492,7 +3487,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -25,
         "isMvp": false,
-        "cumulative": 24.0
+        "cumulative": 24
       },
       {
         "matchId": "MSL0010",
@@ -3503,7 +3498,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 40,
         "isMvp": false,
-        "cumulative": 64.0
+        "cumulative": 64
       },
       {
         "matchId": "MSL0011",
@@ -3514,7 +3509,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 6,
         "isMvp": false,
-        "cumulative": 70.0
+        "cumulative": 70
       },
       {
         "matchId": "MSL0012",
@@ -3525,7 +3520,7 @@
         "venue": "岩初茶舍",
         "score": -12,
         "isMvp": false,
-        "cumulative": 58.0
+        "cumulative": 58
       },
       {
         "matchId": "MSL0013",
@@ -3536,7 +3531,7 @@
         "venue": "岩初茶舍",
         "score": 75,
         "isMvp": true,
-        "cumulative": 133.0
+        "cumulative": 133
       },
       {
         "matchId": "MSL0014",
@@ -3547,7 +3542,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -29,
         "isMvp": false,
-        "cumulative": 104.0
+        "cumulative": 104
       },
       {
         "matchId": "MSL0015",
@@ -3558,7 +3553,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -41,
         "isMvp": false,
-        "cumulative": 63.0
+        "cumulative": 63
       },
       {
         "matchId": "MSL0016",
@@ -3569,7 +3564,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -34,
         "isMvp": false,
-        "cumulative": 29.0
+        "cumulative": 29
       },
       {
         "matchId": "MSL0017",
@@ -3580,7 +3575,7 @@
         "venue": "喜上茶社",
         "score": -40,
         "isMvp": false,
-        "cumulative": -11.0
+        "cumulative": -11
       },
       {
         "matchId": "MSL0018",
@@ -3591,7 +3586,7 @@
         "venue": "喜上茶社",
         "score": -43,
         "isMvp": false,
-        "cumulative": -54.0
+        "cumulative": -54
       },
       {
         "matchId": "MSL0019",
@@ -3602,7 +3597,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": -5,
         "isMvp": false,
-        "cumulative": -59.0
+        "cumulative": -59
       },
       {
         "matchId": "MSL0020",
@@ -3613,7 +3608,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 101,
         "isMvp": true,
-        "cumulative": 42.0
+        "cumulative": 42
       },
       {
         "matchId": "MSL0021",
@@ -3624,7 +3619,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 21,
         "isMvp": false,
-        "cumulative": 63.0
+        "cumulative": 63
       },
       {
         "matchId": "MSL0022",
@@ -3635,7 +3630,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": -44,
         "isMvp": false,
-        "cumulative": 19.0
+        "cumulative": 19
       },
       {
         "matchId": "MSL0023",
@@ -3646,7 +3641,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 9,
         "isMvp": false,
-        "cumulative": 28.0
+        "cumulative": 28
       },
       {
         "matchId": "MSL0024",
@@ -3657,7 +3652,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -23,
         "isMvp": false,
-        "cumulative": 5.0
+        "cumulative": 5
       },
       {
         "matchId": "MSL0025",
@@ -3668,7 +3663,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": 20,
         "isMvp": false,
-        "cumulative": 25.0
+        "cumulative": 25
       },
       {
         "matchId": "MSL0026",
@@ -3679,7 +3674,7 @@
         "venue": "拾月金秋茶馆",
         "score": 44,
         "isMvp": true,
-        "cumulative": 69.0
+        "cumulative": 69
       },
       {
         "matchId": "MSL0027",
@@ -3690,7 +3685,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 21,
         "isMvp": false,
-        "cumulative": 90.0
+        "cumulative": 90
       },
       {
         "matchId": "MSL0028",
@@ -3701,7 +3696,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 8,
         "isMvp": true,
-        "cumulative": 98.0
+        "cumulative": 98
       },
       {
         "matchId": "MSL0029",
@@ -3712,7 +3707,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": 83.0
+        "cumulative": 83
       },
       {
         "matchId": "MSL0030",
@@ -3723,7 +3718,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -7,
         "isMvp": false,
-        "cumulative": 76.0
+        "cumulative": 76
       },
       {
         "matchId": "MSL0031",
@@ -3734,7 +3729,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": -12,
         "isMvp": false,
-        "cumulative": 64.0
+        "cumulative": 64
       },
       {
         "matchId": "MSL0032",
@@ -3745,7 +3740,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 42,
         "isMvp": true,
-        "cumulative": 106.0
+        "cumulative": 106
       },
       {
         "matchId": "MSL0033",
@@ -3756,7 +3751,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 26,
         "isMvp": true,
-        "cumulative": 132.0
+        "cumulative": 132
       },
       {
         "matchId": "MSL0034",
@@ -3767,7 +3762,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -18,
         "isMvp": false,
-        "cumulative": 114.0
+        "cumulative": 114
       },
       {
         "matchId": "MSL0035",
@@ -3778,7 +3773,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 10,
         "isMvp": false,
-        "cumulative": 124.0
+        "cumulative": 124
       },
       {
         "matchId": "MSL0036",
@@ -3789,7 +3784,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -19,
         "isMvp": false,
-        "cumulative": 105.0
+        "cumulative": 105
       },
       {
         "matchId": "MSL0037",
@@ -3800,7 +3795,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -2,
         "isMvp": false,
-        "cumulative": 103.0
+        "cumulative": 103
       },
       {
         "matchId": "MSL0038",
@@ -3811,7 +3806,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -2,
         "isMvp": false,
-        "cumulative": 101.0
+        "cumulative": 101
       },
       {
         "matchId": "MSL0039",
@@ -3822,7 +3817,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 17,
         "isMvp": false,
-        "cumulative": 118.0
+        "cumulative": 118
       },
       {
         "matchId": "MSL0040",
@@ -3833,7 +3828,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -7,
         "isMvp": false,
-        "cumulative": 111.0
+        "cumulative": 111
       },
       {
         "matchId": "MSL0041",
@@ -3844,7 +3839,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -5,
         "isMvp": false,
-        "cumulative": 106.0
+        "cumulative": 106
       },
       {
         "matchId": "MSL0042",
@@ -3855,7 +3850,7 @@
         "venue": "胡小鸭共享棋牌室（厦大店）",
         "score": 93,
         "isMvp": true,
-        "cumulative": 199.0
+        "cumulative": 199
       },
       {
         "matchId": "MSL0043",
@@ -3866,7 +3861,7 @@
         "venue": "雀家（厦大店）",
         "score": -31,
         "isMvp": false,
-        "cumulative": 168.0
+        "cumulative": 168
       },
       {
         "matchId": "MSL0044",
@@ -3877,7 +3872,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 35,
         "isMvp": true,
-        "cumulative": 203.0
+        "cumulative": 203
       },
       {
         "matchId": "MSL0045",
@@ -3888,7 +3883,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 73,
         "isMvp": true,
-        "cumulative": 276.0
+        "cumulative": 276
       },
       {
         "matchId": "MSL0046",
@@ -3899,7 +3894,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 14,
         "isMvp": false,
-        "cumulative": 290.0
+        "cumulative": 290
       },
       {
         "matchId": "MSL0047",
@@ -3910,7 +3905,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 55,
         "isMvp": true,
-        "cumulative": 345.0
+        "cumulative": 345
       },
       {
         "matchId": "MSL0048",
@@ -3921,7 +3916,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -8,
         "isMvp": false,
-        "cumulative": 337.0
+        "cumulative": 337
       },
       {
         "matchId": "MSL0049",
@@ -3932,7 +3927,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 0,
         "isMvp": false,
-        "cumulative": 337.0
+        "cumulative": 337
       },
       {
         "matchId": "MSL0050",
@@ -3943,7 +3938,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 43,
         "isMvp": true,
-        "cumulative": 380.0
+        "cumulative": 380
       },
       {
         "matchId": "MSL0051",
@@ -3954,7 +3949,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 42,
         "isMvp": true,
-        "cumulative": 422.0
+        "cumulative": 422
       },
       {
         "matchId": "MSL0052",
@@ -3965,7 +3960,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -48,
         "isMvp": false,
-        "cumulative": 374.0
+        "cumulative": 374
       },
       {
         "matchId": "MSL0053",
@@ -3976,7 +3971,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 28,
         "isMvp": true,
-        "cumulative": 402.0
+        "cumulative": 402
       },
       {
         "matchId": "MSL0054",
@@ -3987,7 +3982,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 16,
         "isMvp": true,
-        "cumulative": 418.0
+        "cumulative": 418
       },
       {
         "matchId": "MSL0055",
@@ -3998,7 +3993,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 76,
         "isMvp": true,
-        "cumulative": 494.0
+        "cumulative": 494
       },
       {
         "matchId": "MSL0056",
@@ -4009,7 +4004,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 1,
         "isMvp": false,
-        "cumulative": 495.0
+        "cumulative": 495
       },
       {
         "matchId": "MSL0057",
@@ -4020,7 +4015,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 24,
         "isMvp": true,
-        "cumulative": 519.0
+        "cumulative": 519
       },
       {
         "matchId": "MSL0058",
@@ -4031,7 +4026,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 49,
         "isMvp": true,
-        "cumulative": 568.0
+        "cumulative": 568
       },
       {
         "matchId": "MSL0059",
@@ -4042,7 +4037,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -51,
         "isMvp": false,
-        "cumulative": 517.0
+        "cumulative": 517
       },
       {
         "matchId": "MSL0060",
@@ -4053,7 +4048,7 @@
         "venue": "四个朋友（联发欣悦店）",
         "score": 38,
         "isMvp": true,
-        "cumulative": 555.0
+        "cumulative": 555
       },
       {
         "matchId": "MSL0061",
@@ -4064,7 +4059,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 33,
         "isMvp": true,
-        "cumulative": 588.0
+        "cumulative": 588
       },
       {
         "matchId": "MSL0062",
@@ -4075,7 +4070,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 11,
         "isMvp": false,
-        "cumulative": 599.0
+        "cumulative": 599
       },
       {
         "matchId": "MSL0063",
@@ -4086,7 +4081,7 @@
         "venue": "见之共享茶室（火炬园店）",
         "score": -71,
         "isMvp": false,
-        "cumulative": 528.0
+        "cumulative": 528
       },
       {
         "matchId": "MSL0064",
@@ -4097,7 +4092,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -64,
         "isMvp": false,
-        "cumulative": 464.0
+        "cumulative": 464
       },
       {
         "matchId": "MSL0065",
@@ -4108,7 +4103,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -24,
         "isMvp": false,
-        "cumulative": 440.0
+        "cumulative": 440
       }
     ],
     "P002": [
@@ -4121,7 +4116,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 22,
         "isMvp": true,
-        "cumulative": 22.0
+        "cumulative": 22
       },
       {
         "matchId": "MSL0003",
@@ -4132,7 +4127,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": -12,
         "isMvp": false,
-        "cumulative": 10.0
+        "cumulative": 10
       },
       {
         "matchId": "MSL0005",
@@ -4143,7 +4138,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": -25,
         "isMvp": false,
-        "cumulative": -15.0
+        "cumulative": -15
       },
       {
         "matchId": "MSL0006",
@@ -4154,7 +4149,7 @@
         "venue": "茶话荟茶馆",
         "score": 18,
         "isMvp": false,
-        "cumulative": 3.0
+        "cumulative": 3
       },
       {
         "matchId": "MSL0007",
@@ -4165,7 +4160,7 @@
         "venue": "茶话荟茶馆",
         "score": -26,
         "isMvp": false,
-        "cumulative": -23.0
+        "cumulative": -23
       },
       {
         "matchId": "MSL0008",
@@ -4176,7 +4171,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -31,
         "isMvp": false,
-        "cumulative": -54.0
+        "cumulative": -54
       },
       {
         "matchId": "MSL0009",
@@ -4187,7 +4182,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 55,
         "isMvp": true,
-        "cumulative": 1.0
+        "cumulative": 1
       },
       {
         "matchId": "MSL0010",
@@ -4198,7 +4193,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 42,
         "isMvp": true,
-        "cumulative": 43.0
+        "cumulative": 43
       },
       {
         "matchId": "MSL0011",
@@ -4209,7 +4204,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": -41,
         "isMvp": false,
-        "cumulative": 2.0
+        "cumulative": 2
       },
       {
         "matchId": "MSL0012",
@@ -4220,7 +4215,7 @@
         "venue": "岩初茶舍",
         "score": 5,
         "isMvp": false,
-        "cumulative": 7.0
+        "cumulative": 7
       },
       {
         "matchId": "MSL0013",
@@ -4231,7 +4226,7 @@
         "venue": "岩初茶舍",
         "score": -45,
         "isMvp": false,
-        "cumulative": -38.0
+        "cumulative": -38
       },
       {
         "matchId": "MSL0015",
@@ -4242,7 +4237,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 45,
         "isMvp": true,
-        "cumulative": 7.0
+        "cumulative": 7
       },
       {
         "matchId": "MSL0016",
@@ -4253,7 +4248,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 40,
         "isMvp": false,
-        "cumulative": 47.0
+        "cumulative": 47
       },
       {
         "matchId": "MSL0017",
@@ -4264,7 +4259,7 @@
         "venue": "喜上茶社",
         "score": 16,
         "isMvp": false,
-        "cumulative": 63.0
+        "cumulative": 63
       },
       {
         "matchId": "MSL0018",
@@ -4275,7 +4270,7 @@
         "venue": "喜上茶社",
         "score": -4,
         "isMvp": false,
-        "cumulative": 59.0
+        "cumulative": 59
       },
       {
         "matchId": "MSL0019",
@@ -4286,7 +4281,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": 85,
         "isMvp": true,
-        "cumulative": 144.0
+        "cumulative": 144
       },
       {
         "matchId": "MSL0022",
@@ -4297,7 +4292,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": 31,
         "isMvp": false,
-        "cumulative": 175.0
+        "cumulative": 175
       },
       {
         "matchId": "MSL0023",
@@ -4308,7 +4303,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 37,
         "isMvp": true,
-        "cumulative": 212.0
+        "cumulative": 212
       },
       {
         "matchId": "MSL0024",
@@ -4319,7 +4314,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -20,
         "isMvp": false,
-        "cumulative": 192.0
+        "cumulative": 192
       },
       {
         "matchId": "MSL0025",
@@ -4330,7 +4325,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": 182.0
+        "cumulative": 182
       },
       {
         "matchId": "MSL0026",
@@ -4341,7 +4336,7 @@
         "venue": "拾月金秋茶馆",
         "score": -14,
         "isMvp": false,
-        "cumulative": 168.0
+        "cumulative": 168
       },
       {
         "matchId": "MSL0027",
@@ -4352,7 +4347,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 54,
         "isMvp": true,
-        "cumulative": 222.0
+        "cumulative": 222
       },
       {
         "matchId": "MSL0028",
@@ -4363,7 +4358,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 3,
         "isMvp": false,
-        "cumulative": 225.0
+        "cumulative": 225
       },
       {
         "matchId": "MSL0029",
@@ -4374,7 +4369,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": 210.0
+        "cumulative": 210
       },
       {
         "matchId": "MSL0031",
@@ -4385,7 +4380,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": 24,
         "isMvp": true,
-        "cumulative": 234.0
+        "cumulative": 234
       },
       {
         "matchId": "MSL0033",
@@ -4396,7 +4391,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": 219.0
+        "cumulative": 219
       },
       {
         "matchId": "MSL0036",
@@ -4407,7 +4402,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 31,
         "isMvp": true,
-        "cumulative": 250.0
+        "cumulative": 250
       },
       {
         "matchId": "MSL0037",
@@ -4418,7 +4413,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 11,
         "isMvp": false,
-        "cumulative": 261.0
+        "cumulative": 261
       },
       {
         "matchId": "MSL0039",
@@ -4429,7 +4424,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 11,
         "isMvp": false,
-        "cumulative": 272.0
+        "cumulative": 272
       },
       {
         "matchId": "MSL0040",
@@ -4440,7 +4435,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": 53,
         "isMvp": true,
-        "cumulative": 325.0
+        "cumulative": 325
       },
       {
         "matchId": "MSL0041",
@@ -4451,7 +4446,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -11,
         "isMvp": false,
-        "cumulative": 314.0
+        "cumulative": 314
       },
       {
         "matchId": "MSL0042",
@@ -4462,7 +4457,7 @@
         "venue": "胡小鸭共享棋牌室（厦大店）",
         "score": 10,
         "isMvp": false,
-        "cumulative": 324.0
+        "cumulative": 324
       },
       {
         "matchId": "MSL0043",
@@ -4473,7 +4468,7 @@
         "venue": "雀家（厦大店）",
         "score": 17,
         "isMvp": true,
-        "cumulative": 341.0
+        "cumulative": 341
       },
       {
         "matchId": "MSL0044",
@@ -4484,7 +4479,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 30,
         "isMvp": false,
-        "cumulative": 371.0
+        "cumulative": 371
       },
       {
         "matchId": "MSL0046",
@@ -4495,7 +4490,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -31,
         "isMvp": false,
-        "cumulative": 340.0
+        "cumulative": 340
       },
       {
         "matchId": "MSL0048",
@@ -4506,7 +4501,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -25,
         "isMvp": false,
-        "cumulative": 315.0
+        "cumulative": 315
       },
       {
         "matchId": "MSL0049",
@@ -4517,7 +4512,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 7,
         "isMvp": false,
-        "cumulative": 322.0
+        "cumulative": 322
       },
       {
         "matchId": "MSL0050",
@@ -4528,7 +4523,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -18,
         "isMvp": false,
-        "cumulative": 304.0
+        "cumulative": 304
       },
       {
         "matchId": "MSL0051",
@@ -4539,7 +4534,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 34,
         "isMvp": false,
-        "cumulative": 338.0
+        "cumulative": 338
       },
       {
         "matchId": "MSL0052",
@@ -4550,7 +4545,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 26,
         "isMvp": true,
-        "cumulative": 364.0
+        "cumulative": 364
       },
       {
         "matchId": "MSL0053",
@@ -4561,7 +4556,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 16,
         "isMvp": false,
-        "cumulative": 380.0
+        "cumulative": 380
       },
       {
         "matchId": "MSL0054",
@@ -4572,7 +4567,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": 370.0
+        "cumulative": 370
       },
       {
         "matchId": "MSL0055",
@@ -4583,7 +4578,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 7,
         "isMvp": false,
-        "cumulative": 377.0
+        "cumulative": 377
       },
       {
         "matchId": "MSL0056",
@@ -4594,7 +4589,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -7,
         "isMvp": false,
-        "cumulative": 370.0
+        "cumulative": 370
       },
       {
         "matchId": "MSL0057",
@@ -4605,7 +4600,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 16,
         "isMvp": false,
-        "cumulative": 386.0
+        "cumulative": 386
       },
       {
         "matchId": "MSL0058",
@@ -4616,7 +4611,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 33,
         "isMvp": false,
-        "cumulative": 419.0
+        "cumulative": 419
       },
       {
         "matchId": "MSL0059",
@@ -4627,7 +4622,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -4,
         "isMvp": false,
-        "cumulative": 415.0
+        "cumulative": 415
       },
       {
         "matchId": "MSL0060",
@@ -4638,7 +4633,7 @@
         "venue": "四个朋友（联发欣悦店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": 389.0
+        "cumulative": 389
       },
       {
         "matchId": "MSL0061",
@@ -4649,7 +4644,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -13,
         "isMvp": false,
-        "cumulative": 376.0
+        "cumulative": 376
       },
       {
         "matchId": "MSL0062",
@@ -4660,7 +4655,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 22,
         "isMvp": true,
-        "cumulative": 398.0
+        "cumulative": 398
       },
       {
         "matchId": "MSL0063",
@@ -4671,7 +4666,7 @@
         "venue": "见之共享茶室（火炬园店）",
         "score": -49,
         "isMvp": false,
-        "cumulative": 349.0
+        "cumulative": 349
       },
       {
         "matchId": "MSL0065",
@@ -4682,7 +4677,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 19,
         "isMvp": false,
-        "cumulative": 368.0
+        "cumulative": 368
       }
     ],
     "P003": [
@@ -4695,7 +4690,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 1,
         "isMvp": false,
-        "cumulative": 1.0
+        "cumulative": 1
       },
       {
         "matchId": "MSL0002",
@@ -4706,7 +4701,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -7,
         "isMvp": false,
-        "cumulative": -6.0
+        "cumulative": -6
       },
       {
         "matchId": "MSL0003",
@@ -4717,7 +4712,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": 17,
         "isMvp": true,
-        "cumulative": 11.0
+        "cumulative": 11
       },
       {
         "matchId": "MSL0004",
@@ -4728,7 +4723,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": 47,
         "isMvp": true,
-        "cumulative": 58.0
+        "cumulative": 58
       },
       {
         "matchId": "MSL0005",
@@ -4739,7 +4734,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": 14,
         "isMvp": true,
-        "cumulative": 72.0
+        "cumulative": 72
       },
       {
         "matchId": "MSL0006",
@@ -4750,7 +4745,7 @@
         "venue": "茶话荟茶馆",
         "score": -12,
         "isMvp": false,
-        "cumulative": 60.0
+        "cumulative": 60
       },
       {
         "matchId": "MSL0007",
@@ -4761,7 +4756,7 @@
         "venue": "茶话荟茶馆",
         "score": -7,
         "isMvp": false,
-        "cumulative": 53.0
+        "cumulative": 53
       },
       {
         "matchId": "MSL0008",
@@ -4772,7 +4767,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -22,
         "isMvp": false,
-        "cumulative": 31.0
+        "cumulative": 31
       },
       {
         "matchId": "MSL0009",
@@ -4783,7 +4778,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -17,
         "isMvp": false,
-        "cumulative": 14.0
+        "cumulative": 14
       },
       {
         "matchId": "MSL0010",
@@ -4794,7 +4789,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": -90,
         "isMvp": false,
-        "cumulative": -76.0
+        "cumulative": -76
       },
       {
         "matchId": "MSL0011",
@@ -4805,7 +4800,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": -91.0
+        "cumulative": -91
       },
       {
         "matchId": "MSL0012",
@@ -4816,7 +4811,7 @@
         "venue": "岩初茶舍",
         "score": 32,
         "isMvp": true,
-        "cumulative": -59.0
+        "cumulative": -59
       },
       {
         "matchId": "MSL0013",
@@ -4827,7 +4822,7 @@
         "venue": "岩初茶舍",
         "score": -29,
         "isMvp": false,
-        "cumulative": -88.0
+        "cumulative": -88
       },
       {
         "matchId": "MSL0014",
@@ -4838,7 +4833,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 52,
         "isMvp": true,
-        "cumulative": -36.0
+        "cumulative": -36
       },
       {
         "matchId": "MSL0015",
@@ -4849,7 +4844,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -31,
         "isMvp": false,
-        "cumulative": -67.0
+        "cumulative": -67
       },
       {
         "matchId": "MSL0016",
@@ -4860,7 +4855,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -60,
         "isMvp": false,
-        "cumulative": -127.0
+        "cumulative": -127
       },
       {
         "matchId": "MSL0017",
@@ -4871,7 +4866,7 @@
         "venue": "喜上茶社",
         "score": 25,
         "isMvp": false,
-        "cumulative": -102.0
+        "cumulative": -102
       },
       {
         "matchId": "MSL0018",
@@ -4882,7 +4877,7 @@
         "venue": "喜上茶社",
         "score": 30,
         "isMvp": true,
-        "cumulative": -72.0
+        "cumulative": -72
       },
       {
         "matchId": "MSL0019",
@@ -4893,7 +4888,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -98.0
+        "cumulative": -98
       },
       {
         "matchId": "MSL0020",
@@ -4904,7 +4899,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -35,
         "isMvp": false,
-        "cumulative": -133.0
+        "cumulative": -133
       },
       {
         "matchId": "MSL0021",
@@ -4915,7 +4910,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 35,
         "isMvp": true,
-        "cumulative": -98.0
+        "cumulative": -98
       },
       {
         "matchId": "MSL0022",
@@ -4926,7 +4921,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -124.0
+        "cumulative": -124
       },
       {
         "matchId": "MSL0023",
@@ -4937,7 +4932,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 6,
         "isMvp": false,
-        "cumulative": -118.0
+        "cumulative": -118
       },
       {
         "matchId": "MSL0024",
@@ -4948,7 +4943,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": 70,
         "isMvp": true,
-        "cumulative": -48.0
+        "cumulative": -48
       },
       {
         "matchId": "MSL0025",
@@ -4959,7 +4954,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": 32,
         "isMvp": true,
-        "cumulative": -16.0
+        "cumulative": -16
       },
       {
         "matchId": "MSL0026",
@@ -4970,7 +4965,7 @@
         "venue": "拾月金秋茶馆",
         "score": 9,
         "isMvp": false,
-        "cumulative": -7.0
+        "cumulative": -7
       },
       {
         "matchId": "MSL0027",
@@ -4981,7 +4976,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -33,
         "isMvp": false,
-        "cumulative": -40.0
+        "cumulative": -40
       },
       {
         "matchId": "MSL0028",
@@ -4992,7 +4987,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 2,
         "isMvp": false,
-        "cumulative": -38.0
+        "cumulative": -38
       },
       {
         "matchId": "MSL0029",
@@ -5003,7 +4998,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 7,
         "isMvp": false,
-        "cumulative": -31.0
+        "cumulative": -31
       },
       {
         "matchId": "MSL0030",
@@ -5014,7 +5009,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": 30,
         "isMvp": true,
-        "cumulative": -1.0
+        "cumulative": -1
       },
       {
         "matchId": "MSL0031",
@@ -5025,7 +5020,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": -9,
         "isMvp": false,
-        "cumulative": -10.0
+        "cumulative": -10
       },
       {
         "matchId": "MSL0032",
@@ -5036,7 +5031,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": -20.0
+        "cumulative": -20
       },
       {
         "matchId": "MSL0033",
@@ -5047,7 +5042,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -11,
         "isMvp": false,
-        "cumulative": -31.0
+        "cumulative": -31
       },
       {
         "matchId": "MSL0034",
@@ -5058,7 +5053,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": 27,
         "isMvp": true,
-        "cumulative": -4.0
+        "cumulative": -4
       },
       {
         "matchId": "MSL0035",
@@ -5069,7 +5064,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -38,
         "isMvp": false,
-        "cumulative": -42.0
+        "cumulative": -42
       },
       {
         "matchId": "MSL0036",
@@ -5080,7 +5075,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -68.0
+        "cumulative": -68
       },
       {
         "matchId": "MSL0037",
@@ -5091,7 +5086,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 72,
         "isMvp": true,
-        "cumulative": 4.0
+        "cumulative": 4
       },
       {
         "matchId": "MSL0038",
@@ -5102,7 +5097,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 17,
         "isMvp": true,
-        "cumulative": 21.0
+        "cumulative": 21
       },
       {
         "matchId": "MSL0039",
@@ -5113,7 +5108,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -16,
         "isMvp": false,
-        "cumulative": 5.0
+        "cumulative": 5
       },
       {
         "matchId": "MSL0040",
@@ -5124,7 +5119,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -40,
         "isMvp": false,
-        "cumulative": -35.0
+        "cumulative": -35
       },
       {
         "matchId": "MSL0041",
@@ -5135,7 +5130,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 37,
         "isMvp": true,
-        "cumulative": 2.0
+        "cumulative": 2
       },
       {
         "matchId": "MSL0042",
@@ -5146,7 +5141,7 @@
         "venue": "胡小鸭共享棋牌室（厦大店）",
         "score": 10,
         "isMvp": false,
-        "cumulative": 12.0
+        "cumulative": 12
       },
       {
         "matchId": "MSL0043",
@@ -5157,7 +5152,7 @@
         "venue": "雀家（厦大店）",
         "score": 17,
         "isMvp": true,
-        "cumulative": 29.0
+        "cumulative": 29
       },
       {
         "matchId": "MSL0044",
@@ -5168,7 +5163,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 21,
         "isMvp": false,
-        "cumulative": 50.0
+        "cumulative": 50
       },
       {
         "matchId": "MSL0045",
@@ -5179,7 +5174,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -24,
         "isMvp": false,
-        "cumulative": 26.0
+        "cumulative": 26
       },
       {
         "matchId": "MSL0046",
@@ -5190,7 +5185,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -33,
         "isMvp": false,
-        "cumulative": -7.0
+        "cumulative": -7
       },
       {
         "matchId": "MSL0047",
@@ -5201,7 +5196,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": -17.0
+        "cumulative": -17
       },
       {
         "matchId": "MSL0048",
@@ -5212,7 +5207,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -13,
         "isMvp": false,
-        "cumulative": -30.0
+        "cumulative": -30
       },
       {
         "matchId": "MSL0049",
@@ -5223,7 +5218,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 39,
         "isMvp": true,
-        "cumulative": 9.0
+        "cumulative": 9
       },
       {
         "matchId": "MSL0050",
@@ -5234,7 +5229,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 19,
         "isMvp": false,
-        "cumulative": 28.0
+        "cumulative": 28
       },
       {
         "matchId": "MSL0051",
@@ -5245,7 +5240,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -35,
         "isMvp": false,
-        "cumulative": -7.0
+        "cumulative": -7
       },
       {
         "matchId": "MSL0052",
@@ -5256,7 +5251,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -3,
         "isMvp": false,
-        "cumulative": -10.0
+        "cumulative": -10
       },
       {
         "matchId": "MSL0053",
@@ -5267,7 +5262,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": -25.0
+        "cumulative": -25
       },
       {
         "matchId": "MSL0054",
@@ -5278,7 +5273,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 15,
         "isMvp": false,
-        "cumulative": -10.0
+        "cumulative": -10
       },
       {
         "matchId": "MSL0055",
@@ -5289,7 +5284,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -32,
         "isMvp": false,
-        "cumulative": -42.0
+        "cumulative": -42
       },
       {
         "matchId": "MSL0056",
@@ -5300,7 +5295,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -13,
         "isMvp": false,
-        "cumulative": -55.0
+        "cumulative": -55
       },
       {
         "matchId": "MSL0057",
@@ -5311,7 +5306,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": 11,
         "isMvp": false,
-        "cumulative": -44.0
+        "cumulative": -44
       },
       {
         "matchId": "MSL0058",
@@ -5322,7 +5317,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -34,
         "isMvp": false,
-        "cumulative": -78.0
+        "cumulative": -78
       },
       {
         "matchId": "MSL0059",
@@ -5333,7 +5328,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 69,
         "isMvp": true,
-        "cumulative": -9.0
+        "cumulative": -9
       },
       {
         "matchId": "MSL0060",
@@ -5344,7 +5339,7 @@
         "venue": "四个朋友（联发欣悦店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": -19.0
+        "cumulative": -19
       },
       {
         "matchId": "MSL0061",
@@ -5355,7 +5350,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -21,
         "isMvp": false,
-        "cumulative": -40.0
+        "cumulative": -40
       },
       {
         "matchId": "MSL0062",
@@ -5366,7 +5361,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 10,
         "isMvp": false,
-        "cumulative": -30.0
+        "cumulative": -30
       },
       {
         "matchId": "MSL0063",
@@ -5377,7 +5372,7 @@
         "venue": "见之共享茶室（火炬园店）",
         "score": 30,
         "isMvp": false,
-        "cumulative": 0.0
+        "cumulative": 0
       },
       {
         "matchId": "MSL0064",
@@ -5388,7 +5383,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 44,
         "isMvp": false,
-        "cumulative": 44.0
+        "cumulative": 44
       },
       {
         "matchId": "MSL0065",
@@ -5399,7 +5394,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -47,
         "isMvp": false,
-        "cumulative": -3.0
+        "cumulative": -3
       }
     ],
     "P004": [
@@ -5412,7 +5407,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 21,
         "isMvp": true,
-        "cumulative": 21.0
+        "cumulative": 21
       },
       {
         "matchId": "MSL0002",
@@ -5423,7 +5418,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 17,
         "isMvp": false,
-        "cumulative": 38.0
+        "cumulative": 38
       },
       {
         "matchId": "MSL0003",
@@ -5434,7 +5429,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": -17,
         "isMvp": false,
-        "cumulative": 21.0
+        "cumulative": 21
       },
       {
         "matchId": "MSL0004",
@@ -5445,7 +5440,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": -41,
         "isMvp": false,
-        "cumulative": -20.0
+        "cumulative": -20
       },
       {
         "matchId": "MSL0005",
@@ -5456,7 +5451,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": 5,
         "isMvp": false,
-        "cumulative": -15.0
+        "cumulative": -15
       },
       {
         "matchId": "MSL0006",
@@ -5467,7 +5462,7 @@
         "venue": "茶话荟茶馆",
         "score": -6,
         "isMvp": false,
-        "cumulative": -21.0
+        "cumulative": -21
       },
       {
         "matchId": "MSL0007",
@@ -5478,7 +5473,7 @@
         "venue": "茶话荟茶馆",
         "score": 27,
         "isMvp": true,
-        "cumulative": 6.0
+        "cumulative": 6
       },
       {
         "matchId": "MSL0008",
@@ -5489,7 +5484,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 51,
         "isMvp": true,
-        "cumulative": 57.0
+        "cumulative": 57
       },
       {
         "matchId": "MSL0009",
@@ -5500,7 +5495,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 35,
         "isMvp": false,
-        "cumulative": 92.0
+        "cumulative": 92
       },
       {
         "matchId": "MSL0010",
@@ -5511,7 +5506,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 4,
         "isMvp": false,
-        "cumulative": 96.0
+        "cumulative": 96
       },
       {
         "matchId": "MSL0011",
@@ -5522,7 +5517,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 16,
         "isMvp": false,
-        "cumulative": 112.0
+        "cumulative": 112
       },
       {
         "matchId": "MSL0012",
@@ -5533,7 +5528,7 @@
         "venue": "岩初茶舍",
         "score": -19,
         "isMvp": false,
-        "cumulative": 93.0
+        "cumulative": 93
       },
       {
         "matchId": "MSL0013",
@@ -5544,7 +5539,7 @@
         "venue": "岩初茶舍",
         "score": 33,
         "isMvp": false,
-        "cumulative": 126.0
+        "cumulative": 126
       },
       {
         "matchId": "MSL0014",
@@ -5555,7 +5550,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 13,
         "isMvp": false,
-        "cumulative": 139.0
+        "cumulative": 139
       },
       {
         "matchId": "MSL0015",
@@ -5566,7 +5561,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 21,
         "isMvp": false,
-        "cumulative": 160.0
+        "cumulative": 160
       },
       {
         "matchId": "MSL0016",
@@ -5577,7 +5572,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 3,
         "isMvp": false,
-        "cumulative": 163.0
+        "cumulative": 163
       },
       {
         "matchId": "MSL0017",
@@ -5588,7 +5583,7 @@
         "venue": "喜上茶社",
         "score": 32,
         "isMvp": true,
-        "cumulative": 195.0
+        "cumulative": 195
       },
       {
         "matchId": "MSL0018",
@@ -5599,7 +5594,7 @@
         "venue": "喜上茶社",
         "score": 17,
         "isMvp": false,
-        "cumulative": 212.0
+        "cumulative": 212
       },
       {
         "matchId": "MSL0020",
@@ -5610,7 +5605,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -40,
         "isMvp": false,
-        "cumulative": 172.0
+        "cumulative": 172
       },
       {
         "matchId": "MSL0021",
@@ -5621,7 +5616,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": 146.0
+        "cumulative": 146
       },
       {
         "matchId": "MSL0022",
@@ -5632,7 +5627,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": 39,
         "isMvp": true,
-        "cumulative": 185.0
+        "cumulative": 185
       },
       {
         "matchId": "MSL0023",
@@ -5643,7 +5638,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": 159.0
+        "cumulative": 159
       },
       {
         "matchId": "MSL0024",
@@ -5654,7 +5649,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -27,
         "isMvp": false,
-        "cumulative": 132.0
+        "cumulative": 132
       },
       {
         "matchId": "MSL0025",
@@ -5665,7 +5660,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": 106.0
+        "cumulative": 106
       },
       {
         "matchId": "MSL0026",
@@ -5676,7 +5671,7 @@
         "venue": "拾月金秋茶馆",
         "score": 6,
         "isMvp": false,
-        "cumulative": 112.0
+        "cumulative": 112
       },
       {
         "matchId": "MSL0027",
@@ -5687,7 +5682,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -42,
         "isMvp": false,
-        "cumulative": 70.0
+        "cumulative": 70
       },
       {
         "matchId": "MSL0028",
@@ -5698,7 +5693,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -13,
         "isMvp": false,
-        "cumulative": 57.0
+        "cumulative": 57
       },
       {
         "matchId": "MSL0029",
@@ -5709,7 +5704,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 24,
         "isMvp": true,
-        "cumulative": 81.0
+        "cumulative": 81
       },
       {
         "matchId": "MSL0030",
@@ -5720,7 +5715,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": 14,
         "isMvp": false,
-        "cumulative": 95.0
+        "cumulative": 95
       },
       {
         "matchId": "MSL0031",
@@ -5731,7 +5726,7 @@
         "venue": "四季风享棋牌室（洪文店）",
         "score": -3,
         "isMvp": false,
-        "cumulative": 92.0
+        "cumulative": 92
       },
       {
         "matchId": "MSL0032",
@@ -5742,7 +5737,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": 66.0
+        "cumulative": 66
       },
       {
         "matchId": "MSL0033",
@@ -5753,7 +5748,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 0,
         "isMvp": false,
-        "cumulative": 66.0
+        "cumulative": 66
       },
       {
         "matchId": "MSL0034",
@@ -5764,7 +5759,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": 9,
         "isMvp": false,
-        "cumulative": 75.0
+        "cumulative": 75
       },
       {
         "matchId": "MSL0035",
@@ -5775,7 +5770,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 19,
         "isMvp": true,
-        "cumulative": 94.0
+        "cumulative": 94
       },
       {
         "matchId": "MSL0036",
@@ -5786,7 +5781,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 14,
         "isMvp": false,
-        "cumulative": 108.0
+        "cumulative": 108
       },
       {
         "matchId": "MSL0037",
@@ -5797,7 +5792,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -23,
         "isMvp": false,
-        "cumulative": 85.0
+        "cumulative": 85
       },
       {
         "matchId": "MSL0038",
@@ -5808,7 +5803,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -10,
         "isMvp": false,
-        "cumulative": 75.0
+        "cumulative": 75
       },
       {
         "matchId": "MSL0039",
@@ -5819,7 +5814,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 37,
         "isMvp": true,
-        "cumulative": 112.0
+        "cumulative": 112
       },
       {
         "matchId": "MSL0040",
@@ -5830,7 +5825,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -6,
         "isMvp": false,
-        "cumulative": 106.0
+        "cumulative": 106
       },
       {
         "matchId": "MSL0041",
@@ -5841,7 +5836,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 5,
         "isMvp": false,
-        "cumulative": 111.0
+        "cumulative": 111
       },
       {
         "matchId": "MSL0042",
@@ -5852,7 +5847,7 @@
         "venue": "胡小鸭共享棋牌室（厦大店）",
         "score": -53,
         "isMvp": false,
-        "cumulative": 58.0
+        "cumulative": 58
       },
       {
         "matchId": "MSL0043",
@@ -5863,7 +5858,7 @@
         "venue": "雀家（厦大店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": 43.0
+        "cumulative": 43
       },
       {
         "matchId": "MSL0044",
@@ -5874,7 +5869,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -9,
         "isMvp": false,
-        "cumulative": 34.0
+        "cumulative": 34
       },
       {
         "matchId": "MSL0045",
@@ -5885,7 +5880,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -9,
         "isMvp": false,
-        "cumulative": 25.0
+        "cumulative": 25
       },
       {
         "matchId": "MSL0046",
@@ -5896,7 +5891,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 50,
         "isMvp": true,
-        "cumulative": 75.0
+        "cumulative": 75
       },
       {
         "matchId": "MSL0047",
@@ -5907,7 +5902,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -12,
         "isMvp": false,
-        "cumulative": 63.0
+        "cumulative": 63
       },
       {
         "matchId": "MSL0048",
@@ -5918,7 +5913,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 72,
         "isMvp": true,
-        "cumulative": 135.0
+        "cumulative": 135
       },
       {
         "matchId": "MSL0050",
@@ -5929,7 +5924,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -7,
         "isMvp": false,
-        "cumulative": 128.0
+        "cumulative": 128
       },
       {
         "matchId": "MSL0051",
@@ -5940,7 +5935,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -41,
         "isMvp": false,
-        "cumulative": 87.0
+        "cumulative": 87
       },
       {
         "matchId": "MSL0052",
@@ -5951,7 +5946,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 4,
         "isMvp": false,
-        "cumulative": 91.0
+        "cumulative": 91
       },
       {
         "matchId": "MSL0053",
@@ -5962,7 +5957,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -1,
         "isMvp": false,
-        "cumulative": 90.0
+        "cumulative": 90
       },
       {
         "matchId": "MSL0054",
@@ -5973,7 +5968,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -17,
         "isMvp": false,
-        "cumulative": 73.0
+        "cumulative": 73
       },
       {
         "matchId": "MSL0056",
@@ -5984,7 +5979,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 46,
         "isMvp": true,
-        "cumulative": 119.0
+        "cumulative": 119
       },
       {
         "matchId": "MSL0058",
@@ -5995,7 +5990,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -24,
         "isMvp": false,
-        "cumulative": 95.0
+        "cumulative": 95
       },
       {
         "matchId": "MSL0059",
@@ -6006,7 +6001,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -14,
         "isMvp": false,
-        "cumulative": 81.0
+        "cumulative": 81
       },
       {
         "matchId": "MSL0061",
@@ -6017,7 +6012,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -2,
         "isMvp": false,
-        "cumulative": 79.0
+        "cumulative": 79
       },
       {
         "matchId": "MSL0062",
@@ -6028,7 +6023,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -43,
         "isMvp": false,
-        "cumulative": 36.0
+        "cumulative": 36
       },
       {
         "matchId": "MSL0063",
@@ -6039,7 +6034,7 @@
         "venue": "见之共享茶室（火炬园店）",
         "score": 90,
         "isMvp": true,
-        "cumulative": 126.0
+        "cumulative": 126
       },
       {
         "matchId": "MSL0064",
@@ -6050,7 +6045,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 45,
         "isMvp": true,
-        "cumulative": 171.0
+        "cumulative": 171
       },
       {
         "matchId": "MSL0065",
@@ -6061,7 +6056,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 70,
         "isMvp": true,
-        "cumulative": 241.0
+        "cumulative": 241
       }
     ],
     "P005": [
@@ -6074,7 +6069,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -13,
         "isMvp": false,
-        "cumulative": -13.0
+        "cumulative": -13
       },
       {
         "matchId": "MSL0002",
@@ -6085,7 +6080,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -35,
         "isMvp": false,
-        "cumulative": -48.0
+        "cumulative": -48
       },
       {
         "matchId": "MSL0004",
@@ -6096,7 +6091,7 @@
         "venue": "四季风享棋牌室（思北店）",
         "score": -15,
         "isMvp": false,
-        "cumulative": -63.0
+        "cumulative": -63
       },
       {
         "matchId": "MSL0005",
@@ -6107,7 +6102,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": 12,
         "isMvp": false,
-        "cumulative": -51.0
+        "cumulative": -51
       },
       {
         "matchId": "MSL0006",
@@ -6118,7 +6113,7 @@
         "venue": "茶话荟茶馆",
         "score": -23,
         "isMvp": false,
-        "cumulative": -74.0
+        "cumulative": -74
       },
       {
         "matchId": "MSL0007",
@@ -6129,7 +6124,7 @@
         "venue": "茶话荟茶馆",
         "score": -9,
         "isMvp": false,
-        "cumulative": -83.0
+        "cumulative": -83
       },
       {
         "matchId": "MSL0009",
@@ -6140,7 +6135,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": -48,
         "isMvp": false,
-        "cumulative": -131.0
+        "cumulative": -131
       },
       {
         "matchId": "MSL0010",
@@ -6151,7 +6146,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 4,
         "isMvp": false,
-        "cumulative": -127.0
+        "cumulative": -127
       },
       {
         "matchId": "MSL0011",
@@ -6162,7 +6157,7 @@
         "venue": "星八茶乐会（长青路店）",
         "score": 34,
         "isMvp": true,
-        "cumulative": -93.0
+        "cumulative": -93
       },
       {
         "matchId": "MSL0012",
@@ -6173,7 +6168,7 @@
         "venue": "岩初茶舍",
         "score": -6,
         "isMvp": false,
-        "cumulative": -99.0
+        "cumulative": -99
       },
       {
         "matchId": "MSL0013",
@@ -6184,7 +6179,7 @@
         "venue": "岩初茶舍",
         "score": -34,
         "isMvp": false,
-        "cumulative": -133.0
+        "cumulative": -133
       },
       {
         "matchId": "MSL0014",
@@ -6195,7 +6190,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -36,
         "isMvp": false,
-        "cumulative": -169.0
+        "cumulative": -169
       },
       {
         "matchId": "MSL0015",
@@ -6206,7 +6201,7 @@
         "venue": "阅谈共享茶室（后江店）",
         "score": 6,
         "isMvp": false,
-        "cumulative": -163.0
+        "cumulative": -163
       },
       {
         "matchId": "MSL0016",
@@ -6217,7 +6212,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": 51,
         "isMvp": true,
-        "cumulative": -112.0
+        "cumulative": -112
       },
       {
         "matchId": "MSL0017",
@@ -6228,7 +6223,7 @@
         "venue": "喜上茶社",
         "score": -33,
         "isMvp": false,
-        "cumulative": -145.0
+        "cumulative": -145
       },
       {
         "matchId": "MSL0019",
@@ -6239,7 +6234,7 @@
         "venue": "赢雀斯听棋牌室（莲花店）",
         "score": -54,
         "isMvp": false,
-        "cumulative": -199.0
+        "cumulative": -199
       },
       {
         "matchId": "MSL0020",
@@ -6250,7 +6245,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -225.0
+        "cumulative": -225
       },
       {
         "matchId": "MSL0021",
@@ -6261,7 +6256,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -30,
         "isMvp": false,
-        "cumulative": -255.0
+        "cumulative": -255
       },
       {
         "matchId": "MSL0023",
@@ -6272,7 +6267,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -281.0
+        "cumulative": -281
       },
       {
         "matchId": "MSL0025",
@@ -6283,7 +6278,7 @@
         "venue": "胡小鸭共享棋牌室（火车站店）",
         "score": -16,
         "isMvp": false,
-        "cumulative": -297.0
+        "cumulative": -297
       },
       {
         "matchId": "MSL0026",
@@ -6294,7 +6289,7 @@
         "venue": "拾月金秋茶馆",
         "score": -45,
         "isMvp": false,
-        "cumulative": -342.0
+        "cumulative": -342
       },
       {
         "matchId": "MSL0029",
@@ -6305,7 +6300,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -1,
         "isMvp": false,
-        "cumulative": -343.0
+        "cumulative": -343
       },
       {
         "matchId": "MSL0030",
@@ -6316,7 +6311,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -37,
         "isMvp": false,
-        "cumulative": -380.0
+        "cumulative": -380
       },
       {
         "matchId": "MSL0032",
@@ -6327,7 +6322,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -6,
         "isMvp": false,
-        "cumulative": -386.0
+        "cumulative": -386
       },
       {
         "matchId": "MSL0034",
@@ -6338,7 +6333,7 @@
         "venue": "拾月金秋茶馆（浦南一里店）",
         "score": -18,
         "isMvp": false,
-        "cumulative": -404.0
+        "cumulative": -404
       },
       {
         "matchId": "MSL0035",
@@ -6349,7 +6344,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": 9,
         "isMvp": false,
-        "cumulative": -395.0
+        "cumulative": -395
       },
       {
         "matchId": "MSL0037",
@@ -6360,7 +6355,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -58,
         "isMvp": false,
-        "cumulative": -453.0
+        "cumulative": -453
       },
       {
         "matchId": "MSL0038",
@@ -6371,7 +6366,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -5,
         "isMvp": false,
-        "cumulative": -458.0
+        "cumulative": -458
       },
       {
         "matchId": "MSL0039",
@@ -6382,7 +6377,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -49,
         "isMvp": false,
-        "cumulative": -507.0
+        "cumulative": -507
       },
       {
         "matchId": "MSL0041",
@@ -6393,7 +6388,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -533.0
+        "cumulative": -533
       },
       {
         "matchId": "MSL0042",
@@ -6404,7 +6399,7 @@
         "venue": "胡小鸭共享棋牌室（厦大店）",
         "score": -60,
         "isMvp": false,
-        "cumulative": -593.0
+        "cumulative": -593
       },
       {
         "matchId": "MSL0043",
@@ -6415,7 +6410,7 @@
         "venue": "雀家（厦大店）",
         "score": 12,
         "isMvp": false,
-        "cumulative": -581.0
+        "cumulative": -581
       },
       {
         "matchId": "MSL0044",
@@ -6426,7 +6421,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -77,
         "isMvp": false,
-        "cumulative": -658.0
+        "cumulative": -658
       },
       {
         "matchId": "MSL0045",
@@ -6437,7 +6432,7 @@
         "venue": "嗨范棋牌室（万象城店）",
         "score": -40,
         "isMvp": false,
-        "cumulative": -698.0
+        "cumulative": -698
       },
       {
         "matchId": "MSL0047",
@@ -6448,7 +6443,7 @@
         "venue": "七囍茶室（厦门站店）",
         "score": -33,
         "isMvp": false,
-        "cumulative": -731.0
+        "cumulative": -731
       },
       {
         "matchId": "MSL0048",
@@ -6459,7 +6454,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -26,
         "isMvp": false,
-        "cumulative": -757.0
+        "cumulative": -757
       },
       {
         "matchId": "MSL0049",
@@ -6470,7 +6465,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -46,
         "isMvp": false,
-        "cumulative": -803.0
+        "cumulative": -803
       },
       {
         "matchId": "MSL0050",
@@ -6481,7 +6476,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -37,
         "isMvp": false,
-        "cumulative": -840.0
+        "cumulative": -840
       },
       {
         "matchId": "MSL0052",
@@ -6492,7 +6487,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": 21,
         "isMvp": false,
-        "cumulative": -819.0
+        "cumulative": -819
       },
       {
         "matchId": "MSL0053",
@@ -6503,7 +6498,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -28,
         "isMvp": false,
-        "cumulative": -847.0
+        "cumulative": -847
       },
       {
         "matchId": "MSL0054",
@@ -6514,7 +6509,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -4,
         "isMvp": false,
-        "cumulative": -851.0
+        "cumulative": -851
       },
       {
         "matchId": "MSL0055",
@@ -6525,7 +6520,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -51,
         "isMvp": false,
-        "cumulative": -902.0
+        "cumulative": -902
       },
       {
         "matchId": "MSL0056",
@@ -6536,7 +6531,7 @@
         "venue": "大唐茶馆（金山店）",
         "score": -27,
         "isMvp": false,
-        "cumulative": -929.0
+        "cumulative": -929
       },
       {
         "matchId": "MSL0057",
@@ -6547,7 +6542,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -51,
         "isMvp": false,
-        "cumulative": -980.0
+        "cumulative": -980
       },
       {
         "matchId": "MSL0058",
@@ -6558,7 +6553,7 @@
         "venue": "胡小鸭共享棋牌室（金尚店）",
         "score": -24,
         "isMvp": false,
-        "cumulative": -1004.0
+        "cumulative": -1004
       },
       {
         "matchId": "MSL0060",
@@ -6569,7 +6564,7 @@
         "venue": "四个朋友（联发欣悦店）",
         "score": -2,
         "isMvp": false,
-        "cumulative": -1006.0
+        "cumulative": -1006
       },
       {
         "matchId": "MSL0061",
@@ -6580,7 +6575,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": 3,
         "isMvp": false,
-        "cumulative": -1003.0
+        "cumulative": -1003
       },
       {
         "matchId": "MSL0064",
@@ -6591,7 +6586,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -25,
         "isMvp": false,
-        "cumulative": -1028.0
+        "cumulative": -1028
       },
       {
         "matchId": "MSL0065",
@@ -6602,7 +6597,7 @@
         "venue": "拾贰茶铺（SM店）",
         "score": -18,
         "isMvp": false,
-        "cumulative": -1046.0
+        "cumulative": -1046
       }
     ]
   },
@@ -7503,7 +7498,7 @@
     "honorKing": "罗海泓 · 124",
     "seasonMvp": "S1 陈毓圣；S2 罗海泓；S3 罗海泓",
     "scoringKing": "S1 陈丰；S2 罗海泓；S3 吴韬骏",
-    "note": "v10.1 LTS adopts the official H002 weighting: 35% points, 25% MVP, 15% average, 10% positive rate, 10% BGR, 5% champion bonus."
+    "note": "当前评价体系使用积分、效率、MVP、官方荣誉与透明爆发数据；爆发统一定义为单场积分≥50。"
   },
   "healthChecks": [
     {
