@@ -1180,16 +1180,37 @@ function openProfileHonorModal(honorId){
   const backdrop=$("#profileHonorModalBackdrop");backdrop.hidden=false;document.body.classList.add("modal-open");
   const panel=backdrop.querySelector(".profile-honor-modal");if(panel)panel.scrollTop=0;
 }
+function setProfileHonorSeasonOpen(card,isOpen){
+  const toggle=card?.querySelector("[data-profile-honor-season-toggle]"),panel=card?.querySelector(".profile-honor-season-collapse");
+  if(!card||!toggle||!panel)return;
+  if(panel._profileHonorTransitionEnd)panel.removeEventListener("transitionend",panel._profileHonorTransitionEnd);
+  const currentHeight=panel.getBoundingClientRect().height;
+  panel.style.height=`${currentHeight}px`;
+  panel.getBoundingClientRect();
+  if(isOpen)panel.removeAttribute("inert");
+  card.classList.toggle("is-open",isOpen);
+  toggle.setAttribute("aria-expanded",isOpen?"true":"false");
+  panel.setAttribute("aria-hidden",isOpen?"false":"true");
+  if(!isOpen)panel.setAttribute("inert","");
+  if(prefersReducedMotion()){
+    panel.style.height=isOpen?"auto":"0px";
+    return;
+  }
+  panel.style.height=`${isOpen?panel.scrollHeight:0}px`;
+  const finish=event=>{
+    if(event.target!==panel||event.propertyName!=="height")return;
+    panel.removeEventListener("transitionend",finish);
+    panel._profileHonorTransitionEnd=null;
+    panel.style.height=card.classList.contains("is-open")?"auto":"0px";
+  };
+  panel._profileHonorTransitionEnd=finish;
+  panel.addEventListener("transitionend",finish);
+}
 document.addEventListener("click",e=>{
   const toggle=e.target.closest("[data-profile-honor-season-toggle]");
   if(toggle){
-    const card=toggle.closest("[data-profile-honor-season]"),panel=card?.querySelector(".profile-honor-season-collapse");
-    if(!card||!panel)return;
-    const isOpen=!card.classList.contains("is-open");
-    card.classList.toggle("is-open",isOpen);
-    toggle.setAttribute("aria-expanded",isOpen?"true":"false");
-    panel.setAttribute("aria-hidden",isOpen?"false":"true");
-    panel.toggleAttribute("inert",!isOpen);
+    const card=toggle.closest("[data-profile-honor-season]");
+    setProfileHonorSeasonOpen(card,!card?.classList.contains("is-open"));
     return;
   }
   const trigger=e.target.closest("[data-profile-honor]");if(trigger)openProfileHonorModal(trigger.dataset.profileHonor);
