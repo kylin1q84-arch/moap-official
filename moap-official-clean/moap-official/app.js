@@ -315,6 +315,251 @@ function toast(msg){
   clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),2200);
 }
 
+/* Global Premium Dropdown System
+   Native selects remain the single source of truth. The custom UI mirrors values
+   and dispatches the existing change event so every current filter keeps its logic. */
+const premiumSelects=new Map();
+let activePremiumDropdown=null;
+let premiumDropdownRaf=0;
+let premiumDropdownUid=0;
+
+function dropdownMotionReduced(){
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
+}
+
+function selectAccessibleLabel(select){
+  const label=select.closest("label");
+  if(!label)return select.getAttribute("aria-label")||select.id||"选择选项";
+  const clone=label.cloneNode(true);
+  clone.querySelectorAll("select,input,button,.moap-select").forEach(node=>node.remove());
+  return clone.textContent.trim()||select.id||"选择选项";
+}
+
+function positionPremiumDropdown(panel,trigger,{minimumWidth=0}={}){
+  if(!panel||!trigger||panel.hidden)return;
+  const gutter=12,gap=6,viewportWidth=window.innerWidth,viewportHeight=window.innerHeight;
+  const rect=trigger.getBoundingClientRect();
+  const maxWidth=Math.max(0,viewportWidth-gutter*2);
+  const width=Math.min(maxWidth,Math.max(rect.width,minimumWidth));
+  panel.style.width=`${Math.ceil(width)}px`;
+  panel.style.left="0px";
+  panel.style.top="0px";
+  panel.style.maxHeight="320px";
+  panel.style.visibility="hidden";
+  const naturalHeight=Math.min(panel.scrollHeight,320);
+  const below=Math.max(0,viewportHeight-rect.bottom-gap-gutter);
+  const above=Math.max(0,rect.top-gap-gutter);
+  const opensUp=below<Math.min(naturalHeight,180)&&above>below;
+  const available=Math.max(96,opensUp?above:below);
+  panel.style.maxHeight=`${Math.min(320,available)}px`;
+  const height=Math.min(panel.getBoundingClientRect().height,available);
+  const left=Math.min(Math.max(gutter,rect.left),Math.max(gutter,viewportWidth-gutter-width));
+  const top=opensUp?Math.max(gutter,rect.top-gap-height):Math.min(viewportHeight-gutter-height,rect.bottom+gap);
+  panel.style.left=`${Math.round(left)}px`;
+  panel.style.top=`${Math.round(top)}px`;
+  panel.classList.toggle("opens-upward",opensUp);
+  panel.style.visibility="visible";
+}
+
+function schedulePremiumDropdownPosition(){
+  if(!activePremiumDropdown||premiumDropdownRaf)return;
+  premiumDropdownRaf=requestAnimationFrame(()=>{
+    premiumDropdownRaf=0;
+    activePremiumDropdown?.position?.();
+  });
+}
+
+function finishPremiumDropdownClose(state,{focusTrigger=false}={}){
+  if(!state?.panel)return;
+  clearTimeout(state.closeTimer);
+  state.panel.hidden=true;
+  state.panel.classList.remove("is-opening","is-closing");
+  state.panel.style.visibility="";
+  state.trigger?.setAttribute("aria-expanded","false");
+  if(activePremiumDropdown===state)activePremiumDropdown=null;
+  if(focusTrigger)state.trigger?.focus({preventScroll:true});
+}
+
+function closePremiumDropdown(state=activePremiumDropdown,{immediate=false,focusTrigger=false}={}){
+  if(!state?.panel||state.panel.hidden)return;
+  state.trigger?.setAttribute("aria-expanded","false");
+  const finish=()=>finishPremiumDropdownClose(state,{focusTrigger});
+  if(immediate||dropdownMotionReduced())return finish();
+  state.panel.classList.remove("is-opening");
+  state.panel.classList.add("is-closing");
+  clearTimeout(state.closeTimer);
+  state.closeTimer=setTimeout(finish,145);
+}
+
+function closeAllPremiumDropdowns(options={}){
+  closePremiumDropdown(activePremiumDropdown,options);
+}
+
+function openPremiumDropdown(state,{focus="selected"}={}){
+  if(!state?.panel||!state?.trigger)return;
+  if(activePremiumDropdown&&activePremiumDropdown!==state)closePremiumDropdown(activePremiumDropdown,{immediate:true});
+  clearTimeout(state.closeTimer);
+  state.panel.hidden=false;
+  state.panel.classList.remove("is-closing");
+  state.panel.classList.add("is-opening");
+  state.trigger.setAttribute("aria-expanded","true");
+  activePremiumDropdown=state;
+  state.position();
+  const focusOptions=[...state.panel.querySelectorAll('[role="option"]:not([aria-disabled="true"])')];
+  const selected=focusOptions.find(option=>option.getAttribute("aria-selected")==="true");
+  const target=focus==="last"?focusOptions.at(-1):focus==="first"?focusOptions[0]:selected||focusOptions[0];
+  (target?.querySelector?.("input,button")||target)?.focus({preventScroll:true});
+  requestAnimationFrame(()=>{
+    state.position();
+  });
+}
+
+function premiumSelectOptions(state){
+  return [...state.panel.querySelectorAll(".moap-dropdown-option:not([aria-disabled='true'])")];
+}
+
+function syncPremiumSelect(state,{rebuild=false}={}){
+  if(!state?.select?.isConnected)return;
+  const options=[...state.select.options];
+  const signature=options.map(option=>`${option.value}\u0000${option.text}\u0000${option.disabled}`).join("\u0001");
+  if(rebuild||signature!==state.signature){
+    state.signature=signature;
+    state.panel.innerHTML=options.map((option,index)=>`<button type="button" class="moap-dropdown-option" role="option" tabindex="-1" data-option-index="${index}" aria-selected="${option.selected}" aria-disabled="${option.disabled}"><span>${escapeHtml(option.text)}</span></button>`).join("");
+  }else{
+    [...state.panel.querySelectorAll(".moap-dropdown-option")].forEach((row,index)=>row.setAttribute("aria-selected",String(Boolean(options[index]?.selected))));
+  }
+  const selected=state.select.selectedOptions?.[0]||options[0];
+  state.trigger.querySelector(".moap-select-value").textContent=selected?.text||"请选择";
+  state.trigger.disabled=state.select.disabled;
+  state.wrapper.classList.toggle("is-disabled",state.select.disabled);
+}
+
+function choosePremiumSelectOption(state,index){
+  const option=state.select.options[index];
+  if(!option||option.disabled)return;
+  const changed=state.select.value!==option.value;
+  state.select.value=option.value;
+  syncPremiumSelect(state);
+  closePremiumDropdown(state,{focusTrigger:true});
+  if(changed)state.select.dispatchEvent(new Event("change",{bubbles:true}));
+}
+
+function enhancePremiumSelect(select){
+  if(!select||select.dataset.moapEnhanced)return premiumSelects.get(select);
+  const uid=++premiumDropdownUid;
+  const accessibleLabel=selectAccessibleLabel(select);
+  const wrapper=document.createElement("span");
+  wrapper.className="moap-select";
+  const trigger=document.createElement("button");
+  trigger.type="button";
+  trigger.className="moap-select-trigger";
+  trigger.id=`moap-select-trigger-${uid}`;
+  trigger.setAttribute("aria-label",accessibleLabel);
+  trigger.setAttribute("aria-haspopup","listbox");
+  trigger.setAttribute("aria-expanded","false");
+  trigger.innerHTML='<span class="moap-select-value"></span>';
+  const panel=document.createElement("div");
+  panel.className="moap-dropdown moap-select-panel";
+  panel.id=`moap-select-panel-${uid}`;
+  panel.setAttribute("role","listbox");
+  panel.setAttribute("aria-labelledby",trigger.id);
+  panel.hidden=true;
+  trigger.setAttribute("aria-controls",panel.id);
+  select.insertAdjacentElement("afterend",wrapper);
+  wrapper.append(select,trigger);
+  document.body.append(panel);
+  select.dataset.moapEnhanced="true";
+  select.classList.add("moap-native-select");
+  select.tabIndex=-1;
+  select.setAttribute("aria-hidden","true");
+  const state={select,wrapper,trigger,panel,signature:"",closeTimer:0,position:()=>positionPremiumDropdown(panel,trigger)};
+  premiumSelects.set(select,state);
+  syncPremiumSelect(state,{rebuild:true});
+  const observer=new MutationObserver(()=>syncPremiumSelect(state));
+  observer.observe(select,{childList:true,subtree:true,attributes:true,attributeFilter:["disabled","selected","label","value"]});
+  state.observer=observer;
+  trigger.addEventListener("click",()=>panel.hidden?openPremiumDropdown(state):closePremiumDropdown(state,{focusTrigger:true}));
+  trigger.addEventListener("keydown",event=>{
+    if(!["Enter"," ","ArrowDown","ArrowUp"].includes(event.key))return;
+    event.preventDefault();
+    if(panel.hidden)openPremiumDropdown(state,{focus:event.key==="ArrowUp"?"last":"selected"});
+  });
+  panel.addEventListener("click",event=>{
+    const row=event.target.closest(".moap-dropdown-option");
+    if(row)choosePremiumSelectOption(state,Number(row.dataset.optionIndex));
+  });
+  panel.addEventListener("keydown",event=>{
+    const rows=premiumSelectOptions(state),current=Math.max(0,rows.indexOf(document.activeElement));
+    if(event.key==="ArrowDown"||event.key==="ArrowUp"){
+      event.preventDefault();
+      rows[(current+(event.key==="ArrowDown"?1:-1)+rows.length)%rows.length]?.focus({preventScroll:true});
+    }else if(event.key==="Home"||event.key==="End"){
+      event.preventDefault();(event.key==="Home"?rows[0]:rows.at(-1))?.focus({preventScroll:true});
+    }else if(event.key==="Enter"||event.key===" "){
+      event.preventDefault();const row=document.activeElement.closest?.(".moap-dropdown-option");if(row)choosePremiumSelectOption(state,Number(row.dataset.optionIndex));
+    }else if(event.key==="Escape"){
+      event.preventDefault();closePremiumDropdown(state,{focusTrigger:true});
+    }else if(event.key==="Tab")closePremiumDropdown(state,{immediate:true});
+  });
+  return state;
+}
+
+function syncPremiumDropdowns(){
+  premiumSelects.forEach(state=>syncPremiumSelect(state));
+  syncMatchPlayerOptionAccessibility();
+}
+
+function syncMatchPlayerOptionAccessibility(){
+  const menu=$("#matchPlayerMenu");if(!menu)return;
+  menu.querySelectorAll(".match-player-option").forEach(row=>{
+    const checkbox=row.querySelector('[data-match-player]');
+    row.setAttribute("role","option");
+    row.setAttribute("aria-selected",String(Boolean(checkbox?.checked)));
+    checkbox?.setAttribute("aria-label",row.textContent.trim());
+  });
+}
+
+function matchPlayerDropdownState(){
+  const trigger=$("#matchPlayerTrigger"),panel=$("#matchPlayerMenu");
+  if(!trigger||!panel)return null;
+  return {trigger,panel,minimumWidth:260,position:()=>positionPremiumDropdown(panel,trigger,{minimumWidth:260})};
+}
+
+function openMatchPlayerDropdown({focus="selected"}={}){
+  const state=matchPlayerDropdownState();if(!state)return;
+  openPremiumDropdown(state,{focus});
+}
+
+function closeMatchPlayerDropdown(options={}){
+  const state=activePremiumDropdown?.panel===$("#matchPlayerMenu")?activePremiumDropdown:matchPlayerDropdownState();
+  closePremiumDropdown(state,options);
+}
+
+function initPremiumDropdownSystem(){
+  $$('select:not([data-moap-enhanced])').forEach(enhancePremiumSelect);
+  const filter=$(".match-player-filter"),trigger=$("#matchPlayerTrigger"),menu=$("#matchPlayerMenu");
+  if(filter&&trigger&&menu&&!menu.dataset.moapEnhanced){
+    filter.classList.add("moap-multiselect");
+    trigger.classList.add("moap-select-trigger");
+    trigger.setAttribute("aria-haspopup","listbox");
+    trigger.setAttribute("aria-controls",menu.id);
+    menu.classList.add("moap-dropdown","moap-multiselect-panel");
+    menu.setAttribute("role","listbox");
+    menu.setAttribute("aria-multiselectable","true");
+    menu.setAttribute("aria-labelledby",trigger.id);
+    menu.dataset.moapEnhanced="true";
+    document.body.append(menu);
+    syncMatchPlayerOptionAccessibility();
+  }
+  window.addEventListener("resize",schedulePremiumDropdownPosition,{passive:true});
+  window.addEventListener("scroll",schedulePremiumDropdownPosition,{passive:true,capture:true});
+  document.addEventListener("pointerdown",event=>{
+    const state=activePremiumDropdown;
+    if(!state||state.panel.hidden||state.panel.contains(event.target)||state.trigger.contains(event.target))return;
+    closePremiumDropdown(state);
+  });
+}
+
 function initNav(){
   const desktop=$("#sidebarNav"), mobile=$("#mobileNav");
   const visibleNav = NAV.filter(([id])=>id!=="entry" || currentRole==="admin");
@@ -348,6 +593,7 @@ function renderViewContent(id){
 }
 
 function showView(id,{immediate=false}={}){
+  closeAllPremiumDropdowns({immediate:true});
   if(id==="honors"||!NAV.some(([viewId])=>viewId===id))id="overview";
   if(id==="entry"&&currentRole!=="admin"){toast("当前账号为只读成员");id="overview";}
   const outgoing=$(".view.active"),incoming=$(`.view[data-view="${id}"]`);
@@ -360,6 +606,7 @@ function showView(id,{immediate=false}={}){
     requestAnimationFrame(()=>centerActiveMobileNav(id));
     if(!immediate)window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"});
     renderViewContent(id);
+    syncPremiumDropdowns();
     animateNumbers(incoming);
     if(id==="records")animateRecordCenterEntry(incoming);
     if(id==="player")animatePlayerCenterEntry(incoming);
@@ -682,8 +929,9 @@ function renderMatchPlayerOptions(){
   const holder=$("#matchPlayerOptions");if(!holder)return;
   const valid=new Set((state.players||[]).map(p=>p.playerId));
   [...selectedMatchPlayers].forEach(id=>{if(!valid.has(id))selectedMatchPlayers.delete(id);});
-  holder.innerHTML=(state.players||[]).map(p=>`<label class="match-player-option"><input type="checkbox" data-match-player="${escapeHtml(p.playerId)}" ${selectedMatchPlayers.has(p.playerId)?"checked":""}><span>${escapeHtml(p.name)}</span></label>`).join("");
+  holder.innerHTML=(state.players||[]).map(p=>`<label class="match-player-option" role="option" aria-selected="${selectedMatchPlayers.has(p.playerId)}"><input type="checkbox" data-match-player="${escapeHtml(p.playerId)}" aria-label="${escapeHtml(p.name)}" ${selectedMatchPlayers.has(p.playerId)?"checked":""}><span class="moap-checkbox" aria-hidden="true"></span><span class="match-player-option-name">${escapeHtml(p.name)}</span></label>`).join("");
   updateMatchPlayerTrigger();
+  syncMatchPlayerOptionAccessibility();
 }
 function updateMatchPlayerTrigger(){
   const button=$("#matchPlayerTrigger");if(!button)return;
@@ -701,6 +949,7 @@ function populateSelects(){
   $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.status==="active"?"selected":""}>${s.id}${s.status==="active"?"（进行中）":""}</option>`).join("");
   if(!state.players.some(p=>p.playerId===currentPlayer)) currentPlayer=state.players[0]?.playerId||"P001";
   $("#playerSelect").value=currentPlayer;
+  syncPremiumDropdowns();
 }
 
 function playerCareer(pid){
@@ -892,13 +1141,20 @@ function renderMatches(reset=false){
 }
 ["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",()=>renderMatches(true)));
 $("#matchQuery").addEventListener("input",()=>renderMatches(true));
-$("#matchPlayerTrigger")?.addEventListener("click",()=>{const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");const open=menu.hidden;menu.hidden=!open;button.setAttribute("aria-expanded",String(open));});
-$("#matchPlayerClear")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);});
-document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();renderMatches(true);});
-document.addEventListener("click",e=>{const filter=e.target.closest?.(".match-player-filter");if(filter)return;const menu=$("#matchPlayerMenu"),button=$("#matchPlayerTrigger");if(menu&&!menu.hidden){menu.hidden=true;button?.setAttribute("aria-expanded","false");}});
+$("#matchPlayerTrigger")?.addEventListener("click",()=>{$("#matchPlayerMenu")?.hidden?openMatchPlayerDropdown():closeMatchPlayerDropdown({focusTrigger:true});});
+$("#matchPlayerTrigger")?.addEventListener("keydown",event=>{if(!["Enter"," ","ArrowDown","ArrowUp"].includes(event.key))return;event.preventDefault();if($("#matchPlayerMenu")?.hidden)openMatchPlayerDropdown({focus:event.key==="ArrowUp"?"last":"selected"});});
+$("#matchPlayerClear")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);schedulePremiumDropdownPosition();});
+document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();syncMatchPlayerOptionAccessibility();renderMatches(true);});
+$("#matchPlayerMenu")?.addEventListener("keydown",event=>{
+  if(event.key==="Escape"){event.preventDefault();closeMatchPlayerDropdown({focusTrigger:true});return;}
+  const rows=[...$("#matchPlayerMenu").querySelectorAll("[data-match-player]")],index=Math.max(0,rows.indexOf(document.activeElement));
+  if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();rows[(index+(event.key==="ArrowDown"?1:-1)+rows.length)%rows.length]?.focus({preventScroll:true});}
+  else if(event.key==="Enter"&&document.activeElement?.matches?.("[data-match-player]")){event.preventDefault();document.activeElement.click();}
+  else if(event.key==="Tab")closeMatchPlayerDropdown({immediate:true});
+});
 $("#loadMoreBtn").addEventListener("click",()=>{matchLimit+=15;renderMatches()});
 document.addEventListener("click",e=>{const card=e.target.closest("[data-match-id]");if(card&&currentView==="matches")openMatchModal(card.dataset.matchId);});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape"){closeMatchModal();closeRecordModal();}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape"){closeAllPremiumDropdowns({focusTrigger:true});closeMatchModal();closeRecordModal();}});
 
 function initEntry(){
   $("#entryDate").value=new Date().toISOString().slice(0,10);
@@ -1361,7 +1617,7 @@ function initImmersiveBackground(){
 function boot(){
   initImmersiveBackground();
   initAnimationSystem();
-  initNav(); populateSelects(); initEntry();
+  initNav(); populateSelects(); initEntry(); initPremiumDropdownSystem();
   $("#versionBadge").textContent=state.version.version;
   showView("overview",{immediate:true});appBooted=true;
 }
