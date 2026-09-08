@@ -329,16 +329,21 @@ export function animateNumbers(root=document,{duration}={}){
 }
 
 export function animatePlayerSeasonNumbers(root=document,{baseDelay=0}={}){
-  const table=root?.matches?.("#playerSeasonTable")?root:root?.querySelector?.("#playerSeasonTable");
-  if(!table)return;
-  const rows=[...table.querySelectorAll("tr")];
-  const candidates=[...table.querySelectorAll("[data-player-number]")];
-  animateNumberCandidates(candidates,table,{
+  const scope=root?.closest?.(".player-season-data-card")||root;
+  const table=scope?.matches?.("#playerSeasonTable")?scope:scope?.querySelector?.("#playerSeasonTable");
+  const cards=scope?.matches?.("#playerSeasonCards")?scope:scope?.querySelector?.("#playerSeasonCards");
+  if(!table&&!cards)return;
+  const rows=table?[...table.querySelectorAll("tr")]:[];
+  const summaryCards=cards?[...cards.querySelectorAll(".player-season-summary-card")]:[];
+  const candidates=[...(table?.querySelectorAll("[data-player-number]")||[]),...(cards?.querySelectorAll("[data-player-number]")||[])];
+  animateNumberCandidates(candidates,scope,{
     duration:mobileMotion()?.62:.78,
     delayFor:element=>{
       const row=element.closest("tr");
-      const rowIndex=Math.max(0,rows.indexOf(row));
-      return baseDelay+(row?.classList.contains("season-total-row")?.16:rowIndex*.04);
+      const card=element.closest(".player-season-summary-card");
+      const itemIndex=row?Math.max(0,rows.indexOf(row)):Math.max(0,summaryCards.indexOf(card));
+      const isTotal=row?.classList.contains("season-total-row")||card?.classList.contains("is-total");
+      return baseDelay+(isTotal ? .16 : itemIndex*.04);
     }
   });
 }
