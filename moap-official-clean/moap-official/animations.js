@@ -95,6 +95,22 @@ export function initAnimationSystem(){
   },{passive:true});
 }
 
+export function animateNavIndicator(navRoot,activeButton,{immediate=false}={}){
+  const indicator=navRoot?.querySelector?.(".nav-active-indicator");
+  if(!indicator||!activeButton)return;
+  const y=activeButton.offsetTop;
+  const height=activeButton.offsetHeight;
+  const gsap=motionEngine();
+  if(immediate||motionDisabled()||!gsap){
+    indicator.style.transform=`translate3d(0,${y}px,0)`;
+    indicator.style.height=`${height}px`;
+    indicator.style.opacity="1";
+    return;
+  }
+  gsap.killTweensOf(indicator);
+  gsap.to(indicator,{y,height,autoAlpha:1,duration:.32,ease:"power2.out",overwrite:true});
+}
+
 export function transitionView({outgoing,incoming,swap,immediate=false,onEntered}){
   const gsap=motionEngine();
   viewTimeline?.kill();
