@@ -18,7 +18,8 @@ import {
   animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
-  animateGoatRanking
+  animateGoatRanking,
+  animateNavIndicator
 } from "./animations.js";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
@@ -48,6 +49,11 @@ const NAV = [
   ["rival","对位中心"],
   ["system","系统审计"],
   ["entry","录入比赛"]
+];
+
+const NAV_GROUPS = [
+  {label:"LEAGUE",ids:["overview","records","status","player","matches","rival"]},
+  {label:"SYSTEM",ids:["system","entry"]}
 ];
 
 
@@ -312,9 +318,15 @@ function toast(msg){
 function initNav(){
   const desktop=$("#sidebarNav"), mobile=$("#mobileNav");
   const visibleNav = NAV.filter(([id])=>id!=="entry" || currentRole==="admin");
-  desktop.innerHTML = visibleNav.map(([id,label])=>`<button type="button" class="nav-btn ${id==="overview"?"active":""}" data-nav="${id}">${label}</button>`).join("");
-  mobile.innerHTML = desktop.innerHTML;
+  const navButton=([id,label])=>`<button type="button" class="nav-btn ${id===currentView?"active":""}" data-nav="${id}">${label}</button>`;
+  desktop.innerHTML = `<span class="nav-active-indicator" aria-hidden="true"></span>`+NAV_GROUPS.map(group=>{
+    const items=visibleNav.filter(([id])=>group.ids.includes(id));
+    if(!items.length)return "";
+    return `<div class="nav-group"><div class="nav-group-label">${group.label}</div>${items.map(navButton).join("")}</div>`;
+  }).join("");
+  mobile.innerHTML = visibleNav.map(navButton).join("");
   $$('[data-nav]').forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.nav)));
+  requestAnimationFrame(()=>animateNavIndicator(desktop,desktop.querySelector(`.nav-btn[data-nav="${currentView}"]`),{immediate:true}));
 }
 
 function renderViewContent(id){
@@ -335,6 +347,8 @@ function showView(id,{immediate=false}={}){
     currentView=id;
     $$(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
     $$("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));
+    const desktopNav=$("#sidebarNav");
+    animateNavIndicator(desktopNav,desktopNav?.querySelector(`.nav-btn[data-nav="${id}"]`));
     if(!immediate)window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"});
     renderViewContent(id);
     animateNumbers(incoming);
