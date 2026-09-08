@@ -546,16 +546,6 @@ body{
   backdrop-filter:blur(15px);
   -webkit-backdrop-filter:blur(15px);
 }
-@media (hover:hover) and (pointer:fine){
-  .card{
-    transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease;
-  }
-  .card:hover{
-    transform:translateY(-2px);
-    border-color:rgba(215,178,91,.18);
-    box-shadow:0 20px 54px rgba(0,0,0,.30),0 0 28px rgba(65,164,126,.035);
-  }
-}
 .ambient-reduced .ambient-background{
   transform:none !important;
   transition:none;
@@ -970,14 +960,6 @@ body{
   [role="button"]:not([aria-disabled="true"]):hover{
     filter:brightness(1.06);
     transform:scale(1.015);
-  }
-  .card{
-    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
-  }
-  .card:hover{
-    transform:translate3d(0,-3px,0);
-    border-color:rgba(215,178,91,.22);
-    box-shadow:0 22px 58px rgba(0,0,0,.31),0 0 28px rgba(65,164,126,.04);
   }
   .record-row td{
     transition:background-color .2s ease,border-color .2s ease;
@@ -1561,6 +1543,16 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   color:#1a1508;
   box-shadow:0 8px 22px rgba(215,178,91,.12);
 }
+.btn.danger{
+  border-color:rgba(255,118,118,.24);
+  background:rgba(255,118,118,.075);
+  color:#ffc0c0;
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  filter:saturate(.65);
+}
 .btn:focus-visible,
 .nav-btn:focus-visible,
 .segmented-control button:focus-visible,
@@ -1586,6 +1578,7 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
     filter:none;
   }
   .btn.primary:hover{filter:brightness(1.025);background:linear-gradient(135deg,var(--gold),var(--gold2))}
+  .btn.danger:hover{border-color:rgba(255,118,118,.36);background-color:rgba(255,118,118,.11)}
   .card{
     transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
   }
@@ -1973,4 +1966,3 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
     background:var(--panel);
   }
 }
-
