@@ -2553,3 +2553,138 @@ select.moap-native-select{
   .moap-dropdown-option,
   .match-player-option{transition:none!important;animation:none!important}
 }
+
+/* v3.0.0 · Premium Upgrade Round 3 — Unified Motion System */
+.command-goat-spotlight.motion-atmosphere::after,
+.goat-row.motion-leader::after,
+.power-card.motion-status-leader::after,
+.player-portrait-shell.motion-portrait-halo::before{
+  animation:moapAtmosphereDrift 14s ease-in-out infinite alternate;
+}
+.command-goat-spotlight.motion-atmosphere::after{will-change:transform,opacity}
+.goat-row.motion-leader,
+.power-card.motion-status-leader{position:relative;isolation:isolate;overflow:hidden}
+.goat-row.motion-leader::after,
+.power-card.motion-status-leader::after{
+  content:"";
+  position:absolute;
+  inset:-22% -12%;
+  z-index:0;
+  pointer-events:none;
+  opacity:.32;
+  background:radial-gradient(circle at 18% 50%,rgba(215,178,91,.11),transparent 35%);
+}
+.goat-row.motion-leader > *,
+.power-card.motion-status-leader > *{position:relative;z-index:1}
+.power-card.motion-status-leader::after{
+  opacity:.24;
+  background:radial-gradient(circle at 18% 50%,rgba(85,214,156,.09),transparent 38%);
+  animation-duration:16s;
+}
+.player-portrait-shell.motion-portrait-halo::before{
+  content:"";
+  position:absolute;
+  left:10%;
+  right:10%;
+  bottom:2px;
+  height:42%;
+  z-index:1;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.52;
+  background:radial-gradient(ellipse at center,rgba(215,178,91,.13),rgba(85,214,156,.045) 48%,transparent 72%);
+  will-change:transform,opacity;
+  animation-duration:17s;
+}
+@keyframes moapAtmosphereDrift{
+  from{transform:translate3d(-4px,0,0) scale(.99);opacity:.27}
+  to{transform:translate3d(4px,0,0) scale(1.01);opacity:.38}
+}
+
+@media(hover:hover) and (pointer:fine){
+  .player-portrait-shell{transition:transform .18s ease}
+  .player-portrait-shell:hover{transform:scale(1.02)}
+  .player-portrait-shell.motion-portrait-halo:hover::before{opacity:.59}
+}
+
+.season-match-log.motion-rail-reveal::before{
+  transform-origin:top center;
+  animation:moapRailReveal .62s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes moapRailReveal{
+  from{transform:scaleY(0);opacity:0}
+  to{transform:scaleY(1);opacity:1}
+}
+
+#netMatrix tbody td,
+#netMatrix tbody th,
+#netMatrix .matrix-cell{
+  transition:opacity .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#netMatrix.is-focus-mode tbody td{opacity:.66}
+#netMatrix.is-focus-mode tbody tr.is-focus-row td,
+#netMatrix.is-focus-mode tbody td.is-focus-col{opacity:.84}
+#netMatrix.is-focus-mode .matrix-cell.is-focus-cell{
+  opacity:1;
+  border-color:rgba(215,178,91,.48);
+  box-shadow:0 0 0 1px rgba(215,178,91,.08),0 8px 18px rgba(0,0,0,.13);
+}
+#netMatrix .matrix-cell.is-selected{
+  border-color:rgba(215,178,91,.62);
+  box-shadow:inset 0 0 0 1px rgba(215,178,91,.1);
+}
+
+.ai-report-collapse.motion-disclosure-active{display:block!important}
+.validation,
+.validation-console-head>b,
+.validation-console-grid b{
+  transition:color .18s ease,border-color .18s ease,background-color .18s ease;
+}
+#saveMatchBtn.motion-ready-once{animation:moapReadySettle .52s ease-out both}
+@keyframes moapReadySettle{
+  from{box-shadow:0 8px 28px rgba(215,178,91,.28)}
+  to{box-shadow:0 8px 24px rgba(215,178,91,.17)}
+}
+
+.motion-paused .ambient-background::before,
+.motion-paused .motion-atmosphere::after,
+.motion-paused .motion-leader::after,
+.motion-paused .motion-status-leader::after,
+.motion-paused .motion-portrait-halo::before,
+.motion-paused .profile-honor-row::before{
+  animation-play-state:paused!important;
+}
+.view:not(.active) .motion-atmosphere::after,
+.view:not(.active) .motion-leader::after,
+.view:not(.active) .motion-status-leader::after,
+.view:not(.active) .motion-portrait-halo::before,
+.view:not(.active) .profile-honor-row::before{
+  animation-play-state:paused!important;
+}
+
+@media(max-width:760px){
+  .player-portrait-shell.motion-portrait-halo::before{opacity:.44}
+  .goat-row.motion-leader::after,.power-card.motion-status-leader::after{opacity:.2}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .command-goat-spotlight.motion-atmosphere::after,
+  .goat-row.motion-leader::after,
+  .power-card.motion-status-leader::after,
+  .player-portrait-shell.motion-portrait-halo::before,
+  .season-match-log.motion-rail-reveal::before,
+  #saveMatchBtn.motion-ready-once{
+    animation:none!important;
+    transform:none!important;
+  }
+  .player-portrait-shell,
+  #netMatrix tbody td,
+  #netMatrix tbody th,
+  #netMatrix .matrix-cell,
+  .validation,
+  .validation-console-head>b,
+  .validation-console-grid b{transition:none!important}
+  #netMatrix.is-focus-mode tbody td,
+  #netMatrix.is-focus-mode tbody tr.is-focus-row td,
+  #netMatrix.is-focus-mode tbody td.is-focus-col{opacity:1}
+}

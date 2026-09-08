@@ -10,17 +10,21 @@ import {
   initAnimationSystem,
   prefersReducedMotion,
   transitionView,
-  animateRecordCenterEntry,
+  animateViewExperience,
   transitionRecordContent,
+  transitionReportContent,
+  transitionMatchContent,
+  transitionRivalContent,
+  transitionRivalDetail,
+  animateEntryValidation,
+  toggleDisclosure,
   animateNumbers,
   animateRecordDetails,
-  animatePlayerCenterEntry,
   animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
-  animateGoatRanking,
   animateNavIndicator
-} from "./animations.js";
+} from "./animations.js?v=3.0.0-unified-motion";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -607,11 +611,8 @@ function showView(id,{immediate=false}={}){
     if(!immediate)window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"});
     renderViewContent(id);
     syncPremiumDropdowns();
-    animateNumbers(incoming);
-    if(id==="records")animateRecordCenterEntry(incoming);
-    if(id==="player")animatePlayerCenterEntry(incoming);
   };
-  transitionView({outgoing,incoming,swap,immediate});
+  transitionView({outgoing,incoming,swap,immediate,onEntered:()=>animateViewExperience(incoming,id)});
 }
 
 function currentLeaderboard(){
@@ -731,10 +732,16 @@ function renderOverview(){
   $("#latestMatchCommand").innerHTML=latest&&recap?`<div class="latest-match-meta"><strong>${escapeHtml(latest.matchId)}</strong><span>${escapeHtml(latest.date)} · ${escapeHtml(latest.matchType)}</span></div><div class="latest-match-result"><div><span>本场MVP</span><b>${escapeHtml(mvpNames)}</b></div><div><span>最高得分</span><b class="${scoreClass(topScore?.score)}">${topScore?`${escapeHtml(topScore.player)} ${fmtScore(topScore.score)}`:"—"}</b></div></div><p>${escapeHtml(recap.bullets?.[0]||recap.body||"")}</p>`:'<div class="empty">暂无正式比赛。</div>';
   $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["最新比赛日期",latest?.date||"—",latest?.matchId||"等待正式比赛"]].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
   renderGoatRows("#goatRanking");
-  animateGoatRanking($("#goatRanking"));
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
-$("#monthlyReportMonth")?.addEventListener("change",e=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();animateNumbers($("#monthlyReport"));});
+$("#monthlyReportMonth")?.addEventListener("change",e=>{
+  const target=$("#monthlyReport");
+  transitionReportContent({
+    target,
+    update:()=>{monthlyReportMonthTouched=true;monthlyReportMonth=e.target.value;renderMonthlyReport();},
+    onUpdated:()=>animateNumbers(target)
+  });
+});
 
 function movementText(r){return r.movement>0?`↑${r.movement}`:r.movement<0?`↓${Math.abs(r.movement)}`:"—";}
 function seasonRankSnapshot(matches,season){
@@ -840,7 +847,7 @@ document.addEventListener("click",event=>{
   const button=event.target.closest("[data-ai-report-toggle]");if(!button)return;
   const content=document.getElementById(button.getAttribute("aria-controls"));if(!content)return;
   const open=button.getAttribute("aria-expanded")!=="true";
-  button.setAttribute("aria-expanded",String(open));
+  toggleDisclosure({button,content,open});
 });
 
 document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player");});
@@ -1133,18 +1140,25 @@ function filteredMatches(){
     return true;
   });
 }
-function renderMatches(reset=false){
+function renderMatches(reset=false,{append=false,startIndex=0}={}){
   if(reset)matchLimit=15;
   const rows=filteredMatches();
-  $("#matchList").innerHTML=rows.slice(0,matchLimit).map(matchCard).join("")||'<div class="empty">没有符合条件的比赛。</div>';
+  const list=$("#matchList"),visible=rows.slice(0,matchLimit);
+  if(append&&startIndex>0&&list&&!list.querySelector(".empty"))list.insertAdjacentHTML("beforeend",visible.slice(startIndex).map(matchCard).join(""));
+  else list.innerHTML=visible.map(matchCard).join("")||'<div class="empty">没有符合条件的比赛。</div>';
   $("#loadMoreBtn").style.display=rows.length>matchLimit?"block":"none";
+  return visible.length;
 }
-["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",()=>renderMatches(true)));
-$("#matchQuery").addEventListener("input",()=>renderMatches(true));
+function refreshMatches(){
+  const target=$("#matchList");
+  transitionMatchContent({target,update:()=>renderMatches(true)});
+}
+["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",refreshMatches));
+$("#matchQuery").addEventListener("input",refreshMatches);
 $("#matchPlayerTrigger")?.addEventListener("click",()=>{$("#matchPlayerMenu")?.hidden?openMatchPlayerDropdown():closeMatchPlayerDropdown({focusTrigger:true});});
 $("#matchPlayerTrigger")?.addEventListener("keydown",event=>{if(!["Enter"," ","ArrowDown","ArrowUp"].includes(event.key))return;event.preventDefault();if($("#matchPlayerMenu")?.hidden)openMatchPlayerDropdown({focus:event.key==="ArrowUp"?"last":"selected"});});
-$("#matchPlayerClear")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();renderMatches(true);schedulePremiumDropdownPosition();});
-document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();syncMatchPlayerOptionAccessibility();renderMatches(true);});
+$("#matchPlayerClear")?.addEventListener("click",()=>{selectedMatchPlayers.clear();renderMatchPlayerOptions();refreshMatches();schedulePremiumDropdownPosition();});
+document.addEventListener("change",e=>{const checkbox=e.target.closest?.("[data-match-player]");if(!checkbox)return;const id=checkbox.dataset.matchPlayer;if(checkbox.checked)selectedMatchPlayers.add(id);else selectedMatchPlayers.delete(id);updateMatchPlayerTrigger();syncMatchPlayerOptionAccessibility();refreshMatches();});
 $("#matchPlayerMenu")?.addEventListener("keydown",event=>{
   if(event.key==="Escape"){event.preventDefault();closeMatchPlayerDropdown({focusTrigger:true});return;}
   const rows=[...$("#matchPlayerMenu").querySelectorAll("[data-match-player]")],index=Math.max(0,rows.indexOf(document.activeElement));
@@ -1152,7 +1166,11 @@ $("#matchPlayerMenu")?.addEventListener("keydown",event=>{
   else if(event.key==="Enter"&&document.activeElement?.matches?.("[data-match-player]")){event.preventDefault();document.activeElement.click();}
   else if(event.key==="Tab")closeMatchPlayerDropdown({immediate:true});
 });
-$("#loadMoreBtn").addEventListener("click",()=>{matchLimit+=15;renderMatches()});
+$("#loadMoreBtn").addEventListener("click",()=>{
+  const target=$("#matchList"),startIndex=target?.querySelectorAll(".season-log-entry").length||0;
+  matchLimit+=15;
+  transitionMatchContent({target,append:true,startIndex,update:()=>renderMatches(false,{append:true,startIndex})});
+});
 document.addEventListener("click",e=>{const card=e.target.closest("[data-match-id]");if(card&&currentView==="matches")openMatchModal(card.dataset.matchId);});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.("[data-match-id]")&&currentView==="matches")openMatchModal(e.target.dataset.matchId);if(e.key==="Escape"){closeAllPremiumDropdowns({focusTrigger:true});closeMatchModal();closeRecordModal();}});
 
@@ -1260,6 +1278,13 @@ function validateEntry(){
   $("#saveMatchBtn")?.classList.toggle("is-ready",ok);
   $("#matchupValidation").className="validation "+(matchupOk?"ok":"bad");
   $("#matchupValidation").innerHTML=`<span class="matchup-check ${matchup.complete?"pass":"fail"}">${matchup.complete?"所有方向格均已填写":"每个参赛牌手之间的两个方向格都要分别填写（0也要填）"}</span>`+comparisons.map(x=>`<span class="matchup-check ${x.ok?"pass":"fail"}">${escapeHtml(x.player)}：对位行和 ${fmtScore(x.rowTotal)} / 比赛 ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span>`).join("");
+  animateEntryValidation({
+    summary:el,
+    detail:$("#matchupValidation"),
+    readyButton:$("#saveMatchBtn"),
+    ready:ok,
+    signature:[ok,rows.length,required,complete,sum,matchup.complete,matchupOk,...comparisons.map(x=>`${x.playerId}:${x.rowTotal}:${x.raw}:${x.ok}`)].join("|")
+  });
   return ok;
 }
 $("#saveMatchBtn").addEventListener("click",async()=>{
@@ -1368,10 +1393,16 @@ function renderRival(){
   else{$("#rivalDetailCard")?.classList.remove("has-selection");$("#rivalDetail").className="matrix-context-bar";$("#rivalDetail").textContent="请选择矩阵中的一个方向格，查看双方累计或场均对位概览。";}
 }
 function setRivalMode(mode){
-  rivalMode=mode==="average"?"average":"cumulative";
-  $$('[data-rival-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rivalMode===rivalMode));
-  renderRival();
-  animateNumbers($('.view[data-view="rival"]'));
+  const root=$('.view[data-view="rival"]');
+  transitionRivalContent({
+    root,
+    update:()=>{
+      rivalMode=mode==="average"?"average":"cumulative";
+      $$('[data-rival-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rivalMode===rivalMode));
+      renderRival();
+    },
+    onUpdated:()=>animateNumbers(root)
+  });
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rival-mode]");if(b)setRivalMode(b.dataset.rivalMode);});
 function ensureRivalDetailModal(){
@@ -1420,9 +1451,8 @@ function showRivalDetail(a,b){
   });
   let f=summarize(history),r=summarize(reverseHistory);
   if(rivalMode==="average"){if(history.length)f={eat:f.eat/history.length,eaten:f.eaten/history.length,net:f.net/history.length};if(reverseHistory.length)r={eat:r.eat/reverseHistory.length,eaten:r.eaten/reverseHistory.length,net:r.net/reverseHistory.length};}
-  $("#rivalDetailCard")?.classList.add("has-selection");
-  $("#rivalDetail").className="rival-detail-content";
-  $("#rivalDetail").innerHTML=`<div class="player-head"><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
+  const target=$("#rivalDetail");
+  const html=`<div class="player-head"><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
     <div class="kpis rival-detail-kpis" style="margin-top:16px">
       <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtRivalValue(forward)}</strong></div>
       <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtRivalValue(f.eat)} / ${fmtRivalEaten(f.eaten)}</strong></div>
@@ -1431,6 +1461,16 @@ function showRivalDetail(a,b){
     </div>
     <div class="validation">两个方向完全独立记录，不要求互为相反数。当前显示${rivalMode==="average"?"场均":"累计"}口径；逐场明细不在本页叠加。</div>
     <button type="button" class="btn rival-detail-open-btn" data-rival-detail-open="${escapeHtml(`${a}|${b}`)}">查看明细记录 · ${history.length}场</button>`;
+  transitionRivalDetail({
+    target,
+    update:()=>{
+      $("#rivalDetailCard")?.classList.add("has-selection");
+      target.className="rival-detail-content";
+      target.innerHTML=html;
+      $$('[data-rival-a]').forEach(cell=>cell.classList.toggle("is-selected",cell.dataset.rivalA===a&&cell.dataset.rivalB===b));
+    },
+    onUpdated:()=>animateNumbers(target)
+  });
 }
 document.addEventListener("click",e=>{
   const button=e.target.closest("[data-rival-detail-open]");
@@ -1592,26 +1632,7 @@ function initImmersiveBackground(){
   const lowMemory=Number(navigator.deviceMemory||8)<=4;
   if(reduced||lowCpu||lowMemory){
     document.documentElement.classList.add("ambient-reduced");
-    return;
   }
-  const finePointer=window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
-  if(!finePointer)return;
-  let raf=0,lastX=0,lastY=0;
-  const apply=()=>{
-    raf=0;
-    const nx=(lastX/window.innerWidth-.5)*2;
-    const ny=(lastY/window.innerHeight-.5)*2;
-    bg.style.setProperty("--parallax-x",`${(nx*12).toFixed(2)}px`);
-    bg.style.setProperty("--parallax-y",`${(ny*9).toFixed(2)}px`);
-  };
-  window.addEventListener("pointermove",e=>{
-    lastX=e.clientX;lastY=e.clientY;
-    if(!raf)raf=requestAnimationFrame(apply);
-  },{passive:true});
-  window.addEventListener("pointerleave",()=>{
-    bg.style.setProperty("--parallax-x","0px");
-    bg.style.setProperty("--parallax-y","0px");
-  },{passive:true});
 }
 
 function boot(){

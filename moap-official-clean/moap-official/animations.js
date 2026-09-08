@@ -13,6 +13,8 @@ const NUMBER_SELECTOR = [
   ".career-metric-grid b",
   ".career-ovr strong",
   ".goat-rating strong",
+  ".command-goat-index strong",
+  ".power-score > b",
   ".profile-rating-pills b",
   ".record-table tbody td",
   ".record-table tbody td > b",
@@ -29,11 +31,11 @@ const NUMBER_SELECTOR = [
   ".scouting-index > b"
 ].join(",");
 
-const MOAP_MOTION = Object.freeze({
-  duration:Object.freeze({fast:.14,normal:.32,slow:.46}),
-  distance:Object.freeze({enter:12,small:6,card:3}),
-  stagger:Object.freeze({fast:.045,normal:.06}),
-  ease:Object.freeze({enter:"power2.out",exit:"power1.in"})
+export const MOAP_MOTION = Object.freeze({
+  duration:Object.freeze({instant:.11,fast:.16,normal:.31,slow:.47,hero:.64,data:.78}),
+  distance:Object.freeze({micro:3,small:6,enter:10,hero:14,card:3}),
+  stagger:Object.freeze({micro:.03,fast:.045,normal:.06}),
+  ease:Object.freeze({enter:"power2.out",exit:"power1.in",data:"power2.out",emphasis:"power3.out"})
 });
 
 let initialized = false;
@@ -48,6 +50,21 @@ let playerTrendTimeline = null;
 let playerRecentTimeline = null;
 let playerTrendInteractionCleanup = null;
 let goatRankingTimeline = null;
+let shellTimeline = null;
+let overviewTimeline = null;
+let statusTimeline = null;
+let matchTimeline = null;
+let matchContentTimeline = null;
+let rivalTimeline = null;
+let rivalDetailTimeline = null;
+let systemTimeline = null;
+let entryTimeline = null;
+let validationTimeline = null;
+let monthlyTimeline = null;
+let disclosureTimeline = null;
+let revealObserver = null;
+let rivalMatrixInteractionCleanup = null;
+const revealedSections = new WeakSet();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -75,6 +92,56 @@ function clearMotionProps(elements){
   gsap.set(elements,{clearProps:"opacity,visibility,transform"});
 }
 
+function killTimeline(ref){
+  ref?.kill?.();
+}
+
+function killPageMotion(){
+  [recordTimeline,overviewTimeline,statusTimeline,matchTimeline,matchContentTimeline,rivalTimeline,rivalDetailTimeline,systemTimeline,entryTimeline,monthlyTimeline,disclosureTimeline].forEach(killTimeline);
+  recordTimeline=overviewTimeline=statusTimeline=matchTimeline=matchContentTimeline=rivalTimeline=rivalDetailTimeline=systemTimeline=entryTimeline=monthlyTimeline=disclosureTimeline=null;
+  revealObserver?.disconnect();
+  revealObserver=null;
+  rivalMatrixInteractionCleanup?.();
+  rivalMatrixInteractionCleanup=null;
+  motionEngine()?.killTweensOf?.([...document.querySelectorAll(".view *")]);
+  const interrupted=[...document.querySelectorAll('.view [style*="opacity"],.view [style*="visibility"],.view [style*="transform"]')];
+  clearMotionProps(interrupted);
+  document.querySelectorAll(".ai-report-collapse.motion-disclosure-active").forEach(content=>{
+    content.classList.remove("motion-disclosure-active");
+    clearExtendedMotionProps([content],"height,overflow,display");
+  });
+}
+
+function finishNumberTweens(root){
+  if(!root)return;
+  numberTweens.forEach((entry,key)=>{
+    if(!entry?.element||!root.contains(entry.element))return;
+    entry.tween?.kill?.();
+    if(entry.element.isConnected)entry.element.textContent=entry.finalText;
+    numberTweens.delete(key);
+  });
+}
+
+function animateShellEntry(){
+  const gsap=motionEngine();
+  const topbar=document.querySelector(".topbar");
+  const sidebar=document.querySelector(".sidebar");
+  const mobileNav=document.querySelector(".mobile-nav");
+  const main=document.querySelector("main");
+  const targets=[topbar,sidebar,mobileNav,main].filter(Boolean);
+  if(!targets.length||motionDisabled())return;
+  shellTimeline?.kill();
+  clearMotionProps(targets);
+  shellTimeline=gsap.timeline({
+    defaults:{ease:MOAP_MOTION.ease.enter},
+    onComplete:()=>{clearMotionProps(targets);shellTimeline=null;}
+  });
+  if(topbar)shellTimeline.fromTo(topbar,{autoAlpha:0,y:-4},{autoAlpha:1,y:0,duration:.34},0);
+  if(sidebar)shellTimeline.fromTo(sidebar,{autoAlpha:0,x:-6},{autoAlpha:1,x:0,duration:.38},.08);
+  if(mobileNav)shellTimeline.fromTo(mobileNav,{autoAlpha:0,y:-3},{autoAlpha:1,y:0,duration:.3},.08);
+  if(main)shellTimeline.fromTo(main,{autoAlpha:0,y:6},{autoAlpha:1,y:0,duration:.4},.16);
+}
+
 export function initAnimationSystem(){
   if(initialized)return;
   initialized=true;
@@ -93,6 +160,10 @@ export function initAnimationSystem(){
       .to(target,{scale:.97,duration:.07,ease:"power1.out",overwrite:true})
       .to(target,{scale:1,duration:.12,ease:"power2.out",clearProps:"transform"});
   },{passive:true});
+  document.addEventListener("visibilitychange",()=>{
+    document.documentElement.classList.toggle("motion-paused",document.hidden);
+  });
+  requestAnimationFrame(()=>requestAnimationFrame(animateShellEntry));
 }
 
 export function animateNavIndicator(navRoot,activeButton,{immediate=false}={}){
@@ -114,7 +185,9 @@ export function animateNavIndicator(navRoot,activeButton,{immediate=false}={}){
 export function transitionView({outgoing,incoming,swap,immediate=false,onEntered}){
   const gsap=motionEngine();
   viewTimeline?.kill();
-  recordTimeline?.kill();
+  finishNumberTweens(outgoing);
+  killPageMotion();
+  stopPlayerDataExperience(outgoing);
   clearMotionProps([...document.querySelectorAll(".view")]);
 
   if(immediate||motionDisabled()||!incoming){
@@ -160,6 +233,352 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
 
   swap();
   enter();
+}
+
+function sceneHeaderParts(root){
+  return [
+    root?.querySelector?.(".hero h2"),
+    root?.querySelector?.(".hero p"),
+    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *")
+  ].filter(Boolean);
+}
+
+function addHeaderSequence(timeline,root,position=0){
+  const parts=sceneHeaderParts(root);
+  if(parts.length)timeline.fromTo(parts,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.27:.32,stagger:mobileMotion()?.035:MOAP_MOTION.stagger.fast},position);
+}
+
+function prepareSectionReveals(root,view){
+  revealObserver?.disconnect();
+  revealObserver=null;
+  if(!root?.querySelectorAll)return;
+  const selectorByView={
+    overview:".overview-editorial-recap,.monthly-report-card",
+    status:".status-secondary-grid",
+    player:".player-season-data-card,.player-ai-report-card",
+    rival:".rival-context-card",
+    entry:".entry-matrix-stage"
+  };
+  const selector=selectorByView[view];
+  if(!selector)return;
+  const candidates=[...root.querySelectorAll(selector)].filter(element=>!revealedSections.has(element));
+  if(motionDisabled()){
+    clearMotionProps(candidates);
+    candidates.forEach(element=>revealedSections.add(element));
+    return;
+  }
+  const belowFold=candidates.filter(element=>element.getBoundingClientRect().top>window.innerHeight*.82);
+  if(!belowFold.length)return;
+  const gsap=motionEngine();
+  gsap.set(belowFold,{autoAlpha:0,y:mobileMotion()?5:9});
+  revealObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(!entry.isIntersecting)return;
+      const element=entry.target;
+      revealObserver?.unobserve(element);
+      revealedSections.add(element);
+      gsap.to(element,{autoAlpha:1,y:0,duration:mobileMotion()?.28:.4,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",overwrite:true});
+    });
+  },{rootMargin:"0px 0px -8% 0px",threshold:.12});
+  belowFold.forEach(element=>revealObserver.observe(element));
+}
+
+function animateOverviewEntry(root){
+  const gsap=motionEngine();
+  overviewTimeline?.kill();
+  const goatCard=root.querySelector(".command-goat-spotlight");
+  const latestCard=root.querySelector(".command-latest-match");
+  const goatParts=[...root.querySelectorAll("#overviewGoatHero > *")];
+  const latestParts=[...root.querySelectorAll("#latestMatchCommand > *")];
+  const metrics=[...root.querySelectorAll("#overviewKpis > .kpi")];
+  const rankingCard=root.querySelector(".overview-goat-ranking");
+  const rankingRows=[...root.querySelectorAll("#goatRanking > .goat-row")];
+  const animated=[...sceneHeaderParts(root),goatCard,latestCard,...goatParts,...latestParts,...metrics,rankingCard,...rankingRows].filter(Boolean);
+  goatCard?.classList.toggle("motion-atmosphere",!motionDisabled());
+  rankingRows[0]?.classList.toggle("motion-leader",!motionDisabled());
+  if(motionDisabled()){
+    clearMotionProps(animated);
+    return;
+  }
+  clearMotionProps(animated);
+  const mobile=mobileMotion();
+  overviewTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);overviewTimeline=null;}});
+  addHeaderSequence(overviewTimeline,root,0);
+  overviewTimeline.fromTo(goatCard,{autoAlpha:0,y:mobile?7:12},{autoAlpha:1,y:0,duration:mobile?.36:.5,ease:MOAP_MOTION.ease.emphasis},.11);
+  if(goatParts.length)overviewTimeline.fromTo(goatParts,{autoAlpha:0,y:mobile?4:7},{autoAlpha:1,y:0,duration:mobile?.3:.38,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.22);
+  overviewTimeline.fromTo(latestCard,{autoAlpha:0,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.32:.42,ease:MOAP_MOTION.ease.enter},.25);
+  if(latestParts.length)overviewTimeline.fromTo(latestParts,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.28,stagger:.035,ease:MOAP_MOTION.ease.enter},.33);
+  if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
+  if(rankingCard)overviewTimeline.fromTo(rankingCard,{autoAlpha:0,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter},.48);
+  if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:0,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
+}
+
+function animateStatusEntry(root){
+  const gsap=motionEngine();
+  statusTimeline?.kill();
+  const sectionHead=root.querySelector(".status-section-head");
+  const kpis=[...root.querySelectorAll("#statusKpis > .kpi")];
+  const ranking=root.querySelector(".status-ranking-section");
+  const rows=[...root.querySelectorAll("#powerRanking > .power-card")].slice(0,6);
+  const animated=[...sceneHeaderParts(root),sectionHead,...kpis,ranking,...rows].filter(Boolean);
+  rows[0]?.classList.toggle("motion-status-leader",!motionDisabled());
+  if(motionDisabled()){
+    clearMotionProps(animated);
+    return;
+  }
+  clearMotionProps(animated);
+  const mobile=mobileMotion();
+  statusTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);statusTimeline=null;}});
+  addHeaderSequence(statusTimeline,root,0);
+  if(sectionHead)statusTimeline.fromTo(sectionHead,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.26,ease:MOAP_MOTION.ease.enter},.12);
+  if(kpis.length)statusTimeline.fromTo(kpis,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.28:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.18);
+  if(ranking)statusTimeline.fromTo(ranking,{autoAlpha:0,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.4,ease:MOAP_MOTION.ease.enter},.3);
+  if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:0,x:mobile?-3:-6},{autoAlpha:1,x:0,duration:mobile?.27:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.38);
+}
+
+export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}){
+  if(!root?.querySelectorAll)return;
+  const gsap=motionEngine();
+  const rows=[...root.querySelectorAll(".season-log-entry")].slice(startIndex,startIndex+8);
+  const nodes=rows.map(row=>row.querySelector(".match-timeline-node")).filter(Boolean);
+  if(includeRail)root.classList.remove("motion-rail-reveal");
+  if(motionDisabled()){
+    clearExtendedMotionProps([...rows,...nodes]);
+    return;
+  }
+  const mobile=mobileMotion();
+  if(includeRail){void root.offsetWidth;root.classList.add("motion-rail-reveal");}
+  gsap.fromTo(rows,{autoAlpha:0,x:mobile?-3:-5},{autoAlpha:1,x:0,duration:mobile?.28:.34,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:0,scale:.85},{autoAlpha:1,scale:1,duration:.24,stagger:.045,delay:delay+.08,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+}
+
+function animateMatchesEntry(root){
+  const gsap=motionEngine();
+  matchTimeline?.kill();
+  const logCard=root.querySelector(".season-match-log-card");
+  const head=root.querySelector(".match-log-head");
+  const filters=root.querySelector(".season-match-log-card .form-row");
+  const list=root.querySelector("#matchList");
+  const animated=[...sceneHeaderParts(root),logCard,head,filters].filter(Boolean);
+  if(motionDisabled()){
+    clearMotionProps(animated);
+    animateMatchRows(list);
+    return;
+  }
+  clearMotionProps(animated);
+  matchTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);matchTimeline=null;}});
+  addHeaderSequence(matchTimeline,root,0);
+  if(logCard)matchTimeline.fromTo(logCard,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.12);
+  if(head)matchTimeline.fromTo(head,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.22);
+  if(filters)matchTimeline.fromTo(filters,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.27);
+  matchTimeline.call(()=>animateMatchRows(list,{delay:0}),null,.34);
+}
+
+export function transitionMatchContent({target,update,onUpdated,append=false,startIndex=0}){
+  const gsap=motionEngine();
+  matchContentTimeline?.kill();
+  if(!target||motionDisabled()){
+    update();onUpdated?.();
+    return;
+  }
+  if(append){
+    update();
+    animateMatchRows(target,{startIndex,includeRail:false});
+    onUpdated?.();
+    return;
+  }
+  gsap.killTweensOf(target);
+  matchContentTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);matchContentTimeline=null;}})
+    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{update();onUpdated?.();})
+    .set(target,{y:mobileMotion()?3:5})
+    .to(target,{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter})
+    .call(()=>animateMatchRows(target,{includeRail:true}));
+}
+
+function bindRivalMatrixFocus(root){
+  rivalMatrixInteractionCleanup?.();
+  rivalMatrixInteractionCleanup=null;
+  const table=root?.querySelector?.("#netMatrix");
+  const finePointer=window.matchMedia?.("(hover:hover) and (pointer:fine)")?.matches;
+  if(!table||!finePointer||motionDisabled())return;
+  const clear=()=>{
+    table.classList.remove("is-focus-mode");
+    table.querySelectorAll(".is-focus-cell,.is-focus-row,.is-focus-col").forEach(element=>element.classList.remove("is-focus-cell","is-focus-row","is-focus-col"));
+  };
+  const focus=cell=>{
+    if(!cell?.matches?.("button.matrix-cell[data-rival-a][data-rival-b]")){clear();return;}
+    clear();
+    const td=cell.closest("td"),row=cell.closest("tr"),columnIndex=td?[...row.children].indexOf(td):-1;
+    table.classList.add("is-focus-mode");
+    cell.classList.add("is-focus-cell");
+    row?.classList.add("is-focus-row");
+    if(columnIndex>=0)table.querySelectorAll(`tr > *:nth-child(${columnIndex+1})`).forEach(element=>element.classList.add("is-focus-col"));
+  };
+  const move=event=>focus(event.target.closest?.("button.matrix-cell"));
+  const leave=()=>clear();
+  const focusIn=event=>focus(event.target.closest?.("button.matrix-cell"));
+  const focusOut=event=>{if(!table.contains(event.relatedTarget))clear();};
+  table.addEventListener("pointermove",move,{passive:true});
+  table.addEventListener("pointerleave",leave,{passive:true});
+  table.addEventListener("focusin",focusIn);
+  table.addEventListener("focusout",focusOut);
+  rivalMatrixInteractionCleanup=()=>{
+    table.removeEventListener("pointermove",move);
+    table.removeEventListener("pointerleave",leave);
+    table.removeEventListener("focusin",focusIn);
+    table.removeEventListener("focusout",focusOut);
+    clear();
+  };
+}
+
+function animateRivalEntry(root){
+  const gsap=motionEngine();
+  rivalTimeline?.kill();
+  const kpis=[...root.querySelectorAll("#rivalKpis > .kpi")];
+  const matrixCard=root.querySelector(".rival-matrix-card");
+  const matrixRows=[...root.querySelectorAll("#netMatrix tbody tr")];
+  const animated=[...sceneHeaderParts(root),...kpis,matrixCard,...matrixRows].filter(Boolean);
+  bindRivalMatrixFocus(root);
+  if(motionDisabled()){
+    clearMotionProps(animated);
+    return;
+  }
+  clearMotionProps(animated);
+  rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);rivalTimeline=null;}});
+  addHeaderSequence(rivalTimeline,root,0);
+  if(kpis.length)rivalTimeline.fromTo(kpis,{autoAlpha:0,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.32,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.13);
+  if(matrixCard)rivalTimeline.fromTo(matrixCard,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.28);
+  if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:0,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.24:.3,stagger:mobileMotion()?.025:.035,ease:MOAP_MOTION.ease.enter},.38);
+}
+
+export function transitionRivalContent({root,update,onUpdated}){
+  const target=root?.querySelector?.(".rival-matrix-layout")||root;
+  const gsap=motionEngine();
+  rivalTimeline?.kill();
+  if(!target||motionDisabled()){
+    update();bindRivalMatrixFocus(root);onUpdated?.();return;
+  }
+  rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);rivalTimeline=null;}})
+    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{update();bindRivalMatrixFocus(root);onUpdated?.();})
+    .fromTo(target,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.22,ease:MOAP_MOTION.ease.enter});
+}
+
+export function transitionRivalDetail({target,update,onUpdated}){
+  const gsap=motionEngine();
+  rivalDetailTimeline?.kill();
+  if(!target||motionDisabled()){
+    update();onUpdated?.();return;
+  }
+  rivalDetailTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);rivalDetailTimeline=null;}})
+    .to(target,{autoAlpha:0,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{update();onUpdated?.();})
+    .fromTo(target,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
+}
+
+function animateSystemEntry(root){
+  const gsap=motionEngine();
+  systemTimeline?.kill();
+  const kpis=[...root.querySelectorAll("#systemKpis > .kpi")];
+  const audit=root.querySelector(".system-audit-grid");
+  const health=[...root.querySelectorAll("#healthList > .health-item")];
+  const animated=[...sceneHeaderParts(root),...kpis,audit,...health].filter(Boolean);
+  if(motionDisabled()){
+    clearMotionProps(animated);return;
+  }
+  clearMotionProps(animated);
+  systemTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);systemTimeline=null;}});
+  addHeaderSequence(systemTimeline,root,0);
+  if(kpis.length)systemTimeline.fromTo(kpis,{autoAlpha:0,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.14);
+  if(audit)systemTimeline.fromTo(audit,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.4,ease:MOAP_MOTION.ease.enter},.3);
+  if(health.length)systemTimeline.fromTo(health,{autoAlpha:0},{autoAlpha:1,duration:.26,stagger:.03,ease:MOAP_MOTION.ease.enter},.38);
+}
+
+function animateEntryCenter(root){
+  const gsap=motionEngine();
+  entryTimeline?.kill();
+  const workflow=root.querySelector(".entry-workflow-card");
+  const steps=[...root.querySelectorAll(".entry-workflow-step")];
+  const validation=root.querySelector("#entryValidation");
+  const actions=root.querySelector(".entry-actions");
+  const guide=root.querySelector(".grid-2 > .card:not(.entry-workflow-card)");
+  const animated=[...sceneHeaderParts(root),workflow,...steps,validation,actions,guide].filter(Boolean);
+  if(motionDisabled()){
+    clearMotionProps(animated);return;
+  }
+  clearMotionProps(animated);
+  entryTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);entryTimeline=null;}});
+  addHeaderSequence(entryTimeline,root,0);
+  if(workflow)entryTimeline.fromTo(workflow,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:.38,ease:MOAP_MOTION.ease.enter},.13);
+  if(steps.length)entryTimeline.fromTo(steps,{autoAlpha:0,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.04:.06,ease:MOAP_MOTION.ease.enter},.23);
+  if(validation)entryTimeline.fromTo(validation,{autoAlpha:0,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.38);
+  if(actions)entryTimeline.fromTo(actions,{autoAlpha:0,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.42);
+  if(guide)entryTimeline.fromTo(guide,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.34,ease:MOAP_MOTION.ease.enter},.26);
+}
+
+export function animateEntryValidation({summary,detail,readyButton,signature,ready=false}){
+  if(!summary||summary.closest(".view")?.classList.contains("active")===false)return;
+  const stateKey=String(signature??"");
+  if(summary.dataset.motionValidationState===stateKey)return;
+  const wasReady=summary.dataset.motionReady==="true";
+  summary.dataset.motionValidationState=stateKey;
+  summary.dataset.motionReady=String(ready);
+  if(motionDisabled())return;
+  validationTimeline?.kill();
+  const targets=[summary,detail].filter(Boolean);
+  const gsap=motionEngine();
+  validationTimeline=gsap.fromTo(targets,{autoAlpha:.78,y:2},{autoAlpha:1,y:0,duration:.21,stagger:.025,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",onComplete:()=>{validationTimeline=null;}});
+  if(ready&&!wasReady&&readyButton){
+    readyButton.classList.remove("motion-ready-once");
+    void readyButton.offsetWidth;
+    readyButton.classList.add("motion-ready-once");
+  }
+}
+
+export function transitionReportContent({target,update,onUpdated}){
+  const gsap=motionEngine();
+  monthlyTimeline?.kill();
+  if(!target||motionDisabled()){
+    update();onUpdated?.();return;
+  }
+  monthlyTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);monthlyTimeline=null;}})
+    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{update();onUpdated?.();})
+    .fromTo(target,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter});
+}
+
+export function toggleDisclosure({button,content,open}){
+  if(!button||!content)return;
+  disclosureTimeline?.kill();
+  const gsap=motionEngine();
+  if(motionDisabled()){
+    button.setAttribute("aria-expanded",String(open));
+    clearExtendedMotionProps([content],"height,overflow");
+    return;
+  }
+  content.classList.add("motion-disclosure-active");
+  if(open){
+    button.setAttribute("aria-expanded","true");
+    gsap.set(content,{display:"block",height:0,autoAlpha:0,overflow:"hidden"});
+    disclosureTimeline=gsap.to(content,{height:"auto",autoAlpha:1,duration:.3,ease:MOAP_MOTION.ease.enter,onComplete:()=>{content.classList.remove("motion-disclosure-active");clearExtendedMotionProps([content],"height,overflow,display");disclosureTimeline=null;}});
+    return;
+  }
+  disclosureTimeline=gsap.to(content,{height:0,autoAlpha:0,duration:.26,ease:MOAP_MOTION.ease.exit,overflow:"hidden",onComplete:()=>{button.setAttribute("aria-expanded","false");content.classList.remove("motion-disclosure-active");clearExtendedMotionProps([content],"height,overflow,display");disclosureTimeline=null;}});
+}
+
+export function animateViewExperience(root,view){
+  if(!root)return;
+  animateNumbers(root);
+  prepareSectionReveals(root,view);
+  if(view==="overview")animateOverviewEntry(root);
+  else if(view==="records")animateRecordCenterEntry(root);
+  else if(view==="status")animateStatusEntry(root);
+  else if(view==="player")animatePlayerCenterEntry(root);
+  else if(view==="matches")animateMatchesEntry(root);
+  else if(view==="rival")animateRivalEntry(root);
+  else if(view==="system")animateSystemEntry(root);
+  else if(view==="entry")animateEntryCenter(root);
 }
 
 export function animateRecordCenterEntry(root){
@@ -290,7 +709,7 @@ function animateNumberCandidates(candidates,root,{duration,delayFor}={}){
     const delay=Math.max(0,Number(delayFor?.(element,index)||0));
     numberHistory.set(key,format.target);
 
-    numberTweens.get(key)?.kill();
+    numberTweens.get(key)?.tween?.kill?.();
     if(motionDisabled()||previous===format.target){
       element.textContent=original;
       return;
@@ -314,10 +733,10 @@ function animateNumberCandidates(candidates,root,{duration,delayFor}={}){
       },
       onComplete:()=>{
         element.textContent=original;
-        if(numberTweens.get(key)===tween)numberTweens.delete(key);
+        if(numberTweens.get(key)?.tween===tween)numberTweens.delete(key);
       }
     });
-    numberTweens.set(key,tween);
+    numberTweens.set(key,{tween,element,finalText:original});
   });
 }
 
@@ -537,7 +956,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
   }
 
   const mobile=mobileMotion();
-  const duration=mobile?1.2:1.55;
+  const duration=mobile?.72:.86;
   gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
   if(reveal)gsap.set(reveal,{scaleX:0,transformOrigin:"left center"});
 
@@ -602,6 +1021,12 @@ function animatePlayerDataExperience(root,{delay=0}={}){
   animatePlayerSeasonNumbers(root,{baseDelay:delay+.08});
   animatePlayerTrend(root,{delay:delay+.16});
   animateRecentMatches(root,{delay:delay+.22});
+  const bars=[...root.querySelectorAll(".season-dimension .bar i")];
+  const gsap=motionEngine();
+  if(bars.length&&!motionDisabled()){
+    gsap.killTweensOf(bars);
+    gsap.fromTo(bars,{scaleX:0,transformOrigin:"left center"},{scaleX:1,duration:mobileMotion()?.44:.56,delay:delay+.12,stagger:mobileMotion()?.055:.075,ease:MOAP_MOTION.ease.data,clearProps:"transform,transformOrigin"});
+  }
 }
 
 function stopPlayerDataExperience(root){
@@ -618,19 +1043,19 @@ function stopPlayerDataExperience(root){
   clearMotionProps(recentRows);
   clearExtendedMotionProps(recentBadges);
   recentRows[0]?.classList.remove("recent-glow-once");
+  const dimensionBars=root?.querySelectorAll ? [...root.querySelectorAll(".season-dimension .bar i")] : [];
+  motionEngine()?.killTweensOf?.(dimensionBars);
+  clearExtendedMotionProps(dimensionBars,"transformOrigin");
 }
 
 function playerLayers(root){
   const gridCards=directChildren(root,":scope > .grid-2 > .card");
   const current=root?.querySelector?.(".current-season-performance-card");
-  const scouting=root?.querySelector?.("#playerScouting")?.closest?.(".card");
   return [
     root?.querySelector?.("#playerHeader"),
     current,
-    root?.querySelector?.(".player-season-data-card"),
     ...gridCards,
-    root?.querySelector?.(".profile-honors-home"),
-    scouting
+    root?.querySelector?.(".profile-honors-home")
   ].filter(Boolean);
 }
 
@@ -640,24 +1065,32 @@ export function animatePlayerCenterEntry(root){
   playerSwitchTimeline?.kill();
   stopPlayerDataExperience(root);
   const layers=playerLayers(root);
-  if(!root||motionDisabled()||!layers.length){
+  const headerParts=sceneHeaderParts(root);
+  const portrait=root?.querySelector?.(".player-portrait-shell");
+  const identity=[...root?.querySelectorAll?.(".profile-name-block > *, .profile-goat-chip")||[]];
+  const honors=root?.querySelector?.(".profile-honors-home");
+  const remaining=layers.filter(layer=>layer!==root?.querySelector?.("#playerHeader")&&layer!==honors);
+  const animated=[...headerParts,portrait,...identity,honors,...remaining].filter(Boolean);
+  portrait?.classList.toggle("motion-portrait-halo",!motionDisabled());
+  if(!root||motionDisabled()||!animated.length){
     animatePlayerDataExperience(root);
     return;
   }
   const mobile=mobileMotion();
-  clearMotionProps(layers);
-  animatePlayerDataExperience(root);
+  clearMotionProps(animated);
+  animatePlayerDataExperience(root,{delay:.14});
   playerEntryTimeline=gsap.timeline({
     defaults:{ease:MOAP_MOTION.ease.enter},
     onComplete:()=>{
-      clearMotionProps(layers);
+      clearMotionProps(animated);
       playerEntryTimeline=null;
     }
-  }).fromTo(
-    layers,
-    {autoAlpha:0,y:mobile?8:MOAP_MOTION.distance.enter},
-    {autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:MOAP_MOTION.stagger.normal}
-  );
+  });
+  addHeaderSequence(playerEntryTimeline,root,0);
+  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:0,y:mobile?6:8,scale:.96},{autoAlpha:1,y:0,scale:1,duration:mobile?.44:.52,ease:MOAP_MOTION.ease.emphasis},.1);
+  if(identity.length)playerEntryTimeline.fromTo(identity,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.025:.04},.19);
+  if(honors)playerEntryTimeline.fromTo(honors,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.31:.38},.29);
+  if(remaining.length)playerEntryTimeline.fromTo(remaining,{autoAlpha:0,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:.055},.36);
 }
 
 export function transitionPlayerProfile({root,update,onUpdated}){
@@ -676,23 +1109,27 @@ export function transitionPlayerProfile({root,update,onUpdated}){
   }
 
   const mobile=mobileMotion();
+  const oldPortrait=root?.querySelector?.(".player-portrait-shell");
   playerSwitchTimeline=gsap.timeline({
     onComplete:()=>{
       clearMotionProps(playerLayers(root));
       playerSwitchTimeline=null;
     }
   })
-    .to(before,{autoAlpha:0,y:mobile?2:4,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
+    .to(before,{autoAlpha:0,y:mobile?2:3,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
+    .to(oldPortrait,{scale:.97,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit},0)
     .call(()=>{
       update();
       onUpdated?.();
-      animatePlayerDataExperience(root);
+      root?.querySelector?.(".player-portrait-shell")?.classList.toggle("motion-portrait-halo",!motionDisabled());
+      animatePlayerDataExperience(root,{delay:.08});
     })
     .fromTo(
       playerLayers(root),
-      {autoAlpha:0,y:mobile?6:10},
+      {autoAlpha:0,y:mobile?4:5},
       {autoAlpha:1,y:0,duration:mobile?.27:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter,stagger:mobile?.025:MOAP_MOTION.stagger.fast}
-    );
+    )
+    .fromTo(root?.querySelector?.(".player-portrait-shell"),{scale:.97},{scale:1,duration:mobile?.32:.4,ease:MOAP_MOTION.ease.emphasis,clearProps:"transform"},"<");
 }
 
 export function transitionPlayerData({target,update,onUpdated}){
@@ -744,6 +1181,10 @@ export function animateGoatRanking(root){
 export function animateRecordDetails(backdrop,{open,onComplete}={}){
   const gsap=motionEngine();
   const panel=backdrop?.querySelector(".record-modal");
+  const header=panel?.querySelector(".record-modal-header");
+  const sections=panel?.querySelectorAll ? [...panel.querySelectorAll(".record-modal-section")]:[];
+  const footer=panel?.querySelector(".record-modal-footer");
+  const internals=[header,...sections,footer].filter(Boolean);
   detailTimeline?.kill();
 
   if(!backdrop||!panel||motionDisabled()){
@@ -753,29 +1194,31 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
 
   if(open){
     gsap.set(backdrop,{autoAlpha:0});
-    gsap.set(panel,{height:0,autoAlpha:0,y:10,overflow:"hidden"});
+    gsap.set(panel,{autoAlpha:0,y:10,scale:.99,transformOrigin:"center top"});
+    gsap.set(internals,{autoAlpha:0,y:6});
     detailTimeline=gsap.timeline({
       onComplete:()=>{
         gsap.set(backdrop,{clearProps:"opacity,visibility"});
-        gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
+        gsap.set(panel,{clearProps:"opacity,visibility,transform,transformOrigin"});
+        clearMotionProps(internals);
         detailTimeline=null;
         onComplete?.();
       }
     })
       .to(backdrop,{autoAlpha:1,duration:.14,ease:"power1.out"})
-      .to(panel,{height:"auto",autoAlpha:1,y:0,duration:.34,ease:"power2.out"},"-=.06");
+      .to(panel,{autoAlpha:1,y:0,scale:1,duration:.34,ease:MOAP_MOTION.ease.enter},"-=.06")
+      .to(internals,{autoAlpha:1,y:0,duration:.26,stagger:.05,ease:MOAP_MOTION.ease.enter},"-=.22");
     return;
   }
 
-  gsap.set(panel,{overflow:"hidden"});
   detailTimeline=gsap.timeline({
     onComplete:()=>{
       gsap.set(backdrop,{clearProps:"opacity,visibility"});
-      gsap.set(panel,{clearProps:"height,opacity,visibility,transform,overflow"});
+      gsap.set(panel,{clearProps:"opacity,visibility,transform,transformOrigin"});
       detailTimeline=null;
       onComplete?.();
     }
   })
-    .to(panel,{height:0,autoAlpha:0,y:8,duration:.24,ease:"power1.in"})
-    .to(backdrop,{autoAlpha:0,duration:.14,ease:"power1.in"},"-=.1");
+    .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
+    .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
 }
