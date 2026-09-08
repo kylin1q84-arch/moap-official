@@ -1,6 +1,7 @@
 import { gsap } from "./motion-runtime.js";
 
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const SCENE_ENTRY_ALPHA = .94;
 const BUTTON_SELECTOR = "button:not(:disabled), .btn:not(:disabled), [role='button']:not([aria-disabled='true'])";
 const NUMBER_SELECTOR = [
   "[data-animate-number]",
@@ -150,6 +151,7 @@ export function initAnimationSystem(){
     gsap.config({nullTargetWarn:false});
     gsap.defaults({ease:"power2.out"});
   }
+  document.documentElement.classList.toggle("motion-paused",document.hidden);
   document.addEventListener("pointerdown",event=>{
     if(motionDisabled())return;
     const target=event.target.closest?.(BUTTON_SELECTOR);
@@ -196,18 +198,22 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
     return;
   }
 
+  let entered=false;
+  const runEntered=()=>{
+    if(entered)return;
+    entered=true;
+    onEntered?.();
+  };
+
   const enter=()=>{
+    gsap.set(incoming,{autoAlpha:SCENE_ENTRY_ALPHA,y:6});
+    runEntered();
     viewTimeline=gsap.timeline({
       onComplete:()=>{
         clearMotionProps([incoming]);
         viewTimeline=null;
-        onEntered?.();
       }
-    }).fromTo(
-      incoming,
-      {autoAlpha:0,y:10},
-      {autoAlpha:1,y:0,duration:.3,ease:"power2.out"}
-    );
+    }).to(incoming,{autoAlpha:1,y:0,duration:.26,ease:"power2.out"});
   };
 
   if(outgoing&&outgoing!==incoming){
@@ -215,19 +221,16 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
       onComplete:()=>{
         clearMotionProps([incoming]);
         viewTimeline=null;
-        onEntered?.();
       }
     })
-      .to(outgoing,{autoAlpha:0,y:-4,duration:.14,ease:"power1.in"})
+      .to(outgoing,{autoAlpha:SCENE_ENTRY_ALPHA,y:-2,duration:.1,ease:"power1.in"})
       .call(()=>{
         swap();
         clearMotionProps([outgoing]);
+        gsap.set(incoming,{autoAlpha:SCENE_ENTRY_ALPHA,y:6});
+        runEntered();
       })
-      .fromTo(
-        incoming,
-        {autoAlpha:0,y:10},
-        {autoAlpha:1,y:0,duration:.3,ease:"power2.out"}
-      );
+      .to(incoming,{autoAlpha:1,y:0,duration:.26,ease:"power2.out"});
     return;
   }
 
@@ -245,7 +248,7 @@ function sceneHeaderParts(root){
 
 function addHeaderSequence(timeline,root,position=0){
   const parts=sceneHeaderParts(root);
-  if(parts.length)timeline.fromTo(parts,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.27:.32,stagger:mobileMotion()?.035:MOAP_MOTION.stagger.fast},position);
+  if(parts.length)timeline.fromTo(parts,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.27:.32,stagger:mobileMotion()?.035:MOAP_MOTION.stagger.fast},position);
 }
 
 function prepareSectionReveals(root,view){
@@ -304,13 +307,13 @@ function animateOverviewEntry(root){
   const mobile=mobileMotion();
   overviewTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);overviewTimeline=null;}});
   addHeaderSequence(overviewTimeline,root,0);
-  overviewTimeline.fromTo(goatCard,{autoAlpha:0,y:mobile?7:12},{autoAlpha:1,y:0,duration:mobile?.36:.5,ease:MOAP_MOTION.ease.emphasis},.11);
-  if(goatParts.length)overviewTimeline.fromTo(goatParts,{autoAlpha:0,y:mobile?4:7},{autoAlpha:1,y:0,duration:mobile?.3:.38,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.22);
-  overviewTimeline.fromTo(latestCard,{autoAlpha:0,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.32:.42,ease:MOAP_MOTION.ease.enter},.25);
-  if(latestParts.length)overviewTimeline.fromTo(latestParts,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.28,stagger:.035,ease:MOAP_MOTION.ease.enter},.33);
-  if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
-  if(rankingCard)overviewTimeline.fromTo(rankingCard,{autoAlpha:0,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter},.48);
-  if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:0,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
+  overviewTimeline.fromTo(goatCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?7:12},{autoAlpha:1,y:0,duration:mobile?.36:.5,ease:MOAP_MOTION.ease.emphasis},.11);
+  if(goatParts.length)overviewTimeline.fromTo(goatParts,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:7},{autoAlpha:1,y:0,duration:mobile?.3:.38,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.22);
+  overviewTimeline.fromTo(latestCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.32:.42,ease:MOAP_MOTION.ease.enter},.25);
+  if(latestParts.length)overviewTimeline.fromTo(latestParts,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.28,stagger:.035,ease:MOAP_MOTION.ease.enter},.33);
+  if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
+  if(rankingCard)overviewTimeline.fromTo(rankingCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter},.48);
+  if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
 }
 
 function animateStatusEntry(root){
@@ -330,10 +333,10 @@ function animateStatusEntry(root){
   const mobile=mobileMotion();
   statusTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);statusTimeline=null;}});
   addHeaderSequence(statusTimeline,root,0);
-  if(sectionHead)statusTimeline.fromTo(sectionHead,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.26,ease:MOAP_MOTION.ease.enter},.12);
-  if(kpis.length)statusTimeline.fromTo(kpis,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.28:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.18);
-  if(ranking)statusTimeline.fromTo(ranking,{autoAlpha:0,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.4,ease:MOAP_MOTION.ease.enter},.3);
-  if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:0,x:mobile?-3:-6},{autoAlpha:1,x:0,duration:mobile?.27:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.38);
+  if(sectionHead)statusTimeline.fromTo(sectionHead,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.26,ease:MOAP_MOTION.ease.enter},.12);
+  if(kpis.length)statusTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.28:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.18);
+  if(ranking)statusTimeline.fromTo(ranking,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.4,ease:MOAP_MOTION.ease.enter},.3);
+  if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobile?-3:-6},{autoAlpha:1,x:0,duration:mobile?.27:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.38);
 }
 
 export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}){
@@ -348,8 +351,8 @@ export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}
   }
   const mobile=mobileMotion();
   if(includeRail){void root.offsetWidth;root.classList.add("motion-rail-reveal");}
-  gsap.fromTo(rows,{autoAlpha:0,x:mobile?-3:-5},{autoAlpha:1,x:0,duration:mobile?.28:.34,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
-  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:0,scale:.85},{autoAlpha:1,scale:1,duration:.24,stagger:.045,delay:delay+.08,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  gsap.fromTo(rows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobile?-3:-5},{autoAlpha:1,x:0,duration:mobile?.28:.34,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:SCENE_ENTRY_ALPHA,scale:.85},{autoAlpha:1,scale:1,duration:.24,stagger:.045,delay:delay+.08,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
 }
 
 function animateMatchesEntry(root){
@@ -368,9 +371,9 @@ function animateMatchesEntry(root){
   clearMotionProps(animated);
   matchTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);matchTimeline=null;}});
   addHeaderSequence(matchTimeline,root,0);
-  if(logCard)matchTimeline.fromTo(logCard,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.12);
-  if(head)matchTimeline.fromTo(head,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.22);
-  if(filters)matchTimeline.fromTo(filters,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.27);
+  if(logCard)matchTimeline.fromTo(logCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.12);
+  if(head)matchTimeline.fromTo(head,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.22);
+  if(filters)matchTimeline.fromTo(filters,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.27);
   matchTimeline.call(()=>animateMatchRows(list,{delay:0}),null,.34);
 }
 
@@ -447,9 +450,9 @@ function animateRivalEntry(root){
   clearMotionProps(animated);
   rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);rivalTimeline=null;}});
   addHeaderSequence(rivalTimeline,root,0);
-  if(kpis.length)rivalTimeline.fromTo(kpis,{autoAlpha:0,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.32,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.13);
-  if(matrixCard)rivalTimeline.fromTo(matrixCard,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.28);
-  if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:0,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.24:.3,stagger:mobileMotion()?.025:.035,ease:MOAP_MOTION.ease.enter},.38);
+  if(kpis.length)rivalTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.32,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.13);
+  if(matrixCard)rivalTimeline.fromTo(matrixCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.28);
+  if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.24:.3,stagger:mobileMotion()?.025:.035,ease:MOAP_MOTION.ease.enter},.38);
 }
 
 export function transitionRivalContent({root,update,onUpdated}){
@@ -490,9 +493,9 @@ function animateSystemEntry(root){
   clearMotionProps(animated);
   systemTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);systemTimeline=null;}});
   addHeaderSequence(systemTimeline,root,0);
-  if(kpis.length)systemTimeline.fromTo(kpis,{autoAlpha:0,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.14);
-  if(audit)systemTimeline.fromTo(audit,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.4,ease:MOAP_MOTION.ease.enter},.3);
-  if(health.length)systemTimeline.fromTo(health,{autoAlpha:0},{autoAlpha:1,duration:.26,stagger:.03,ease:MOAP_MOTION.ease.enter},.38);
+  if(kpis.length)systemTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.14);
+  if(audit)systemTimeline.fromTo(audit,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.4,ease:MOAP_MOTION.ease.enter},.3);
+  if(health.length)systemTimeline.fromTo(health,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.26,stagger:.03,ease:MOAP_MOTION.ease.enter},.38);
 }
 
 function animateEntryCenter(root){
@@ -510,11 +513,11 @@ function animateEntryCenter(root){
   clearMotionProps(animated);
   entryTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);entryTimeline=null;}});
   addHeaderSequence(entryTimeline,root,0);
-  if(workflow)entryTimeline.fromTo(workflow,{autoAlpha:0,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:.38,ease:MOAP_MOTION.ease.enter},.13);
-  if(steps.length)entryTimeline.fromTo(steps,{autoAlpha:0,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.04:.06,ease:MOAP_MOTION.ease.enter},.23);
-  if(validation)entryTimeline.fromTo(validation,{autoAlpha:0,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.38);
-  if(actions)entryTimeline.fromTo(actions,{autoAlpha:0,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.42);
-  if(guide)entryTimeline.fromTo(guide,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.34,ease:MOAP_MOTION.ease.enter},.26);
+  if(workflow)entryTimeline.fromTo(workflow,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:.38,ease:MOAP_MOTION.ease.enter},.13);
+  if(steps.length)entryTimeline.fromTo(steps,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.04:.06,ease:MOAP_MOTION.ease.enter},.23);
+  if(validation)entryTimeline.fromTo(validation,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.38);
+  if(actions)entryTimeline.fromTo(actions,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.42);
+  if(guide)entryTimeline.fromTo(guide,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.34,ease:MOAP_MOTION.ease.enter},.26);
 }
 
 export function animateEntryValidation({summary,detail,readyButton,signature,ready=false}){
@@ -607,10 +610,10 @@ export function animateRecordCenterEntry(root){
       recordTimeline=null;
     }
   });
-  if(title)recordTimeline.fromTo(title,{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.3});
-  if(filters.length)recordTimeline.fromTo(filters,{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:.32,stagger:.05},"-=.12");
-  if(regions.length)recordTimeline.fromTo(regions,{autoAlpha:0,y:12},{autoAlpha:1,y:0,duration:.34,stagger:.06},"-=.14");
-  if(rows.length)recordTimeline.fromTo(rows,{autoAlpha:0,y:14},{autoAlpha:1,y:0,duration:.42,stagger:.05},"-=.18");
+  if(title)recordTimeline.fromTo(title,{autoAlpha:SCENE_ENTRY_ALPHA,y:8},{autoAlpha:1,y:0,duration:.3});
+  if(filters.length)recordTimeline.fromTo(filters,{autoAlpha:SCENE_ENTRY_ALPHA,y:10},{autoAlpha:1,y:0,duration:.32,stagger:.05},"-=.12");
+  if(regions.length)recordTimeline.fromTo(regions,{autoAlpha:SCENE_ENTRY_ALPHA,y:12},{autoAlpha:1,y:0,duration:.34,stagger:.06},"-=.14");
+  if(rows.length)recordTimeline.fromTo(rows,{autoAlpha:SCENE_ENTRY_ALPHA,y:14},{autoAlpha:1,y:0,duration:.42,stagger:.05},"-=.18");
 }
 
 export function transitionRecordContent({targets,update,onUpdated}){
@@ -936,6 +939,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
   const chart=root?.querySelector?.("#trendChart")||root;
   const line=chart?.querySelector?.(".trend-line");
   const reveal=chart?.querySelector?.(".trend-area-reveal");
+  chart?.classList?.remove("trend-ambient-ready");
   const animated=[line,reveal].filter(Boolean);
   playerTrendTimeline?.kill();
   clearPlayerTrendInteraction();
@@ -951,6 +955,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
   clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
 
   if(motionDisabled()){
+    chart?.classList?.add("trend-ambient-ready");
     bindPlayerTrendInteraction(root);
     return;
   }
@@ -964,6 +969,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
     delay,
     onComplete:()=>{
       clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+      chart?.classList?.add("trend-ambient-ready");
       playerTrendTimeline=null;
       bindPlayerTrendInteraction(root);
     }
@@ -989,7 +995,7 @@ function animateRecentMatches(root,{delay=0}={}){
   const mobile=mobileMotion();
   const rowDuration=mobile?.28:.34;
   const stagger=mobile?.05:.06;
-  gsap.set(rows,{autoAlpha:0,y:mobile?5:8});
+  gsap.set(rows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8});
   if(badges.length)gsap.set(badges,{autoAlpha:0,scale:.9,transformOrigin:"center"});
 
   playerRecentTimeline=gsap.timeline({
@@ -1036,6 +1042,7 @@ function stopPlayerDataExperience(root){
   playerRecentTimeline=null;
   clearPlayerTrendInteraction();
   const chart=root?.querySelector?.("#trendChart");
+  chart?.classList?.remove("trend-ambient-ready");
   const trendParts=chart?[chart.querySelector(".trend-line"),chart.querySelector(".trend-area-reveal"),...chart.querySelectorAll(".trend-dot")].filter(Boolean):[];
   clearExtendedMotionProps(trendParts,"strokeDasharray,strokeDashoffset,transformOrigin");
   const recentRows=root?.querySelectorAll ? [...root.querySelectorAll("#recentMatchesPlayer [data-recent-match]")] : [];
@@ -1087,10 +1094,10 @@ export function animatePlayerCenterEntry(root){
     }
   });
   addHeaderSequence(playerEntryTimeline,root,0);
-  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:0,y:mobile?6:8,scale:.96},{autoAlpha:1,y:0,scale:1,duration:mobile?.44:.52,ease:MOAP_MOTION.ease.emphasis},.1);
-  if(identity.length)playerEntryTimeline.fromTo(identity,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.025:.04},.19);
-  if(honors)playerEntryTimeline.fromTo(honors,{autoAlpha:0,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.31:.38},.29);
-  if(remaining.length)playerEntryTimeline.fromTo(remaining,{autoAlpha:0,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:.055},.36);
+  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:8,scale:.96},{autoAlpha:1,y:0,scale:1,duration:mobile?.44:.52,ease:MOAP_MOTION.ease.emphasis},.1);
+  if(identity.length)playerEntryTimeline.fromTo(identity,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.025:.04},.19);
+  if(honors)playerEntryTimeline.fromTo(honors,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.31:.38},.29);
+  if(remaining.length)playerEntryTimeline.fromTo(remaining,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:.055},.36);
 }
 
 export function transitionPlayerProfile({root,update,onUpdated}){

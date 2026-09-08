@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=3.0.0-unified-motion";
+} from "./animations.js?v=3.2.0-ambient-living";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -973,6 +973,7 @@ function playerTimeline(pid){
 }
 function drawTrend(pid){
   const svg=$("#trendChart"),arr=playerTimeline(pid);
+  svg?.classList.remove("trend-ambient-ready");
   const wrap=svg?.closest?.(".trend-wrap");
   if(wrap&&!wrap.querySelector(".trend-tooltip")){
     wrap.insertAdjacentHTML("beforeend",'<div class="trend-tooltip" role="tooltip" aria-hidden="true"><strong data-trend-title></strong><span data-trend-date></span><span data-trend-mvp hidden>MVP</span><span data-trend-score></span><span data-trend-total></span></div>');
@@ -986,7 +987,7 @@ function drawTrend(pid){
   const area=`${x(0)},${y(0)} ${pts} ${x(arr.length-1)},${y(0)}`;
   const grid=[0,.25,.5,.75,1].map(t=>{const v=min+range*t;return `<line class="axis" x1="${pad.l}" y1="${y(v)}" x2="${W-pad.r}" y2="${y(v)}"/><text class="chart-label" x="3" y="${y(v)+3}">${Math.round(v)}</text>`}).join("");
   const dots=arr.map((d,i)=>`<circle class="trend-dot" cx="${x(i)}" cy="${y(d.cumulative)}" r="3.2" data-season="${escapeHtml(d.season||"")}" data-round="${escapeHtml(String(d.round??""))}" data-date="${escapeHtml(d.date||"")}" data-mvp="${d.isMvp?"true":"false"}" data-score="${escapeHtml(fmtScore(d.score))}" data-score-value="${Number(d.score)}" data-cumulative="${escapeHtml(fmtScore(d.cumulative))}"><title>${escapeHtml([d.season,d.round?`第${d.round}场`:"",d.date,d.isMvp?"MVP":"",fmtScore(d.score),`累计 ${fmtScore(d.cumulative)}`].filter(Boolean).join(" · "))}</title></circle>`).join("");
-  svg.innerHTML=`<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d7b25b" stop-opacity=".24"/><stop offset="100%" stop-color="#d7b25b" stop-opacity="0"/></linearGradient><clipPath id="trendAreaClip"><rect class="trend-area-reveal" x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${H-pad.t-pad.b}"/></clipPath></defs>${grid}<polygon class="trend-area" clip-path="url(#trendAreaClip)" points="${area}"/><polyline class="trend-line" points="${pts}"/><line class="trend-guide" x1="${x(arr.length-1)}" y1="${pad.t}" x2="${x(arr.length-1)}" y2="${H-pad.b}"/>${dots}<text class="chart-label" x="${pad.l}" y="${H-7}">${arr[0].season} · 第1场</text><text class="chart-label" text-anchor="end" x="${W-pad.r}" y="${H-7}">${arr[arr.length-1].season} · 第${arr[arr.length-1].round}场</text>`;
+  svg.innerHTML=`<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d7b25b" stop-opacity=".24"/><stop offset="100%" stop-color="#d7b25b" stop-opacity="0"/></linearGradient><clipPath id="trendAreaClip"><rect class="trend-area-reveal" x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${H-pad.t-pad.b}"/></clipPath></defs>${grid}<polygon class="trend-area" clip-path="url(#trendAreaClip)" points="${area}"/><polyline class="trend-line" points="${pts}"/><polyline class="trend-line-ambient" pathLength="100" points="${pts}" aria-hidden="true"/><line class="trend-guide" x1="${x(arr.length-1)}" y1="${pad.t}" x2="${x(arr.length-1)}" y2="${H-pad.b}"/>${dots}<text class="chart-label" x="${pad.l}" y="${H-7}">${arr[0].season} · 第1场</text><text class="chart-label" text-anchor="end" x="${W-pad.r}" y="${H-7}">${arr[arr.length-1].season} · 第${arr[arr.length-1].round}场</text>`;
   $("#chartCaption").textContent=`${arr.length}场 · 当前累计 ${fmtScore(arr[arr.length-1].cumulative)}`;
 }
 function seasonGrade(rating){return rating>=92?"S":rating>=86?"A+":rating>=80?"A":rating>=74?"B+":rating>=68?"B":rating>=62?"C+":"C";}

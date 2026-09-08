@@ -2688,3 +2688,324 @@ select.moap-native-select{
   #netMatrix.is-focus-mode tbody tr.is-focus-row td,
   #netMatrix.is-focus-mode tbody td.is-focus-col{opacity:1}
 }
+
+/* v3.2.0 · Ambient Living System */
+.ambient-background::after{
+  display:block;
+  opacity:.32;
+  background:
+    linear-gradient(180deg,rgba(10,32,27,.06),transparent 42%,rgba(2,9,7,.24)),
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(16,53,43,.075) 14%,
+      rgba(215,178,91,.028) 27%,
+      transparent 50%,
+      rgba(16,53,43,.075) 64%,
+      rgba(215,178,91,.028) 77%,
+      transparent 100%);
+  background-size:100% 100%,240% 100%;
+  background-position:0 0,0% 50%;
+  background-repeat:no-repeat,repeat-x;
+  animation:moapAmbientDeepFlow 47s linear infinite;
+  animation-delay:-19s;
+  will-change:background-position;
+}
+@keyframes moapAmbientDeepFlow{
+  from{background-position:0 0,0% 50%}
+  to{background-position:0 0,240% 50%}
+}
+
+/* Persistent shell signals: stable core, moving environment only. */
+.top-actions .badge:first-child .dot{
+  position:relative;
+  isolation:isolate;
+  flex:0 0 auto;
+}
+.top-actions .badge:first-child .dot::after{
+  content:"";
+  position:absolute;
+  inset:-4px;
+  z-index:-1;
+  border-radius:50%;
+  pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 23%,rgba(85,214,156,.34) 37%,transparent 52% 76%,rgba(215,178,91,.14) 88%,transparent 100%);
+  -webkit-mask:radial-gradient(circle,transparent 47%,#000 53% 70%,transparent 76%);
+  mask:radial-gradient(circle,transparent 47%,#000 53% 70%,transparent 76%);
+  animation:moapLiveOrbit 12.5s linear infinite;
+  animation-delay:-4.25s;
+  will-change:transform;
+}
+@keyframes moapLiveOrbit{to{transform:rotate(360deg)}}
+
+.nav-active-indicator{
+  background:
+    linear-gradient(180deg,transparent 0%,rgba(255,231,165,.78) 19%,var(--gold) 38%,rgba(215,178,91,.42) 52%,transparent 67%,rgba(255,231,165,.7) 84%,transparent 100%),
+    rgba(215,178,91,.62);
+  background-size:100% 240%,100% 100%;
+  background-position:50% 0%,0 0;
+  background-repeat:repeat-y,no-repeat;
+  animation:moapNavGoldFlow 8.5s linear infinite;
+  animation-delay:-2.7s;
+}
+@keyframes moapNavGoldFlow{
+  from{background-position:50% 0%,0 0}
+  to{background-position:50% 240%,0 0}
+}
+
+/* Overview ambient hierarchy: GOAT hero, then ranking #1. */
+.command-goat-spotlight.motion-atmosphere{
+  isolation:isolate;
+}
+.command-goat-spotlight.motion-atmosphere::after{
+  inset:-24% auto -24% 0;
+  width:200%;
+  height:auto;
+  border:0;
+  border-radius:0;
+  z-index:0;
+  opacity:.42;
+  background:linear-gradient(104deg,
+    transparent 0%,
+    rgba(16,53,43,.08) 10%,
+    rgba(215,178,91,.12) 22%,
+    rgba(85,214,156,.035) 35%,
+    transparent 50%,
+    rgba(16,53,43,.08) 60%,
+    rgba(215,178,91,.12) 72%,
+    rgba(85,214,156,.035) 85%,
+    transparent 100%);
+  animation:moapSurfaceDrift 12.8s linear infinite;
+  animation-delay:-6.4s;
+  will-change:transform;
+}
+.command-goat-spotlight.motion-atmosphere > *{position:relative;z-index:1}
+
+.goat-row.motion-leader::after,
+.power-card.motion-status-leader::after{
+  inset:0 auto 0 0;
+  width:200%;
+  opacity:.2;
+  background:linear-gradient(96deg,
+    transparent 0%,rgba(215,178,91,.07) 18%,rgba(85,214,156,.025) 34%,transparent 50%,
+    transparent 50%,rgba(215,178,91,.07) 68%,rgba(85,214,156,.025) 84%,transparent 100%);
+  animation:moapSurfaceDrift 13.7s linear infinite;
+  animation-delay:-8.1s;
+  will-change:transform;
+}
+.power-card.motion-status-leader::after{
+  opacity:.17;
+  background:linear-gradient(96deg,
+    transparent 0%,rgba(85,214,156,.06) 18%,rgba(215,178,91,.045) 34%,transparent 50%,
+    transparent 50%,rgba(85,214,156,.06) 68%,rgba(215,178,91,.045) 84%,transparent 100%);
+  animation-duration:10.9s;
+  animation-delay:-3.8s;
+}
+@keyframes moapSurfaceDrift{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+
+/* Player ambient layers: halo > OVR texture > trend trace. */
+.player-portrait-shell.motion-portrait-halo::before{
+  inset:5% 5% -4%;
+  width:auto;
+  height:auto;
+  bottom:-4%;
+  opacity:.5;
+  border-radius:48%;
+  background:conic-gradient(from 18deg,
+    transparent 0 14%,rgba(215,178,91,.22) 25%,rgba(85,214,156,.08) 37%,transparent 49% 61%,
+    rgba(215,178,91,.11) 70%,rgba(85,214,156,.065) 78%,transparent 89% 100%);
+  -webkit-mask:radial-gradient(ellipse at 50% 58%,transparent 0 49%,#000 57% 71%,transparent 80%);
+  mask:radial-gradient(ellipse at 50% 58%,transparent 0 49%,#000 57% 71%,transparent 80%);
+  transform-origin:50% 58%;
+  animation:moapPortraitHaloOrbit 16.7s linear infinite;
+  animation-delay:-10.2s;
+  will-change:transform;
+}
+@keyframes moapPortraitHaloOrbit{to{transform:rotate(360deg)}}
+
+.view[data-view="player"].active .season-dimension .bar > i{
+  background-image:linear-gradient(90deg,
+    #b88d34 0%,#efd68c 18%,rgba(85,214,156,.72) 27%,#d7b25b 39%,#b88d34 50%,
+    #efd68c 68%,rgba(85,214,156,.72) 77%,#d7b25b 89%,#b88d34 100%);
+  background-size:200% 100%;
+  animation:moapOvrTexture 11.7s linear infinite;
+  animation-delay:-1s;
+  will-change:background-position;
+}
+.view[data-view="player"].active .season-dimension:nth-child(2) .bar > i{animation-delay:-3s}
+.view[data-view="player"].active .season-dimension:nth-child(3) .bar > i{animation-delay:-5s}
+.view[data-view="player"].active .season-dimension:nth-child(4) .bar > i{animation-delay:-7s}
+.view[data-view="player"].active .season-dimension:nth-child(5) .bar > i{animation-delay:-9s}
+@keyframes moapOvrTexture{
+  from{background-position:0% 50%}
+  to{background-position:200% 50%}
+}
+
+.trend-line-ambient{
+  fill:none;
+  stroke:rgba(255,224,139,.54);
+  stroke-width:3.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:7 93;
+  stroke-dashoffset:100;
+  opacity:0;
+  pointer-events:none;
+}
+.trend-ambient-ready .trend-line-ambient{
+  opacity:.42;
+  animation:moapTrendTrace 15.8s linear infinite;
+  animation-delay:-6.3s;
+}
+@keyframes moapTrendTrace{to{stroke-dashoffset:0}}
+
+/* Matches: one quiet data signal moving through the season rail. */
+.season-match-log::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:6px;
+  width:3px;
+  height:18%;
+  z-index:0;
+  border-radius:999px;
+  pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(85,214,156,.22) 34%,rgba(215,178,91,.5) 55%,transparent);
+  transform:translate3d(0,-165%,0);
+  animation:moapTimelineFlow 16.9s linear infinite;
+  animation-delay:-5.6s;
+  will-change:transform;
+}
+.season-log-entry{z-index:1}
+@keyframes moapTimelineFlow{to{transform:translate3d(0,690%,0)}}
+
+/* Rival: a single container-level sweep, never per-cell animation. */
+.rival-matrix-card .matrix-wrap{
+  position:relative;
+  isolation:isolate;
+}
+.rival-matrix-card .matrix-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  opacity:.11;
+  background:linear-gradient(112deg,
+    transparent 0 24%,rgba(85,214,156,.07) 34%,rgba(215,178,91,.13) 42%,rgba(85,214,156,.055) 49%,transparent 59% 100%);
+  background-size:240% 100%;
+  background-position:210% 50%;
+  background-repeat:repeat-x;
+  animation:moapMatrixSweep 21.7s linear infinite;
+  animation-delay:-13.2s;
+  transition:opacity .18s ease;
+  will-change:background-position;
+}
+.rival-matrix-card .matrix-wrap:hover::after{opacity:.055}
+@keyframes moapMatrixSweep{
+  from{background-position:210% 50%}
+  to{background-position:-30% 50%}
+}
+#netMatrix .matrix-cell.is-selected{
+  background-image:linear-gradient(96deg,transparent 0%,rgba(215,178,91,.11) 27%,transparent 50%,rgba(215,178,91,.11) 77%,transparent 100%);
+  background-size:200% 100%;
+  animation:moapSelectedCellDrift 9.4s linear infinite;
+  animation-delay:-4.1s;
+}
+@keyframes moapSelectedCellDrift{
+  from{background-position:0% 50%}
+  to{background-position:200% 50%}
+}
+
+/* Entry stays still until validation reaches READY TO SAVE. */
+#saveMatchBtn.is-ready{
+  background-image:linear-gradient(100deg,
+    #c99f45 0%,#efd58c 23%,#d7b25b 39%,#c99f45 50%,#efd58c 73%,#d7b25b 89%,#c99f45 100%);
+  background-size:200% 100%;
+  animation:moapReadyFlow 7.6s linear infinite;
+  animation-delay:-2.8s;
+  will-change:background-position;
+}
+@keyframes moapReadyFlow{
+  from{background-position:0% 50%}
+  to{background-position:200% 50%}
+}
+
+/* Background tabs and inactive views do not spend animation work. */
+.motion-paused .ambient-background::after,
+.motion-paused .top-actions .badge:first-child .dot::after,
+.motion-paused .nav-active-indicator,
+.motion-paused .season-dimension .bar > i,
+.motion-paused .trend-line-ambient,
+.motion-paused .season-match-log::after,
+.motion-paused .rival-matrix-card .matrix-wrap::after,
+.motion-paused #netMatrix .matrix-cell.is-selected,
+.motion-paused #saveMatchBtn.is-ready,
+.view:not(.active) .season-dimension .bar > i,
+.view:not(.active) .trend-line-ambient,
+.view:not(.active) .season-match-log::after,
+.view:not(.active) .rival-matrix-card .matrix-wrap::after,
+.view:not(.active) #netMatrix .matrix-cell.is-selected,
+.view:not(.active) #saveMatchBtn.is-ready{
+  animation-play-state:paused!important;
+}
+
+@media(max-width:760px){
+  .ambient-background::after{display:none}
+  .command-goat-spotlight.motion-atmosphere::after{opacity:.34}
+  .goat-row.motion-leader::after,.power-card.motion-status-leader::after{opacity:.14}
+  .player-portrait-shell.motion-portrait-halo::before{opacity:.41}
+  .view[data-view="player"].active .season-dimension .bar > i{
+    background-image:linear-gradient(90deg,
+      #b88d34 0%,#efd68c 20%,rgba(85,214,156,.56) 29%,#d7b25b 41%,#b88d34 50%,
+      #efd68c 70%,rgba(85,214,156,.56) 79%,#d7b25b 91%,#b88d34 100%);
+  }
+  .trend-ambient-ready .trend-line-ambient{display:none}
+  .rival-matrix-card .matrix-wrap::after{display:none}
+  .season-match-log::before{display:block;left:1px}
+  .season-match-log::after{display:block;left:0;opacity:.72}
+}
+
+.ambient-reduced .ambient-background::before,
+.ambient-reduced .ambient-background::after,
+.ambient-reduced .top-actions .badge:first-child .dot::after,
+.ambient-reduced .nav-active-indicator,
+.ambient-reduced .command-goat-spotlight.motion-atmosphere::after,
+.ambient-reduced .goat-row.motion-leader::after,
+.ambient-reduced .power-card.motion-status-leader::after,
+.ambient-reduced .player-portrait-shell.motion-portrait-halo::before,
+.ambient-reduced .view[data-view="player"].active .season-dimension .bar > i,
+.ambient-reduced .trend-ambient-ready .trend-line-ambient,
+.ambient-reduced .season-match-log::after,
+.ambient-reduced .rival-matrix-card .matrix-wrap::after,
+.ambient-reduced #netMatrix .matrix-cell.is-selected,
+.ambient-reduced #saveMatchBtn.is-ready{
+  animation:none!important;
+  transform:none!important;
+}
+.ambient-reduced .trend-ambient-ready .trend-line-ambient{opacity:.16}
+.ambient-reduced .rival-matrix-card .matrix-wrap::after{opacity:.035}
+
+@media(prefers-reduced-motion:reduce){
+  .ambient-background::before,
+  .ambient-background::after,
+  .top-actions .badge:first-child .dot::after,
+  .nav-active-indicator,
+  .command-goat-spotlight.motion-atmosphere::after,
+  .goat-row.motion-leader::after,
+  .power-card.motion-status-leader::after,
+  .player-portrait-shell.motion-portrait-halo::before,
+  .view[data-view="player"].active .season-dimension .bar > i,
+  .trend-ambient-ready .trend-line-ambient,
+  .season-match-log::after,
+  .rival-matrix-card .matrix-wrap::after,
+  #netMatrix .matrix-cell.is-selected,
+  #saveMatchBtn.is-ready{
+    animation:none!important;
+    transform:none!important;
+  }
+  .trend-ambient-ready .trend-line-ambient{opacity:.16}
+  .rival-matrix-card .matrix-wrap::after{opacity:.035}
+}
