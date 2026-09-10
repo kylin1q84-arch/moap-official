@@ -97,20 +97,18 @@ function killTimeline(ref){
   ref?.kill?.();
 }
 
-function killPageMotion(){
-  [recordTimeline,overviewTimeline,statusTimeline,matchTimeline,matchContentTimeline,rivalTimeline,rivalDetailTimeline,systemTimeline,entryTimeline,monthlyTimeline,disclosureTimeline].forEach(killTimeline);
-  recordTimeline=overviewTimeline=statusTimeline=matchTimeline=matchContentTimeline=rivalTimeline=rivalDetailTimeline=systemTimeline=entryTimeline=monthlyTimeline=disclosureTimeline=null;
-  revealObserver?.disconnect();
-  revealObserver=null;
-  rivalMatrixInteractionCleanup?.();
-  rivalMatrixInteractionCleanup=null;
-  motionEngine()?.killTweensOf?.([...document.querySelectorAll(".view *")]);
-  const interrupted=[...document.querySelectorAll('.view [style*="opacity"],.view [style*="visibility"],.view [style*="transform"]')];
+function timelineTargets(timeline){
+  if(!timeline?.getChildren)return [];
+  const targets=timeline.getChildren(true,true,true).flatMap(child=>child?.targets?.()||[]);
+  return [...new Set(targets)].filter(target=>target instanceof Element);
+}
+
+function killEntryMotion(){
+  const timelines=[recordTimeline,overviewTimeline,statusTimeline,matchTimeline,rivalTimeline,systemTimeline,entryTimeline,playerEntryTimeline];
+  const interrupted=timelines.flatMap(timelineTargets);
+  timelines.forEach(killTimeline);
+  recordTimeline=overviewTimeline=statusTimeline=matchTimeline=rivalTimeline=systemTimeline=entryTimeline=playerEntryTimeline=null;
   clearMotionProps(interrupted);
-  document.querySelectorAll(".ai-report-collapse.motion-disclosure-active").forEach(content=>{
-    content.classList.remove("motion-disclosure-active");
-    clearExtendedMotionProps([content],"height,overflow,display");
-  });
 }
 
 function finishNumberTweens(root){
@@ -155,7 +153,7 @@ export function initAnimationSystem(){
   document.addEventListener("pointerdown",event=>{
     if(motionDisabled())return;
     const target=event.target.closest?.(BUTTON_SELECTOR);
-    if(!target||!target.isConnected)return;
+    if(!target||!target.isConnected||target.matches(".nav-btn"))return;
     const engine=motionEngine();
     engine.killTweensOf(target);
     engine.timeline()
@@ -175,67 +173,26 @@ export function animateNavIndicator(navRoot,activeButton,{immediate=false}={}){
   const height=activeButton.offsetHeight;
   const gsap=motionEngine();
   if(immediate||motionDisabled()||!gsap){
-    indicator.style.transform=`translate3d(0,${y}px,0)`;
+    indicator.style.setProperty("transform",`translate3d(0,${y}px,0)`,motionDisabled()?"important":"");
     indicator.style.height=`${height}px`;
     indicator.style.opacity="1";
     return;
   }
   gsap.killTweensOf(indicator);
-  gsap.to(indicator,{y,height,autoAlpha:1,duration:.32,ease:"power2.out",overwrite:true});
+  if(indicator.style.getPropertyPriority("transform")==="important"){
+    indicator.style.setProperty("transform",indicator.style.getPropertyValue("transform"));
+  }
+  gsap.set(indicator,{height,autoAlpha:1});
+  gsap.to(indicator,{y,duration:.22,ease:"power3.out",overwrite:true});
 }
 
 export function transitionView({outgoing,incoming,swap,immediate=false,onEntered}){
-  const gsap=motionEngine();
   viewTimeline?.kill();
+  viewTimeline=null;
   finishNumberTweens(outgoing);
-  killPageMotion();
-  stopPlayerDataExperience(outgoing);
-  clearMotionProps([...document.querySelectorAll(".view")]);
-
-  if(immediate||motionDisabled()||!incoming){
-    swap();
-    onEntered?.();
-    return;
-  }
-
-  let entered=false;
-  const runEntered=()=>{
-    if(entered)return;
-    entered=true;
-    onEntered?.();
-  };
-
-  const enter=()=>{
-    gsap.set(incoming,{autoAlpha:SCENE_ENTRY_ALPHA,y:6});
-    runEntered();
-    viewTimeline=gsap.timeline({
-      onComplete:()=>{
-        clearMotionProps([incoming]);
-        viewTimeline=null;
-      }
-    }).to(incoming,{autoAlpha:1,y:0,duration:.26,ease:"power2.out"});
-  };
-
-  if(outgoing&&outgoing!==incoming){
-    viewTimeline=gsap.timeline({
-      onComplete:()=>{
-        clearMotionProps([incoming]);
-        viewTimeline=null;
-      }
-    })
-      .to(outgoing,{autoAlpha:SCENE_ENTRY_ALPHA,y:-2,duration:.1,ease:"power1.in"})
-      .call(()=>{
-        swap();
-        clearMotionProps([outgoing]);
-        gsap.set(incoming,{autoAlpha:SCENE_ENTRY_ALPHA,y:6});
-        runEntered();
-      })
-      .to(incoming,{autoAlpha:1,y:0,duration:.26,ease:"power2.out"});
-    return;
-  }
-
+  killEntryMotion();
   swap();
-  enter();
+  onEntered?.();
 }
 
 function sceneHeaderParts(root){
@@ -582,6 +539,29 @@ export function animateViewExperience(root,view){
   else if(view==="rival")animateRivalEntry(root);
   else if(view==="system")animateSystemEntry(root);
   else if(view==="entry")animateEntryCenter(root);
+}
+
+function applyAmbientViewState(root,view){
+  const enabled=!motionDisabled();
+  if(view==="overview"){
+    root.querySelector(".command-goat-spotlight")?.classList.toggle("motion-atmosphere",enabled);
+    root.querySelector("#goatRanking > .goat-row")?.classList.toggle("motion-leader",enabled);
+  }else if(view==="status"){
+    root.querySelector("#powerRanking > .power-card")?.classList.toggle("motion-status-leader",enabled);
+  }else if(view==="player"){
+    root.querySelector(".player-portrait-shell")?.classList.toggle("motion-portrait-halo",enabled);
+    const chart=root.querySelector("#trendChart");
+    chart?.classList.toggle("trend-ambient-ready",Boolean(chart.querySelector(".trend-line")));
+    bindPlayerTrendInteraction(root);
+  }else if(view==="rival"){
+    bindRivalMatrixFocus(root);
+  }
+}
+
+export function prepareViewExperience(root,view){
+  if(!root)return;
+  prepareSectionReveals(root,view);
+  applyAmbientViewState(root,view);
 }
 
 export function animateRecordCenterEntry(root){
@@ -1229,3 +1209,4 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
     .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
     .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
 }
+

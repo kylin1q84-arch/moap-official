@@ -28,7 +28,7 @@
       --space-xl:32px;
     }
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:auto}
     body{margin:0;background:
       radial-gradient(circle at 12% -10%,rgba(57,164,122,.18),transparent 32%),
       radial-gradient(circle at 92% 12%,rgba(215,178,91,.12),transparent 28%),
@@ -1289,6 +1289,10 @@ body::-webkit-scrollbar-thumb,
   letter-spacing:.015em;
   transition:color .18s ease,background-color .18s ease,border-color .18s ease;
 }
+.nav-btn:not(:disabled):active{transform:none;filter:none}
+@media(hover:hover) and (pointer:fine){
+  .nav-btn:not(:disabled):hover{transform:none;filter:none}
+}
 .nav-btn.active{
   background:linear-gradient(90deg,rgba(215,178,91,.105),rgba(215,178,91,.025));
   color:var(--gold2);
@@ -1306,7 +1310,7 @@ body::-webkit-scrollbar-thumb,
   box-shadow:0 0 14px rgba(215,178,91,.22);
   opacity:0;
   pointer-events:none;
-  will-change:transform,height;
+  will-change:transform;
 }
 .side-footer{
   margin-top:14px;
@@ -2233,7 +2237,7 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 }
 
 @media(max-width:430px){
-  .mobile-nav{scroll-behavior:smooth}
+  .mobile-nav{scroll-behavior:auto}
   #overviewGoatHero{grid-template-columns:minmax(0,1fr) 82px;gap:10px}
   .command-goat-index strong{font-size:34px}
   .latest-match-result{grid-template-columns:1fr}
@@ -3009,3 +3013,4 @@ select.moap-native-select{
   .trend-ambient-ready .trend-line-ambient{opacity:.16}
   .rival-matrix-card .matrix-wrap::after{opacity:.035}
 }
+

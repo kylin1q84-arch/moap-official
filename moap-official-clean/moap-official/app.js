@@ -11,6 +11,7 @@ import {
   prefersReducedMotion,
   transitionView,
   animateViewExperience,
+  prepareViewExperience,
   transitionRecordContent,
   transitionReportContent,
   transitionMatchContent,
@@ -24,10 +25,11 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=3.2.0-ambient-living";
+} from "./animations.js?v=3.3.0-navigation-snap";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
+const renderedViews = new Set();
 let currentPlayer = "P001";
 let matchLimit = 15;
 let monthlyReportMonth = "";
@@ -287,7 +289,7 @@ async function reloadCloudData(){
 
   currentRole="admin";
   state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups});
-  if(appBooted){initNav();populateSelects();initEntry();showView(currentView);}
+  if(appBooted){renderedViews.clear();initNav();populateSelects();initEntry();showView(currentView,{forceRender:true});}
   document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
 }
@@ -576,14 +578,14 @@ function initNav(){
   mobile.innerHTML = visibleNav.map(navButton).join("");
   $$('[data-nav]').forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.nav)));
   requestAnimationFrame(()=>animateNavIndicator(desktop,desktop.querySelector(`.nav-btn[data-nav="${currentView}"]`),{immediate:true}));
-  requestAnimationFrame(()=>centerActiveMobileNav(currentView,{immediate:true}));
+  requestAnimationFrame(()=>centerActiveMobileNav(currentView));
 }
 
-function centerActiveMobileNav(id,{immediate=false}={}){
+function centerActiveMobileNav(id){
   const nav=$("#mobileNav"),button=nav?.querySelector(`.nav-btn[data-nav="${id}"]`);
   if(!nav||!button||getComputedStyle(nav).display==="none")return;
   const left=Math.max(0,button.offsetLeft-(nav.clientWidth-button.offsetWidth)/2);
-  nav.scrollTo({left,behavior:immediate||prefersReducedMotion()?"auto":"smooth"});
+  nav.scrollTo({left,behavior:"auto"});
 }
 
 function renderViewContent(id){
@@ -596,7 +598,7 @@ function renderViewContent(id){
   if(id==="system") renderSystem();
 }
 
-function showView(id,{immediate=false}={}){
+function showView(id,{immediate=false,forceRender=false}={}){
   closeAllPremiumDropdowns({immediate:true});
   if(id==="honors"||!NAV.some(([viewId])=>viewId===id))id="overview";
   if(id==="entry"&&currentRole!=="admin"){toast("当前账号为只读成员");id="overview";}
@@ -608,11 +610,20 @@ function showView(id,{immediate=false}={}){
     const desktopNav=$("#sidebarNav");
     animateNavIndicator(desktopNav,desktopNav?.querySelector(`.nav-btn[data-nav="${id}"]`));
     requestAnimationFrame(()=>centerActiveMobileNav(id));
-    if(!immediate)window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"});
-    renderViewContent(id);
+    window.scrollTo({top:0,behavior:"auto"});
+    if(forceRender||!renderedViews.has(id)){
+      renderViewContent(id);
+      renderedViews.add(id);
+    }
     syncPremiumDropdowns();
   };
-  transitionView({outgoing,incoming,swap,immediate,onEntered:()=>animateViewExperience(incoming,id)});
+  transitionView({
+    outgoing,
+    incoming,
+    swap,
+    immediate,
+    onEntered:()=>immediate?animateViewExperience(incoming,id):prepareViewExperience(incoming,id)
+  });
 }
 
 function currentLeaderboard(){
@@ -850,7 +861,7 @@ document.addEventListener("click",event=>{
   toggleDisclosure({button,content,open});
 });
 
-document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player");});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player",{forceRender:true});});
 
 function formatRecordValue(record,value=record?.value){
   if(value==null||!Number.isFinite(Number(value)))return "—";
@@ -1677,3 +1688,4 @@ async function start(){
   }
 }
 start();
+
