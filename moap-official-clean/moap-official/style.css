@@ -527,10 +527,6 @@ body{
   animation:ambientBackgroundFlow 24s linear infinite;
   will-change:background-position;
 }
-.ambient-background::after{
-  opacity:.72;
-  background:linear-gradient(180deg,rgba(10,32,27,.08),transparent 42%,rgba(2,9,7,.30));
-}
 .ambient-glow{
   display:none;
 }
@@ -1598,13 +1594,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   .health-item:hover,
   .honor-item:hover,
   .score-row:hover{border-color:rgba(215,178,91,.13)}
-}
-
-/* Background remains the existing 24-second single-direction flow. */
-.ambient-background::after{
-  background:
-    radial-gradient(ellipse at 50% 22%,rgba(16,53,43,.10),transparent 58%),
-    linear-gradient(180deg,rgba(10,32,27,.07),transparent 42%,rgba(2,9,7,.30));
 }
 
 @media(max-width:1180px){
@@ -2695,6 +2684,8 @@ select.moap-native-select{
 
 /* v3.2.0 · Ambient Living System */
 .ambient-background::after{
+  inset:0 auto 0 0;
+  width:240%;
   display:block;
   opacity:.32;
   background:
@@ -2707,16 +2698,17 @@ select.moap-native-select{
       rgba(16,53,43,.075) 64%,
       rgba(215,178,91,.028) 77%,
       transparent 100%);
-  background-size:100% 100%,240% 100%;
-  background-position:0 0,0% 50%;
-  background-repeat:no-repeat,repeat-x;
+  background-size:100% 100%,100% 100%;
+  background-position:0 0;
+  background-repeat:no-repeat;
+  transform:translate3d(0,0,0);
   animation:moapAmbientDeepFlow 47s linear infinite;
   animation-delay:-19s;
-  will-change:background-position;
+  will-change:transform;
 }
 @keyframes moapAmbientDeepFlow{
-  from{background-position:0 0,0% 50%}
-  to{background-position:0 0,240% 50%}
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
 }
 
 /* Persistent shell signals: stable core, moving environment only. */
