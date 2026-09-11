@@ -3278,6 +3278,13 @@ select.moap-native-select{
   padding-top:24px;
   border-top:1px solid var(--overview-rule-gold);
 }
+[data-view="overview"] .overview-goat-ranking{
+  background:transparent;
+  box-shadow:none;
+  border:0;
+  border-top:1px solid var(--overview-rule-gold);
+  border-radius:0;
+}
 [data-view="overview"] .overview-second-screen{margin-top:0}
 [data-view="overview"] .overview-section-head{
   display:flex;
