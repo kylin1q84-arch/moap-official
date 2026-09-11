@@ -3049,15 +3049,16 @@ select.moap-native-select{
 [data-view="overview"] .league-command-scene{
   position:relative;
   isolation:isolate;
-  overflow:hidden;
+  overflow:visible;
   margin-bottom:72px;
-  border:1px solid rgba(215,178,91,.2);
-  border-radius:var(--radius-xl);
-  background:
-    radial-gradient(circle at 38% 12%,rgba(215,178,91,.075),transparent 37%),
-    linear-gradient(145deg,rgba(16,53,43,.965),rgba(7,25,21,.975) 66%,rgba(6,20,17,.985));
-  box-shadow:var(--shadow-hero);
+  border:0;
+  border-top:1px solid var(--overview-rule-gold);
+  border-bottom:1px solid var(--overview-rule-gold);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
 }
+[data-view="overview"] .command-goat-spotlight::after{display:none}
 [data-view="overview"] .league-command-grid{
   display:grid;
   grid-template-columns:minmax(0,1.86fr) minmax(310px,1fr);
@@ -3067,7 +3068,7 @@ select.moap-native-select{
 [data-view="overview"] .command-transmission-zone{min-width:0;padding:36px 40px 32px}
 [data-view="overview"] .command-transmission-zone{
   border-left:1px solid var(--overview-rule);
-  background:linear-gradient(180deg,rgba(4,16,13,.08),rgba(4,16,13,.28));
+  background:transparent;
 }
 [data-view="overview"] .command-zone-head{
   display:flex;
@@ -3427,11 +3428,11 @@ select.moap-native-select{
   [data-view="overview"] .overview-masthead{min-height:0;margin-bottom:13px;padding:3px 1px 14px}
   [data-view="overview"] .overview-masthead h2{font-size:28px}
   [data-view="overview"] .overview-goat-signal{padding-left:0;border-left:0}
-  [data-view="overview"] .league-command-scene{margin-bottom:48px;border-radius:18px}
+  [data-view="overview"] .league-command-scene{margin-bottom:48px;border-radius:0}
   [data-view="overview"] .league-command-grid{grid-template-columns:1fr;min-height:0}
   [data-view="overview"] .command-goat-zone,
   [data-view="overview"] .command-transmission-zone{padding:22px 20px}
-  [data-view="overview"] .command-transmission-zone{border-top:1px solid var(--overview-rule-gold);border-left:0;background:rgba(4,16,13,.16)}
+  [data-view="overview"] .command-transmission-zone{border-top:1px solid var(--overview-rule-gold);border-left:0;background:transparent}
   [data-view="overview"] .command-zone-head{margin-bottom:23px;padding-bottom:10px}
   [data-view="overview"] #overviewGoatHero{column-gap:14px;row-gap:21px}
   [data-view="overview"] .command-goat-identity h3{font-size:29px}
