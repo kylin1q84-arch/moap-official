@@ -250,7 +250,7 @@ function animateOverviewEntry(root){
   const latestCard=root.querySelector(".command-latest-match");
   const goatParts=[...root.querySelectorAll("#overviewGoatHero > *")];
   const latestParts=[...root.querySelectorAll("#latestMatchCommand > *")];
-  const metrics=[...root.querySelectorAll("#overviewKpis > .kpi")];
+  const metrics=[...root.querySelectorAll("#overviewKpis > .overview-metric")];
   const rankingCard=root.querySelector(".overview-goat-ranking");
   const rankingRows=[...root.querySelectorAll("#goatRanking > .goat-row")];
   const animated=[...sceneHeaderParts(root),goatCard,latestCard,...goatParts,...latestParts,...metrics,rankingCard,...rankingRows].filter(Boolean);

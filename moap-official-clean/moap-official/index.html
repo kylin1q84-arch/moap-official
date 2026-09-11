@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=3.3.0-navigation-snap">
+  <link rel="stylesheet" href="/style.css?v=4.0.0-prototype-a">
 </head>
 <body>
 
@@ -42,36 +42,42 @@
 
     <main>
       <section class="view active" data-view="overview">
-        <div class="hero">
-          <div><h2>联赛总览</h2><p>查看联赛核心数据、最新MSL赛后简报与月度表现报告。</p></div>
-          <span class="chip gold">CURRENT GOAT · <b id="goatName">—</b></span>
-        </div>
-        <div class="league-command-center">
-          <div class="card section command-goat-spotlight">
-            <div class="section-head"><div><h3>CURRENT GOAT</h3><small>当前联盟历史地位领跑者</small></div><span class="chip gold">OFFICIAL INDEX</span></div>
-            <div id="overviewGoatHero"></div>
+        <div class="hero overview-masthead">
+          <div>
+            <span class="overview-masthead-kicker">LEAGUE OVERVIEW / <b id="overviewSeasonCode">SEASON —</b></span>
+            <h2>联赛总览</h2>
+            <p>官方赛事数据实时更新</p>
           </div>
-          <div class="card section command-latest-match">
-            <div class="section-head"><div><h3>最新比赛</h3><small>最近一场正式比赛快照</small></div><span class="chip">LIVE RESULT</span></div>
-            <div id="latestMatchCommand"></div>
-          </div>
+          <span class="overview-goat-signal">CURRENT GOAT <b id="goatName">—</b></span>
         </div>
-        <div class="kpis overview-metrics-strip" id="overviewKpis"></div>
-        <div class="card section overview-goat-ranking overview-second-screen" style="margin-bottom:16px">
-          <div class="section-head"><h3>GOAT官方排名</h3><small>当前认证结果</small></div>
+        <section class="league-command-scene command-goat-spotlight" aria-label="League Command Scene">
+          <div class="league-command-grid">
+            <section class="command-goat-zone">
+              <div class="command-zone-head"><span>01 / LEAGUE AUTHORITY</span><small>历史地位综合模型</small></div>
+              <div id="overviewGoatHero"></div>
+            </section>
+            <aside class="command-latest-match command-transmission-zone">
+              <div class="command-zone-head"><span>02 / LATEST TRANSMISSION</span><small>最新正式比赛信号</small></div>
+              <div id="latestMatchCommand"></div>
+            </aside>
+          </div>
+          <div class="overview-metrics-strip" id="overviewKpis"></div>
+        </section>
+        <section class="overview-open-section overview-goat-ranking overview-second-screen">
+          <header class="overview-section-head"><div><span>HISTORICAL STANDING</span><h3>GOAT官方排名</h3></div><small>当前认证结果 · 指数与构成数据</small></header>
           <div id="goatRanking"></div>
-        </div>
-        <div class="card section overview-editorial-recap" style="margin-bottom:16px">
-          <div class="section-head"><h3>最新比赛 · MSL赛后简报</h3><small>自动读取最新正式比赛与纪录动态</small></div>
+        </section>
+        <section class="overview-open-section overview-editorial-recap">
+          <header class="overview-section-head"><div><span>EDITORIAL DATA BRIEF</span><h3>最新比赛 · MSL赛后简报</h3></div><small>自动读取最新正式比赛与纪录动态</small></header>
           <div id="latestAiRecap"></div>
-        </div>
-        <div class="card section monthly-report-card">
-          <div class="section-head monthly-report-head">
-            <div><h3>月度报告</h3><small>比赛表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入官方荣誉</small></div>
+        </section>
+        <section class="overview-open-section monthly-report-card">
+          <header class="overview-section-head monthly-report-head">
+            <div><span>MONTHLY INTELLIGENCE</span><h3>月度报告</h3><small>比赛表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入官方荣誉</small></div>
             <label class="inline-filter">月份<select id="monthlyReportMonth"></select></label>
-          </div>
+          </header>
           <div id="monthlyReport"></div>
-        </div>
+        </section>
       </section>
 
       <section class="view" data-view="records">
@@ -274,7 +280,7 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=3.3.0-navigation-snap"></script>
+  <script type="module" src="/app.js?v=4.0.0-prototype-a"></script>
 </body>
 </html>
 

@@ -25,7 +25,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=3.3.0-navigation-snap";
+} from "./animations.js?v=4.0.0-prototype-a";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -737,11 +737,16 @@ function renderMonthlyReport(){
 }
 function renderOverview(){
   const goat=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank)[0]||{},latest=(state.matches||[]).at(-1),recap=buildDetailedLatestRecap();$("#goatName").textContent=goat.player||"—";
+  const currentSeason=latestActualSeason(),seasonNumber=String(currentSeason||"").match(/\d+/)?.[0];
+  if($("#overviewSeasonCode"))$("#overviewSeasonCode").textContent=seasonNumber?`SEASON ${seasonNumber.padStart(2,"0")}`:`SEASON ${currentSeason||"—"}`;
   const goatChange=Number(goat.indexChange||0),goatMovement=Number(goat.movement||0);
-  $("#overviewGoatHero").innerHTML=`<div class="command-goat-identity"><span>联盟 #${goat.rank||"—"}${goatMovement?` · ${goatMovement>0?"↑":"↓"}${Math.abs(goatMovement)}`:""}</span><h3>${escapeHtml(goat.player||"—")}</h3><p>${escapeHtml(goat.evaluation?.label||"历史观察中")}</p></div><div class="command-goat-index"><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><small>GOAT INDEX</small><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)} 本期</b></div><p class="command-goat-copy">${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p>`;
-  const topScore=recap?.scores?.[0],mvpNames=(recap?.scores||[]).filter(x=>x.isMvp).map(x=>x.player).join(" / ")||"—";
-  $("#latestMatchCommand").innerHTML=latest&&recap?`<div class="latest-match-meta"><strong>${escapeHtml(latest.matchId)}</strong><span>${escapeHtml(latest.date)} · ${escapeHtml(latest.matchType)}</span></div><div class="latest-match-result"><div><span>本场MVP</span><b>${escapeHtml(mvpNames)}</b></div><div><span>最高得分</span><b class="${scoreClass(topScore?.score)}">${topScore?`${escapeHtml(topScore.player)} ${fmtScore(topScore.score)}`:"—"}</b></div></div><p>${escapeHtml(recap.bullets?.[0]||recap.body||"")}</p>`:'<div class="empty">暂无正式比赛。</div>';
-  $("#overviewKpis").innerHTML=[["正式比赛",state.matches.length+" 场","S1至今完整记录"],["当前赛季",latestActualSeason(),"自动识别最新赛季"],["最新比赛日期",latest?.date||"—",latest?.matchId||"等待正式比赛"]].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
+  const compositionNames={honors:"HONOR",career:"CAREER",records:"RECORD",longevity:"CONSISTENCY"};
+  const composition=Object.entries(goat.breakdown||{}).map(([key,item])=>{const score=Number(item?.score||0),max=Number(item?.max||0),level=max?Math.max(0,Math.min(100,score/max*100)):0;return `<div class="command-composition-segment"><div><span>${escapeHtml(compositionNames[key]||String(key).toUpperCase())}</span><small>${escapeHtml(item?.label||key)}</small></div><b>${score.toFixed(1)}<small> / ${max.toFixed(0)}</small></b><div class="command-composition-meter" aria-label="${escapeHtml(item?.label||key)} ${score.toFixed(1)} / ${max.toFixed(0)}"><i style="width:${level.toFixed(2)}%"></i></div></div>`;}).join("");
+  $("#overviewGoatHero").innerHTML=`<div class="command-goat-identity"><span>CURRENT GOAT · 联盟 #${goat.rank||"—"}${goatMovement?` · ${goatMovement>0?"↑":"↓"}${Math.abs(goatMovement)}`:""}</span><h3>${escapeHtml(goat.player||"—")}</h3><p>${escapeHtml(goat.evaluation?.label||"历史观察中")}</p></div><div class="command-goat-index" tabindex="0"><span>OFFICIAL GOAT INDEX</span><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)} <small>本期变化</small></b></div><div class="command-goat-composition"><div class="command-composition-head"><span>GOAT COMPOSITION</span><small>100 POINT SYSTEM</small></div><div class="command-composition-rail">${composition}</div></div><p class="command-goat-copy">${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p>`;
+  const mvpRows=(recap?.scores||[]).filter(x=>x.isMvp),mvpNames=mvpRows.map(x=>x.player).join(" / ")||"—",mvpScore=mvpRows[0];
+  const latestDate=String(latest?.date||"—"),dateParts=latestDate.match(/^(\d{4})-(\d{2})-(\d{2})$/),shortDate=dateParts?`${dateParts[2]}.${dateParts[3]}`:latestDate;
+  $("#latestMatchCommand").innerHTML=latest&&recap?`<div class="latest-transmission-id"><strong>${escapeHtml(latest.matchId)}</strong><span>${escapeHtml(shortDate)} / ${escapeHtml(latest.season||currentSeason)}</span></div><dl class="latest-transmission-data"><div><dt>MVP</dt><dd>${escapeHtml(mvpNames)}</dd></div><div><dt>SCORE</dt><dd class="${scoreClass(mvpScore?.score)}">${mvpScore?fmtScore(mvpScore.score):"—"}</dd></div><div><dt>FORMAT</dt><dd>${escapeHtml(latest.matchType||"—")}</dd></div><div><dt>VENUE</dt><dd>${escapeHtml(latest.venue||"未填写场地")}</dd></div></dl><p>${escapeHtml(recap.bullets?.[0]||recap.body||"")}</p>`:'<div class="empty">暂无正式比赛。</div>';
+  $("#overviewKpis").innerHTML=[["OFFICIAL MATCHES",String(state.matches.length),`${state.matches.length} 场正式记录`],["CURRENT SEASON",currentSeason,"自动识别最新赛季"],["LATEST MATCH",shortDate,latest?.matchId||"等待正式比赛"]].map(x=>`<div class="overview-metric"><span>${x[0]}</span><strong class="kpi-value">${x[1]}</strong><small>${x[2]}</small></div>`).join("");
   renderGoatRows("#goatRanking");
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
@@ -1608,7 +1613,7 @@ function renderGoatRows(sel,limit=5){
     const b=r.breakdown||{};
     const change=Number(r.indexChange||0);
     const changeText=change>0?`+${change.toFixed(1)}`:change<0?change.toFixed(1):"—";
-    return `<div class="goat-row goat-row-v2" data-rank-movement="${Number(r.movement||0)}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div><div class="goat-row-title"><strong>${escapeHtml(r.player)}</strong><span class="muted">${escapeHtml(r.evaluation?.label||"")}</span></div><div class="goat-breakdown-mini"><span>荣誉 ${Number(b.honors?.score||0).toFixed(1)}</span><span>生涯 ${Number(b.career?.score||0).toFixed(1)}</span><span>纪录 ${Number(b.records?.score||0).toFixed(1)}</span><span>持续 ${Number(b.longevity?.score||0).toFixed(1)}</span></div><div class="bar"><i style="width:${Math.max(3,Math.min(100,Number(r.goatIndex||0)))}%"></i></div></div><div class="goat-score-v2"><b>${Number(r.goatIndex||0).toFixed(1)}</b><small class="${change>0?"score-pos":change<0?"score-neg":""}">${changeText}</small></div></div>`;
+    return `<div class="goat-row goat-row-v2" data-rank-movement="${Number(r.movement||0)}"><span class="rank ${r.rank===1?"top":""}">${String(r.rank||0).padStart(2,"0")}</span><div><div class="goat-row-title"><strong>${escapeHtml(r.player)}</strong><span class="muted">${escapeHtml(r.evaluation?.label||"")}</span></div><div class="goat-breakdown-mini"><span>荣誉 ${Number(b.honors?.score||0).toFixed(1)}</span><span>生涯 ${Number(b.career?.score||0).toFixed(1)}</span><span>纪录 ${Number(b.records?.score||0).toFixed(1)}</span><span>持续 ${Number(b.longevity?.score||0).toFixed(1)}</span></div><div class="bar"><i style="width:${Math.max(3,Math.min(100,Number(r.goatIndex||0)))}%"></i></div></div><div class="goat-score-v2"><span>INDEX</span><b>${Number(r.goatIndex||0).toFixed(1)}</b><small class="${change>0?"score-pos":change<0?"score-neg":""}">${changeText}</small></div></div>`;
   }).join("")||'<div class="empty">暂无GOAT评分</div>';
 }
 function renderSystem(){
@@ -1688,4 +1693,3 @@ async function start(){
   }
 }
 start();
-
