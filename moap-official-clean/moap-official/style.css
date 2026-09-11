@@ -518,7 +518,7 @@ body{
   background-size:100% 100%;
   background-position:center;
   background-repeat:no-repeat;
-  transform:translate3d(0,0,0) rotate(0deg);
+  transform:translate3d(0,0,0) rotate(0deg) scale(1.32);
   transform-origin:43% 57%;
   animation:moapAmbientPrimaryOrbit 32s linear infinite;
   animation-delay:-9s;
@@ -529,8 +529,8 @@ body{
   display:none;
 }
 @keyframes moapAmbientPrimaryOrbit{
-  from{transform:translate3d(0,0,0) rotate(0deg)}
-  to{transform:translate3d(0,0,0) rotate(360deg)}
+  from{transform:translate3d(0,0,0) rotate(0deg) scale(1.32)}
+  to{transform:translate3d(0,0,0) rotate(360deg) scale(1.32)}
 }
 .shell{
   position:relative;
@@ -2694,7 +2694,7 @@ select.moap-native-select{
   background-size:100% 100%;
   background-position:center;
   background-repeat:no-repeat;
-  transform:translate3d(0,0,0) rotate(0deg);
+  transform:translate3d(0,0,0) rotate(0deg) scale(1.55);
   transform-origin:61% 39%;
   animation:moapAmbientSecondaryOrbit 53s linear infinite;
   animation-delay:-31s;
@@ -2702,8 +2702,8 @@ select.moap-native-select{
   will-change:transform;
 }
 @keyframes moapAmbientSecondaryOrbit{
-  from{transform:translate3d(0,0,0) rotate(0deg)}
-  to{transform:translate3d(0,0,0) rotate(-360deg)}
+  from{transform:translate3d(0,0,0) rotate(0deg) scale(1.55)}
+  to{transform:translate3d(0,0,0) rotate(-360deg) scale(1.55)}
 }
 
 /* Persistent shell signals: stable core, moving environment only. */
