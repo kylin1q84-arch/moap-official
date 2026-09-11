@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.0-overview-open-command">
+  <link rel="stylesheet" href="/style.css?v=4.0.0-player-observatory">
 </head>
 <body>
 
@@ -140,34 +140,30 @@
       </section>
 
       <section class="view" data-view="player">
-        <div class="hero">
-          <div><h2>个人中心</h2><p>查看个人趋势、当前赛季表现、历季综合数据与官方荣誉。</p></div>
+        <div class="hero player-observatory-masthead">
+          <div><span class="player-observatory-kicker">PLAYER OBSERVATORY · MSL</span><h2>牌手观测站</h2><p>以赛季能力、生涯轨迹与荣誉档案持续观测牌手表现。</p></div>
           <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
         </div>
-        <div class="card section player-profile-hero" style="margin-bottom:16px">
+        <div class="card section player-profile-hero player-observatory-stage" style="margin-bottom:16px">
           <div class="player-head" id="playerHeader"></div>
-          <div class="profile-honors-home">
-            <div class="section-head profile-honors-head"><h3>官方荣誉</h3><small id="profileHonorSummary"></small></div>
-            <div class="profile-honor-list" id="profileHonorList"></div>
+          <div class="current-season-performance-card">
+            <div class="section-head player-observatory-section-head"><div><span>CURRENT PERFORMANCE</span><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
+            <div id="currentSeasonPerformance"></div>
           </div>
-        </div>
-        <div class="card section current-season-performance-card" style="margin-bottom:16px">
-          <div class="section-head"><div><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
-          <div id="currentSeasonPerformance"></div>
         </div>
         <div class="grid-2 player-trend-stage">
-          <div class="card section">
-            <div class="section-head"><h3>生涯积分曲线</h3><small id="chartCaption"></small></div>
+          <div class="card section player-observatory-panel player-career-trajectory">
+            <div class="section-head player-observatory-section-head"><div><span>CAREER TRAJECTORY</span><h3>生涯积分曲线</h3></div><small id="chartCaption"></small></div>
             <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
           </div>
-          <div class="card section">
-            <div class="section-head"><h3>最近五场</h3><small>最近参加的5场正式比赛 · 得分与MVP</small></div>
+          <div class="card section player-observatory-panel player-recent-form">
+            <div class="section-head player-observatory-section-head"><div><span>RECENT FORM</span><h3>最近五场</h3></div><small>最近参加的5场正式比赛 · 得分与MVP</small></div>
             <div id="recentMatchesPlayer" class="score-list"></div>
           </div>
         </div>
-        <div class="card section player-season-data-card" style="margin-bottom:16px">
-          <div class="section-head player-season-data-head">
-            <div><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
+        <div class="card section player-season-data-card player-observatory-panel" style="margin-bottom:16px">
+          <div class="section-head player-season-data-head player-observatory-section-head">
+            <div><span>SEASON DATA</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
             <div class="record-filter-row player-season-filters">
               <label>比赛类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               <label>数据类型<select id="playerSeasonMetric"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
@@ -178,8 +174,12 @@
             <div class="player-season-summary-cards" id="playerSeasonCards" aria-live="polite"></div>
           </div>
         </div>
-        <div class="card section player-ai-report-card" style="margin-bottom:16px">
-          <div class="section-head"><h3>AI牌手报告</h3><small>近期状态 + S1至今生涯评价</small></div>
+        <div class="card section profile-honors-home player-honor-archive player-observatory-panel" style="margin-bottom:16px">
+          <div class="section-head profile-honors-head player-observatory-section-head"><div><span>HONOR ARCHIVE</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
+          <div class="profile-honor-list" id="profileHonorList"></div>
+        </div>
+        <div class="card section player-ai-report-card player-observatory-panel" style="margin-bottom:16px">
+          <div class="section-head player-observatory-section-head"><div><span>SCOUTING REPORT</span><h3>AI牌手报告</h3></div><small>近期状态 + S1至今生涯评价</small></div>
           <div id="playerScouting"></div>
         </div>
       </section>
@@ -280,7 +280,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.0-prototype-a"></script>
+  <script type="module" src="/app.js?v=4.0.0-player-observatory"></script>
 </body>
 </html>
-

@@ -549,7 +549,6 @@ function applyAmbientViewState(root,view){
   }else if(view==="status"){
     root.querySelector("#powerRanking > .power-card")?.classList.toggle("motion-status-leader",enabled);
   }else if(view==="player"){
-    root.querySelector(".player-portrait-shell")?.classList.toggle("motion-portrait-halo",enabled);
     const chart=root.querySelector("#trendChart");
     chart?.classList.toggle("trend-ambient-ready",Boolean(chart.querySelector(".trend-line")));
     bindPlayerTrendInteraction(root);
@@ -808,6 +807,7 @@ function bindPlayerTrendInteraction(root){
   gsap.set(dots,{attr:{r:baseRadius},clearProps:"transform,transformOrigin"});
 
   const hide=()=>{
+    chart.classList.remove("is-inspecting");
     if(activeDot){
       activeDot.classList.remove("is-active");
       gsap.killTweensOf(activeDot);
@@ -826,6 +826,7 @@ function bindPlayerTrendInteraction(root){
   };
 
   const show=dot=>{
+    chart.classList.add("is-inspecting");
     if(activeDot!==dot){
       if(activeDot){
         activeDot.classList.remove("is-active");
@@ -958,7 +959,7 @@ export function animatePlayerTrend(root,{delay=0}={}){
   if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:duration*.94,ease:"none"},.04);
 }
 
-function animateRecentMatches(root,{delay=0}={}){
+function animateRecentMatches(root,{delay=0,glow=false}={}){
   const holder=root?.querySelector?.("#recentMatchesPlayer")||root;
   const rows=holder?.querySelectorAll ? [...holder.querySelectorAll("[data-recent-match]")] : [];
   const badges=holder?.querySelectorAll ? [...holder.querySelectorAll(".recent-mvp-badge")] : [];
@@ -983,7 +984,7 @@ function animateRecentMatches(root,{delay=0}={}){
     onComplete:()=>{
       clearMotionProps(rows);
       clearExtendedMotionProps(badges);
-      if(latest?.isConnected){
+      if(glow&&latest?.isConnected){
         latest.classList.remove("recent-glow-once");
         void latest.offsetWidth;
         latest.classList.add("recent-glow-once");
@@ -1003,10 +1004,10 @@ function animateRecentMatches(root,{delay=0}={}){
   });
 }
 
-function animatePlayerDataExperience(root,{delay=0}={}){
+function animatePlayerDataExperience(root,{delay=0,recentGlow=false}={}){
   animatePlayerSeasonNumbers(root,{baseDelay:delay+.08});
   animatePlayerTrend(root,{delay:delay+.16});
-  animateRecentMatches(root,{delay:delay+.22});
+  animateRecentMatches(root,{delay:delay+.22,glow:recentGlow});
   const bars=[...root.querySelectorAll(".season-dimension .bar i")];
   const gsap=motionEngine();
   if(bars.length&&!motionDisabled()){
@@ -1036,13 +1037,13 @@ function stopPlayerDataExperience(root){
 }
 
 function playerLayers(root){
-  const gridCards=directChildren(root,":scope > .grid-2 > .card");
-  const current=root?.querySelector?.(".current-season-performance-card");
   return [
     root?.querySelector?.("#playerHeader"),
-    current,
-    ...gridCards,
-    root?.querySelector?.(".profile-honors-home")
+    root?.querySelector?.(".current-season-performance-card"),
+    root?.querySelector?.(".player-trend-stage"),
+    root?.querySelector?.(".player-season-data-card"),
+    root?.querySelector?.(".profile-honors-home"),
+    root?.querySelector?.(".player-ai-report-card")
   ].filter(Boolean);
 }
 
@@ -1055,10 +1056,8 @@ export function animatePlayerCenterEntry(root){
   const headerParts=sceneHeaderParts(root);
   const portrait=root?.querySelector?.(".player-portrait-shell");
   const identity=[...root?.querySelectorAll?.(".profile-name-block > *, .profile-goat-chip")||[]];
-  const honors=root?.querySelector?.(".profile-honors-home");
-  const remaining=layers.filter(layer=>layer!==root?.querySelector?.("#playerHeader")&&layer!==honors);
-  const animated=[...headerParts,portrait,...identity,honors,...remaining].filter(Boolean);
-  portrait?.classList.toggle("motion-portrait-halo",!motionDisabled());
+  const progressive=layers.filter(layer=>layer!==root?.querySelector?.("#playerHeader"));
+  const animated=[...headerParts,portrait,...identity,...progressive].filter(Boolean);
   if(!root||motionDisabled()||!animated.length){
     animatePlayerDataExperience(root);
     return;
@@ -1074,10 +1073,9 @@ export function animatePlayerCenterEntry(root){
     }
   });
   addHeaderSequence(playerEntryTimeline,root,0);
-  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:8,scale:.96},{autoAlpha:1,y:0,scale:1,duration:mobile?.44:.52,ease:MOAP_MOTION.ease.emphasis},.1);
+  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.38:.46,ease:MOAP_MOTION.ease.enter},.1);
   if(identity.length)playerEntryTimeline.fromTo(identity,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.025:.04},.19);
-  if(honors)playerEntryTimeline.fromTo(honors,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.31:.38},.29);
-  if(remaining.length)playerEntryTimeline.fromTo(remaining,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.34:.42,stagger:mobile?.035:.055},.36);
+  if(progressive.length)playerEntryTimeline.fromTo(progressive,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.33:.4,stagger:mobile?.035:.055},.3);
 }
 
 export function transitionPlayerProfile({root,update,onUpdated}){
@@ -1096,7 +1094,6 @@ export function transitionPlayerProfile({root,update,onUpdated}){
   }
 
   const mobile=mobileMotion();
-  const oldPortrait=root?.querySelector?.(".player-portrait-shell");
   playerSwitchTimeline=gsap.timeline({
     onComplete:()=>{
       clearMotionProps(playerLayers(root));
@@ -1104,19 +1101,16 @@ export function transitionPlayerProfile({root,update,onUpdated}){
     }
   })
     .to(before,{autoAlpha:0,y:mobile?2:3,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
-    .to(oldPortrait,{scale:.97,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit},0)
     .call(()=>{
       update();
       onUpdated?.();
-      root?.querySelector?.(".player-portrait-shell")?.classList.toggle("motion-portrait-halo",!motionDisabled());
-      animatePlayerDataExperience(root,{delay:.08});
+      animatePlayerDataExperience(root,{delay:.08,recentGlow:true});
     })
     .fromTo(
       playerLayers(root),
       {autoAlpha:0,y:mobile?4:5},
       {autoAlpha:1,y:0,duration:mobile?.27:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter,stagger:mobile?.025:MOAP_MOTION.stagger.fast}
-    )
-    .fromTo(root?.querySelector?.(".player-portrait-shell"),{scale:.97},{scale:1,duration:mobile?.32:.4,ease:MOAP_MOTION.ease.emphasis,clearProps:"transform"},"<");
+    );
 }
 
 export function transitionPlayerData({target,update,onUpdated}){
@@ -1209,4 +1203,3 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
     .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
     .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
 }
-
