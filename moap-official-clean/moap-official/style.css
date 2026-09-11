@@ -508,31 +508,29 @@ body{
   background-repeat:no-repeat;
 }
 .ambient-background::before{
-  opacity:.9;
+  inset:-44vmax;
+  opacity:.56;
   background:
-    linear-gradient(180deg,rgba(6,20,17,.08),rgba(2,9,7,.28)),
-    linear-gradient(90deg,
-      rgba(57,164,122,.24) 0%,
-      rgba(10,32,27,.72) 15%,
-      rgba(6,20,17,.46) 25%,
-      rgba(215,178,91,.10) 35%,
-      rgba(215,178,91,.22) 50%,
-      rgba(215,178,91,.10) 65%,
-      rgba(6,20,17,.46) 75%,
-      rgba(10,32,27,.72) 85%,
-      rgba(57,164,122,.24) 100%);
-  background-size:100% 100%,200% 100%;
-  background-position:0 0,0% 50%;
-  background-repeat:no-repeat,repeat-x;
-  animation:ambientBackgroundFlow 24s linear infinite;
-  will-change:background-position;
+    radial-gradient(ellipse 58% 72% at 18% 48%,rgba(57,164,122,.42) 0%,rgba(28,101,78,.23) 34%,rgba(6,20,17,.07) 60%,transparent 80%),
+    radial-gradient(ellipse 56% 64% at 82% 16%,rgba(215,178,91,.34) 0%,rgba(146,132,60,.17) 36%,transparent 74%),
+    radial-gradient(ellipse 70% 68% at 78% 84%,rgba(2,9,7,.68) 0%,rgba(6,20,17,.34) 44%,transparent 80%),
+    radial-gradient(ellipse 64% 70% at 45% 54%,rgba(6,20,17,.58) 0%,rgba(10,32,27,.20) 52%,transparent 84%);
+  background-size:100% 100%;
+  background-position:center;
+  background-repeat:no-repeat;
+  transform:translate3d(0,0,0) rotate(0deg);
+  transform-origin:43% 57%;
+  animation:moapAmbientPrimaryOrbit 32s linear infinite;
+  animation-delay:-9s;
+  backface-visibility:hidden;
+  will-change:transform;
 }
 .ambient-glow{
   display:none;
 }
-@keyframes ambientBackgroundFlow{
-  from{background-position:0 0,0% 50%}
-  to{background-position:0 0,200% 50%}
+@keyframes moapAmbientPrimaryOrbit{
+  from{transform:translate3d(0,0,0) rotate(0deg)}
+  to{transform:translate3d(0,0,0) rotate(360deg)}
 }
 .shell{
   position:relative;
@@ -575,11 +573,13 @@ body{
     transition:none;
   }
   .ambient-background::before{
-    inset:-10%;
-    opacity:.78;
+    inset:-44vmax;
+    opacity:.53;
   }
   .ambient-background::after{
-    display:none;
+    display:block;
+    inset:-48vmax;
+    opacity:.22;
   }
 }
 
@@ -2684,31 +2684,26 @@ select.moap-native-select{
 
 /* v3.2.0 · Ambient Living System */
 .ambient-background::after{
-  inset:0 auto 0 0;
-  width:240%;
+  inset:-48vmax;
   display:block;
-  opacity:.32;
+  opacity:.26;
   background:
-    linear-gradient(180deg,rgba(10,32,27,.06),transparent 42%,rgba(2,9,7,.24)),
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(16,53,43,.075) 14%,
-      rgba(215,178,91,.028) 27%,
-      transparent 50%,
-      rgba(16,53,43,.075) 64%,
-      rgba(215,178,91,.028) 77%,
-      transparent 100%);
-  background-size:100% 100%,100% 100%;
-  background-position:0 0;
+    radial-gradient(ellipse 70% 58% at 76% 28%,rgba(215,178,91,.16) 0%,rgba(146,132,60,.08) 38%,transparent 76%),
+    radial-gradient(ellipse 68% 76% at 26% 78%,rgba(57,164,122,.22) 0%,rgba(28,101,78,.11) 40%,transparent 80%),
+    radial-gradient(ellipse 74% 70% at 68% 72%,rgba(2,9,7,.32) 0%,rgba(6,20,17,.15) 48%,transparent 84%);
+  background-size:100% 100%;
+  background-position:center;
   background-repeat:no-repeat;
-  transform:translate3d(0,0,0);
-  animation:moapAmbientDeepFlow 47s linear infinite;
-  animation-delay:-19s;
+  transform:translate3d(0,0,0) rotate(0deg);
+  transform-origin:61% 39%;
+  animation:moapAmbientSecondaryOrbit 53s linear infinite;
+  animation-delay:-31s;
+  backface-visibility:hidden;
   will-change:transform;
 }
-@keyframes moapAmbientDeepFlow{
-  from{transform:translate3d(0,0,0)}
-  to{transform:translate3d(-50%,0,0)}
+@keyframes moapAmbientSecondaryOrbit{
+  from{transform:translate3d(0,0,0) rotate(0deg)}
+  to{transform:translate3d(0,0,0) rotate(-360deg)}
 }
 
 /* Persistent shell signals: stable core, moving environment only. */
@@ -2949,7 +2944,6 @@ select.moap-native-select{
 }
 
 @media(max-width:760px){
-  .ambient-background::after{display:none}
   .command-goat-spotlight.motion-atmosphere::after{opacity:.34}
   .goat-row.motion-leader::after,.power-card.motion-status-leader::after{opacity:.14}
   .player-portrait-shell.motion-portrait-halo::before{opacity:.41}
