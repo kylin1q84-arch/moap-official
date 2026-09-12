@@ -4154,7 +4154,7 @@ select.moap-native-select{
   [data-view="status"] .status-ranking-row,
   [data-view="status"] .status-ranking-row.is-leader{
     min-height:0;
-    grid-template-columns:28px minmax(0,1fr) 55px;
+    grid-template-columns:28px minmax(0,1fr) 60px;
     gap:9px;
     padding:18px 1px 18px 0;
   }
@@ -4178,7 +4178,7 @@ select.moap-native-select{
   [data-view="status"] .status-rating-pair b{font-size:9px}
   [data-view="status"] .status-index-rail{margin-top:9px}
   [data-view="status"] .status-rank-index>b{font-size:29px}
-  [data-view="status"] .status-ranking-row.is-leader .status-rank-index>b{font-size:36px}
+  [data-view="status"] .status-ranking-row.is-leader .status-rank-index>b{font-size:33px;letter-spacing:-.04em}
   [data-view="status"] .status-recent-total{margin-top:7px;font-size:7px;line-height:1.4}
   [data-view="status"] .status-observation-grid{grid-template-columns:1fr}
   [data-view="status"] .status-observation-item,
@@ -4198,13 +4198,13 @@ select.moap-native-select{
   [data-view="status"] .status-current-leader span{font-size:7px}
   [data-view="status"] .status-current-leader strong{font-size:14px}
   [data-view="status"] .status-ranking-row,
-  [data-view="status"] .status-ranking-row.is-leader{grid-template-columns:25px minmax(0,1fr) 48px;gap:7px}
+  [data-view="status"] .status-ranking-row.is-leader{grid-template-columns:25px minmax(0,1fr) 52px;gap:7px}
   [data-view="status"] .status-state-summary small{display:none}
   [data-view="status"] .status-recent-node{font-size:9px}
   [data-view="status"] .status-rating-pair{gap:6px}
   [data-view="status"] .status-rating-pair span+span{padding-left:6px}
   [data-view="status"] .status-rank-index>b{font-size:26px}
-  [data-view="status"] .status-ranking-row.is-leader .status-rank-index>b{font-size:32px}
+  [data-view="status"] .status-ranking-row.is-leader .status-rank-index>b{font-size:29px}
 }
 
 @media(prefers-reduced-motion:reduce){
