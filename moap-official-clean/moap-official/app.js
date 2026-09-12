@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.2-remove-player-ai";
+} from "./animations.js?v=4.0.5-status-board";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -826,18 +826,26 @@ function renderStatus(){
   const relative=[...rows].sort((a,b)=>Math.abs(b.vsSeason||0)-Math.abs(a.vsSeason||0))[0];
   const recentMvp=[...rows].map(r=>({row:r,count:(r.recent||[]).filter(x=>x.isMvp).length})).sort((a,b)=>b.count-a.count||(b.row.powerIndex||0)-(a.row.powerIndex||0))[0];
   const observations=[
-    volatile?`近期波动最大：${volatile.player}，最近5场波动指数 ${Number(volatile.recentStd||0).toFixed(1)}。`:"",
-    relative?`近期偏离赛季均值最大：${relative.player}，最近5场表现较赛季均值 ${relative.vsSeason>=0?"+":""}${Number(relative.vsSeason||0).toFixed(1)}。`:"",
-    recentMvp?.count?`近期MVP最集中：${recentMvp.row.player}，最近5场获得 ${recentMvp.count} 次MVP。`:""
+    volatile?{number:"01",title:"近期波动最大",player:volatile.player,detail:`波动指数 ${Number(volatile.recentStd||0).toFixed(1)}`}:null,
+    relative?{number:"02",title:"偏离赛季均值最大",player:relative.player,detail:`${relative.vsSeason>=0?"+":""}${Number(relative.vsSeason||0).toFixed(1)}`}:null,
+    recentMvp?.count?{number:"03",title:"近期MVP最集中",player:recentMvp.row.player,detail:`${recentMvp.count} 次MVP`}:null
   ].filter(Boolean).slice(0,3);
-  $("#statusKpis").innerHTML=[
-    ["当前最火热",hot?.player||"—",hot?`${hot.powerIndex} 状态指数`:"暂无"],
-    ["当前最低迷",cold?.player||"—",cold?`${cold.powerIndex} 状态指数`:"暂无"],
-    ["上升最快",up?.player||"—",up?`${movementText(up)} · 指数 ${up.indexChange>=0?"+":""}${up.indexChange}`:"暂无"]
-  ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?22:28}px">${escapeHtml(x[1])}</div><div class="kpi-sub">${escapeHtml(x[2])}</div></div>`).join("");
-  $("#powerRanking").innerHTML=rows.map(r=>`<button type="button" class="power-card" data-status-player="${r.playerId}"><span class="rank ${r.rank===1?"top":""}">${r.rank}</span><div class="power-card-main"><div class="power-card-title"><strong>${escapeHtml(r.player)}</strong><span class="stock ${r.report.trendKey==="up"?"up":r.report.trendKey==="down"?"down":"hold"}">${escapeHtml(r.report.headline)}</span></div><div class="power-card-meta"><span>${escapeHtml(r.label)}</span><span>${escapeHtml(r.archetype)}</span><span>近5场 ${fmtScore(r.recentTotal)}</span><span>${escapeHtml(r.seasonPerformance?.season||latestActualSeason())} OVR ${r.seasonPerformance?.rating??"—"}</span><span>生涯OVR ${r.career?.overallRating??"—"}</span></div><div class="bar"><i style="width:${Math.max(4,r.powerIndex)}%"></i></div></div><div class="power-score"><b>${r.powerIndex}</b><small class="${r.indexChange>0?"score-pos":r.indexChange<0?"score-neg":""}"><span>${movementText(r)}</span><span>${r.indexChange>0?"+":""}${r.indexChange}</span></small></div></button>`).join("");
-  $("#statusStorylines").innerHTML=observations.length?observations.map(x=>`<div class="storyline-item">${escapeHtml(x)}</div>`).join(""):`<div class="empty">暂无足够的近期比赛数据。</div>`;
-  $("#statusMethodology").innerHTML=`<p>状态指数只衡量最近5场的即时表现与走势，与赛季OVR、生涯OVR、GOAT及官方荣誉互不影响。</p><div class="method-bars"><span>近期加权净分 <b>35%</b></span><span>正分率 <b>20%</b></span><span>MVP <b>15%</b></span><span>近期爆发表现 <b>10%</b></span><span>走势 <b>10%</b></span><span>相对赛季表现 <b>10%</b></span></div>`;
+  const signals=[
+    {key:"hot",eyebrow:"CURRENT FORM",label:"当前最火热",player:hot?.player||"—",value:hot?.powerIndex??"—",meta:hot?"状态指数":"暂无"},
+    {key:"cold",eyebrow:"LOWEST FORM",label:"当前最低迷",player:cold?.player||"—",value:cold?.powerIndex??"—",meta:cold?"状态指数":"暂无"},
+    {key:"rise",eyebrow:"FASTEST RISE",label:"上升最快",player:up?.player||"—",value:up?movementText(up):"—",meta:up?`指数 ${up.indexChange>=0?"+":""}${up.indexChange}`:"暂无"}
+  ];
+  $("#statusCurrentLeader").textContent=hot?.player||"—";
+  $("#statusCurrentLeaderIndex").textContent=hot?`LIVE INDEX ${hot.powerIndex}`:"LIVE INDEX —";
+  $("#statusKpis").innerHTML=signals.map(signal=>`<div class="status-signal-cell is-${signal.key}"><div class="status-signal-label"><span>${signal.eyebrow}</span><small>${signal.label}</small></div><div class="status-signal-value"><strong>${escapeHtml(signal.player)}</strong><b>${escapeHtml(signal.value)}</b></div><p>${escapeHtml(signal.meta)}</p></div>`).join("");
+  $("#powerRanking").innerHTML=rows.map(r=>{
+    const railWidth=Math.max(0,Math.min(100,Number(r.powerIndex)||0));
+    const recent=(r.recent||[]).map(item=>`<span class="status-recent-node ${item.score>0?"is-positive":item.score<0?"is-negative":"is-neutral"} ${item.isMvp?"is-mvp":""}" title="${escapeHtml(`${item.matchId} · ${item.date}${item.isMvp?" · MVP":""}`)}"><b>${fmtScore(item.score)}</b></span>`).join("");
+    return `<button type="button" class="status-ranking-row ${r.rank===1?"is-leader":""}" data-status-player="${r.playerId}" aria-label="查看${escapeHtml(r.player)}个人中心"><span class="status-rank-number">${String(r.rank).padStart(2,"0")}</span><div class="status-player-main"><div class="status-player-primary"><strong>${escapeHtml(r.player)}</strong><span class="status-view-cue">VIEW PLAYER →</span></div><div class="status-row-context"><div class="status-state-summary"><span>${escapeHtml(r.label)}</span><span>${escapeHtml(r.report.headline)}</span><small>${escapeHtml(r.archetype)}</small></div><div class="status-change-cluster"><span class="${r.movement>0?"score-pos":r.movement<0?"score-neg":""}">${movementText(r)}</span><span class="${r.indexChange>0?"score-pos":r.indexChange<0?"score-neg":""}">${r.indexChange>0?"+":""}${r.indexChange}</span></div></div><div class="status-recent-strip" aria-label="${escapeHtml(r.player)}最近${(r.recent||[]).length}场">${recent||'<small>暂无近期比赛</small>'}</div><div class="status-rating-pair"><span>${escapeHtml(r.seasonPerformance?.season||latestActualSeason())} OVR <b>${r.seasonPerformance?.rating??"—"}</b></span><span>CAREER OVR <b>${r.career?.overallRating??"—"}</b></span></div><div class="status-index-rail" aria-hidden="true"><i style="width:${railWidth}%"></i></div></div><div class="status-rank-index"><small>LIVE INDEX</small><b data-animate-number data-animation-key="status-index-${r.playerId}">${r.powerIndex}</b><span class="status-recent-total">RECENT 5 ${fmtScore(r.recentTotal)}</span></div></button>`;
+  }).join("");
+  $("#statusStorylines").innerHTML=observations.length?observations.map(x=>`<article class="status-observation-item"><span>${x.number}</span><div><h4>${escapeHtml(x.title)}</h4><p>${escapeHtml(x.player)} · <b>${escapeHtml(x.detail)}</b></p></div></article>`).join(""):`<div class="empty">暂无足够的近期比赛数据。</div>`;
+  const weights=[["近期加权净分",35],["正分率",20],["MVP",15],["近期爆发表现",10],["走势",10],["相对赛季表现",10]];
+  $("#statusMethodology").innerHTML=`<p>状态指数只衡量最近5场的即时表现与走势，与赛季OVR、生涯OVR、GOAT及官方荣誉互不影响。</p><div class="status-method-list">${weights.map(([label,value])=>`<div class="status-method-row"><span>${label}</span><b>${value}%</b><i aria-hidden="true"><em style="width:${value}%"></em></i></div>`).join("")}</div>`;
 }
 
 document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player",{forceRender:true});});

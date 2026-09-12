@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.4-player-mobile">
+  <link rel="stylesheet" href="/style.css?v=4.0.5-status-board">
 </head>
 <body>
 
@@ -117,26 +117,26 @@
       </section>
 
       <section class="view" data-view="status">
-        <div class="hero">
-          <div><h2>MSL状态中心</h2><p>聚焦最近5场表现与即时走势，快速了解每位牌手的当前状态。</p></div>
-          <span class="chip gold">近期状态看板</span>
-        </div>
-        <div class="section-head status-section-head"><h3>状态摘要</h3><small>最近5场 · 即时概览</small></div>
-        <div class="kpis status-kpis status-metrics-strip" id="statusKpis"></div>
-        <div class="card section status-ranking-section">
-          <div class="section-head"><h3>MSL状态实力榜</h3><small>状态指数、排名变化与指数变化</small></div>
+        <header class="status-live-masthead">
+          <div><span class="status-live-kicker">LIVE PERFORMANCE / RECENT 5</span><h2>MSL状态中心</h2><p>聚焦最近5场表现、走势与即时变化</p></div>
+          <div class="status-current-leader"><span>CURRENT LEADER</span><strong id="statusCurrentLeader">—</strong><small id="statusCurrentLeaderIndex">LIVE INDEX —</small></div>
+        </header>
+        <section class="status-signal-stage" aria-labelledby="statusSignalTitle">
+          <header class="status-stage-head"><div><span>LIVE SIGNAL</span><h3 id="statusSignalTitle">即时状态信号</h3></div><small>最近5场 · 实时态势</small></header>
+          <div class="status-signal-rail" id="statusKpis"></div>
+        </section>
+        <section class="status-ranking-stage" aria-labelledby="statusRankingTitle">
+          <header class="status-stage-head"><div><span>STATE RANKING</span><h3 id="statusRankingTitle">MSL状态实力榜</h3></div><small>RECENT 5 · LIVE INDEX</small></header>
           <div class="power-list" id="powerRanking"></div>
-        </div>
-        <div class="grid-2 status-secondary-grid">
-          <div class="card section">
-            <div class="section-head"><h3>状态观察</h3><small>近期表现的补充信号</small></div>
+        </section>
+        <section class="status-observation-stage" aria-labelledby="statusObservationTitle">
+          <header class="status-stage-head"><div><span>STATUS OBSERVATION</span><h3 id="statusObservationTitle">状态观察</h3></div><small>近期表现的补充信号</small></header>
             <div class="storyline-grid status-observation-grid" id="statusStorylines"></div>
-          </div>
-          <div class="card section">
-            <div class="section-head"><h3>状态指数说明</h3><small>仅解释近期状态</small></div>
+        </section>
+        <section class="status-method-stage" aria-labelledby="statusMethodTitle">
+          <header class="status-stage-head"><div><span>METHOD / STATUS INDEX</span><h3 id="statusMethodTitle">状态指数说明</h3></div><small>仅解释近期状态</small></header>
             <div class="analysis-method" id="statusMethodology"></div>
-          </div>
-        </div>
+        </section>
       </section>
 
       <section class="view" data-view="player">
@@ -278,7 +278,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.2-remove-player-ai"></script>
+  <script type="module" src="/app.js?v=4.0.5-status-board"></script>
 </body>
 </html>
-

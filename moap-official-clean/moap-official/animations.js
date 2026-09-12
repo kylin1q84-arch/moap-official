@@ -12,7 +12,6 @@ const NUMBER_SELECTOR = [
   ".season-compare b",
   ".season-dimension b",
   ".command-goat-index strong",
-  ".power-score > b",
   ".profile-career-ovr b",
   ".record-table tbody td",
   ".record-table tbody td > b",
@@ -61,6 +60,7 @@ let monthlyTimeline = null;
 let revealObserver = null;
 let rivalMatrixInteractionCleanup = null;
 const revealedSections = new WeakSet();
+const enteredStatusViews = new WeakSet();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -192,9 +192,9 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
 
 function sceneHeaderParts(root){
   return [
-    root?.querySelector?.(".hero h2"),
-    root?.querySelector?.(".hero p"),
-    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *")
+    root?.querySelector?.(".hero h2, .status-live-masthead h2"),
+    root?.querySelector?.(".hero p, .status-live-masthead p"),
+    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *, .status-current-leader")
   ].filter(Boolean);
 }
 
@@ -209,7 +209,7 @@ function prepareSectionReveals(root,view){
   if(!root?.querySelectorAll)return;
   const selectorByView={
     overview:".overview-editorial-recap,.monthly-report-card",
-    status:".status-secondary-grid",
+    status:".status-observation-stage,.status-method-stage",
     player:".player-season-data-card",
     rival:".rival-context-card",
     entry:".entry-matrix-stage"
@@ -271,13 +271,14 @@ function animateOverviewEntry(root){
 function animateStatusEntry(root){
   const gsap=motionEngine();
   statusTimeline?.kill();
-  const sectionHead=root.querySelector(".status-section-head");
-  const kpis=[...root.querySelectorAll("#statusKpis > .kpi")];
-  const ranking=root.querySelector(".status-ranking-section");
-  const rows=[...root.querySelectorAll("#powerRanking > .power-card")].slice(0,6);
-  const animated=[...sceneHeaderParts(root),sectionHead,...kpis,ranking,...rows].filter(Boolean);
-  rows[0]?.classList.toggle("motion-status-leader",!motionDisabled());
-  if(motionDisabled()){
+  const signalHead=root.querySelector(".status-signal-stage .status-stage-head");
+  const signals=[...root.querySelectorAll("#statusKpis > .status-signal-cell")];
+  const rankingHead=root.querySelector(".status-ranking-stage .status-stage-head");
+  const rows=[...root.querySelectorAll("#powerRanking > .status-ranking-row")].slice(0,6);
+  const animated=[...sceneHeaderParts(root),signalHead,...signals,rankingHead,...rows].filter(Boolean);
+  const firstEntry=!enteredStatusViews.has(root);
+  enteredStatusViews.add(root);
+  if(motionDisabled()||!firstEntry){
     clearMotionProps(animated);
     return;
   }
@@ -285,10 +286,10 @@ function animateStatusEntry(root){
   const mobile=mobileMotion();
   statusTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);statusTimeline=null;}});
   addHeaderSequence(statusTimeline,root,0);
-  if(sectionHead)statusTimeline.fromTo(sectionHead,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.26,ease:MOAP_MOTION.ease.enter},.12);
-  if(kpis.length)statusTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.28:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.18);
-  if(ranking)statusTimeline.fromTo(ranking,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.4,ease:MOAP_MOTION.ease.enter},.3);
-  if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobile?-3:-6},{autoAlpha:1,x:0,duration:mobile?.27:.34,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.38);
+  if(signalHead)statusTimeline.fromTo(signalHead,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.26,ease:MOAP_MOTION.ease.enter},.12);
+  if(signals.length)statusTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.32,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.18);
+  if(rankingHead)statusTimeline.fromTo(rankingHead,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.27,ease:MOAP_MOTION.ease.enter},.3);
+  if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:.6,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.36);
 }
 
 export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}){
@@ -522,8 +523,6 @@ function applyAmbientViewState(root,view){
   if(view==="overview"){
     root.querySelector(".command-goat-spotlight")?.classList.toggle("motion-atmosphere",enabled);
     root.querySelector("#goatRanking > .goat-row")?.classList.toggle("motion-leader",enabled);
-  }else if(view==="status"){
-    root.querySelector("#powerRanking > .power-card")?.classList.toggle("motion-status-leader",enabled);
   }else if(view==="player"){
     const chart=root.querySelector("#trendChart");
     chart?.classList.toggle("trend-ambient-ready",Boolean(chart.querySelector(".trend-line")));
