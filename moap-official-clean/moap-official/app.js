@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.5-status-board";
+} from "./animations.js?v=4.0.7-match-ledger";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1093,9 +1093,12 @@ $("#playerSeasonMetric")?.addEventListener("change",e=>{
   });
 });
 
+function matchResultStripHtml(played,{detail=false}={}){
+  return `<div class="match-result-strip ${detail?"match-detail-result-strip":""}">${played.map((r,index)=>`<span class="match-result-item ${r.isMvp?"is-mvp":""}"><span class="match-result-rank">${String(index+1).padStart(2,"0")}</span><span class="match-result-player">${escapeHtml(r.player)}</span><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?'<small class="match-result-mvp">MVP</small>':'<small class="match-result-mvp" aria-hidden="true"></small>'}</span>`).join("")}</div>`;
+}
 function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=matchOrdinal(m.matchId)>=67,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
-  return `<article class="card match-card season-log-entry ${precise?"match-card-clickable":""} ${isLatest?"is-latest":""}" ${precise?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><span class="match-timeline-node" aria-hidden="true"></span><div class="match-meta"><div><strong>${m.season} 第${m.round}局 · ${m.matchType}</strong><div><small>${m.date} · ${escapeHtml(m.venue||"未填写场地")}</small></div></div><div class="match-card-id">${isLatest?'<span class="latest-match-tag">LATEST</span>':""}<span class="chip">${m.matchId}</span>${precise?'<small>查看比赛详情 →</small>':""}</div></div><div class="match-scores">${played.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></article>`;
+  return `<article class="season-log-entry match-ledger-row ${precise?"is-clickable":""} ${isLatest?"is-latest":""}" ${precise?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><span class="match-timeline-node" aria-hidden="true"></span><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">LATEST TRANSMISSION</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${precise?'<span class="match-ledger-view">VIEW MATCH →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
 }
 function ensureMatchModal(){
   if($("#matchModalBackdrop"))return;
@@ -1118,7 +1121,7 @@ function openMatchModal(matchId){
   const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
   ensureMatchModal();const pp=match.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score);
   const precise=matchOrdinal(match.matchId)>=67?`<div class="honor-modal-section"><h3>本场精准对位矩阵</h3>${singleMatchMatrixHtml(match)}</div>`:"";
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3><div class="match-scores">${pp.map(r=>`<span class="score-pill ${r.isMvp?"mvp":""}">${escapeHtml(r.player)} <b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?" · MVP":""}</span>`).join("")}</div></div>${precise}`;
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3>${matchResultStripHtml(pp,{detail:true})}</div>${precise}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
@@ -1143,7 +1146,9 @@ function renderMatches(reset=false,{append=false,startIndex=0}={}){
   const rows=filteredMatches();
   const list=$("#matchList"),visible=rows.slice(0,matchLimit);
   if(append&&startIndex>0&&list&&!list.querySelector(".empty"))list.insertAdjacentHTML("beforeend",visible.slice(startIndex).map(matchCard).join(""));
-  else list.innerHTML=visible.map(matchCard).join("")||'<div class="empty">没有符合条件的比赛。</div>';
+  else list.innerHTML=visible.map(matchCard).join("")||'<div class="empty match-ledger-empty"><span>NO MATCHES FOUND</span><p>没有符合当前筛选条件的正式比赛。</p></div>';
+  $("#matchTotalCount").textContent=String((state.matches||[]).length);
+  $("#matchResultCount").textContent=`${rows.length} ${rows.length===1?"MATCH":"MATCHES"} FOUND`;
   $("#loadMoreBtn").style.display=rows.length>matchLimit?"block":"none";
   return visible.length;
 }

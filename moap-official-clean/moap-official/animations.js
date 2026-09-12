@@ -61,6 +61,7 @@ let revealObserver = null;
 let rivalMatrixInteractionCleanup = null;
 const revealedSections = new WeakSet();
 const enteredStatusViews = new WeakSet();
+const enteredMatchesViews = new WeakSet();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -192,9 +193,9 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
 
 function sceneHeaderParts(root){
   return [
-    root?.querySelector?.(".hero h2, .status-live-masthead h2"),
-    root?.querySelector?.(".hero p, .status-live-masthead p"),
-    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *, .status-current-leader")
+    root?.querySelector?.(".hero h2, .status-live-masthead h2, .match-ledger-masthead h2"),
+    root?.querySelector?.(".hero p, .status-live-masthead p, .match-ledger-masthead p"),
+    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *, .status-current-leader, .match-ledger-total")
   ].filter(Boolean);
 }
 
@@ -304,30 +305,29 @@ export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}
   }
   const mobile=mobileMotion();
   if(includeRail){void root.offsetWidth;root.classList.add("motion-rail-reveal");}
-  gsap.fromTo(rows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobile?-3:-5},{autoAlpha:1,x:0,duration:mobile?.28:.34,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
-  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:SCENE_ENTRY_ALPHA,scale:.85},{autoAlpha:1,scale:1,duration:.24,stagger:.045,delay:delay+.08,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  gsap.fromTo(rows,{autoAlpha:.7,y:mobile?3:5},{autoAlpha:1,y:0,duration:mobile?.27:.33,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:.68},{autoAlpha:1,duration:.22,stagger:.04,delay:delay+.06,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility"});
 }
 
 function animateMatchesEntry(root){
   const gsap=motionEngine();
   matchTimeline?.kill();
-  const logCard=root.querySelector(".season-match-log-card");
-  const head=root.querySelector(".match-log-head");
-  const filters=root.querySelector(".season-match-log-card .form-row");
+  const query=root.querySelector(".match-query-stage");
+  const head=root.querySelector(".match-ledger-head");
   const list=root.querySelector("#matchList");
-  const animated=[...sceneHeaderParts(root),logCard,head,filters].filter(Boolean);
-  if(motionDisabled()){
+  const animated=[...sceneHeaderParts(root),query,head].filter(Boolean);
+  const firstEntry=!enteredMatchesViews.has(root);
+  enteredMatchesViews.add(root);
+  if(motionDisabled()||!firstEntry){
     clearMotionProps(animated);
-    animateMatchRows(list);
     return;
   }
   clearMotionProps(animated);
   matchTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);matchTimeline=null;}});
   addHeaderSequence(matchTimeline,root,0);
-  if(logCard)matchTimeline.fromTo(logCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.12);
-  if(head)matchTimeline.fromTo(head,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.22);
-  if(filters)matchTimeline.fromTo(filters,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.27);
-  matchTimeline.call(()=>animateMatchRows(list,{delay:0}),null,.34);
+  if(query)matchTimeline.fromTo(query,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:mobileMotion()?.29:.34,ease:MOAP_MOTION.ease.enter},.14);
+  if(head)matchTimeline.fromTo(head,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.27,ease:MOAP_MOTION.ease.enter},.25);
+  matchTimeline.call(()=>animateMatchRows(list,{delay:0}),null,.31);
 }
 
 export function transitionMatchContent({target,update,onUpdated,append=false,startIndex=0}){
@@ -345,11 +345,10 @@ export function transitionMatchContent({target,update,onUpdated,append=false,sta
   }
   gsap.killTweensOf(target);
   matchContentTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);matchContentTimeline=null;}})
-    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+    .to(target,{autoAlpha:.66,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
     .call(()=>{update();onUpdated?.();})
-    .set(target,{y:mobileMotion()?3:5})
-    .to(target,{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter})
-    .call(()=>animateMatchRows(target,{includeRail:true}));
+    .set(target,{autoAlpha:.66,y:mobileMotion()?2:3})
+    .to(target,{autoAlpha:1,y:0,duration:.18,ease:MOAP_MOTION.ease.enter});
 }
 
 function bindRivalMatrixFocus(root){

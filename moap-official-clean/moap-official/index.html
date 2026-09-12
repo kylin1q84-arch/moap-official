@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.6-status-mobile">
+  <link rel="stylesheet" href="/style.css?v=4.0.7-match-ledger">
 </head>
 <body>
 
@@ -183,18 +183,24 @@
       </section>
 
       <section class="view" data-view="matches">
-        <div class="hero"><div><h2>比赛中心</h2><p>按赛季、牌手和比赛类型筛选所有正式记录。</p></div></div>
-        <div class="card section season-match-log-card">
-          <div class="section-head match-log-head"><div><h3>赛季比赛日志</h3><small>按时间倒序查看正式比赛记录</small></div><span class="chip gold">SEASON MATCH LOG</span></div>
-          <div class="form-row">
-            <label>赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
+        <header class="match-ledger-masthead">
+          <div><span class="match-ledger-kicker">MATCH ARCHIVE / OFFICIAL LOG</span><h2>比赛中心</h2><p>正式比赛档案与逐场结果</p></div>
+          <div class="match-ledger-total"><span>TOTAL MATCHES</span><strong id="matchTotalCount">—</strong><small>OFFICIAL RECORDS</small></div>
+        </header>
+        <section class="match-query-stage" aria-labelledby="matchQueryTitle">
+          <header class="match-ledger-section-head"><div><span>QUERY BAR</span><h3 id="matchQueryTitle">比赛档案查询</h3></div><strong id="matchResultCount">— MATCHES FOUND</strong></header>
+          <div class="form-row match-query-bar">
+            <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
-            <label>比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
-            <label>关键词<input id="matchQuery" placeholder="场地 / 场次 / 日期"></label>
+            <label class="match-filter-type">比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
+            <label class="match-filter-query">关键词<input id="matchQuery" placeholder="比赛编号 / 场地 / 日期"></label>
           </div>
-          <div class="list season-match-log" id="matchList"></div>
-          <button class="btn load-more" id="loadMoreBtn" type="button">加载更多</button>
-        </div>
+        </section>
+        <section class="match-ledger-stage" aria-labelledby="matchLedgerTitle">
+          <header class="match-ledger-section-head match-ledger-head"><div><span>MATCH LEDGER</span><h3 id="matchLedgerTitle">官方比赛档案流</h3></div><small>按时间倒序 · 精准对位自 MSL0067 起可查</small></header>
+          <div class="season-match-log match-ledger" id="matchList"></div>
+          <div class="match-load-action"><button class="btn load-more" id="loadMoreBtn" type="button">LOAD MORE MATCHES · 加载更多比赛</button></div>
+        </section>
       </section>
 
       <section class="view" data-view="entry">
@@ -278,6 +284,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.5-status-board"></script>
+  <script type="module" src="/app.js?v=4.0.7-match-ledger"></script>
 </body>
 </html>
