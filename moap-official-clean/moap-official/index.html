@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.0-player-observatory">
+  <link rel="stylesheet" href="/style.css?v=4.0.1-player-identity">
 </head>
 <body>
 
@@ -145,7 +145,13 @@
           <label style="min-width:180px">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="card section player-profile-hero player-observatory-stage" style="margin-bottom:16px">
-          <div class="player-head" id="playerHeader"></div>
+          <div class="player-observatory-identity-column">
+            <div class="player-head" id="playerHeader"></div>
+            <div class="card section profile-honors-home player-honor-archive player-observatory-panel">
+              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>HONOR ARCHIVE</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
+              <div class="profile-honor-list" id="profileHonorList"></div>
+            </div>
+          </div>
           <div class="current-season-performance-card">
             <div class="section-head player-observatory-section-head"><div><span>CURRENT PERFORMANCE</span><h3>当前赛季表现</h3><small id="currentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div><span class="chip gold">SEASON OVR</span></div>
             <div id="currentSeasonPerformance"></div>
@@ -173,10 +179,6 @@
             <div class="table-scroll player-season-desktop"><table class="player-season-data-table"><thead id="playerSeasonHead"></thead><tbody id="playerSeasonTable"></tbody></table></div>
             <div class="player-season-summary-cards" id="playerSeasonCards" aria-live="polite"></div>
           </div>
-        </div>
-        <div class="card section profile-honors-home player-honor-archive player-observatory-panel" style="margin-bottom:16px">
-          <div class="section-head profile-honors-head player-observatory-section-head"><div><span>HONOR ARCHIVE</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
-          <div class="profile-honor-list" id="profileHonorList"></div>
         </div>
         <div class="card section player-ai-report-card player-observatory-panel" style="margin-bottom:16px">
           <div class="section-head player-observatory-section-head"><div><span>SCOUTING REPORT</span><h3>AI牌手报告</h3></div><small>近期状态 + S1至今生涯评价</small></div>
@@ -280,6 +282,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.0-player-observatory"></script>
+  <script type="module" src="/app.js?v=4.0.1-player-identity"></script>
 </body>
 </html>

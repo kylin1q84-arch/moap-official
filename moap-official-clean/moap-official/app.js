@@ -25,7 +25,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.0-player-observatory";
+} from "./animations.js?v=4.0.1-player-identity";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1072,9 +1072,9 @@ function renderPlayerSeasonData(pid){
 
 function renderPlayer(){
   const pid=currentPlayer,p=state.players.find(x=>x.playerId===pid),c=playerCareer(pid),prof=state.profiles[pid];
-  const statusRow=state.statusCenter?.rankings?.find(x=>x.playerId===pid),career=statusRow?.career||{},seasonPerf=statusRow?.seasonPerformance||{};
+  const statusRow=state.statusCenter?.rankings?.find(x=>x.playerId===pid),career=statusRow?.career||{};
   const honors=state.honors[pid]||[],groups=groupPlayerHonors(honors);
-  $("#playerHeader").innerHTML=`<div class="profile-identity"><div class="profile-portrait-stage">${playerPortraitHtml(p)}<small>MSL ACTIVE ROSTER</small></div><div class="profile-name-block"><span class="profile-kicker">PLAYER IDENTITY</span><h3>${escapeHtml(p.name)}</h3><div class="profile-observer-meta"><span><small>PLAYER ID</small><b>${escapeHtml(pid)}</b></span><span><small>HONOR RANK</small><b>#${prof.honorRank}</b></span></div><div class="profile-rating-pills"><span>生涯OVR <b>${career.overallRating??"—"}</b></span><span>${escapeHtml(seasonPerf.season||latestActualSeason())} OVR <b>${seasonPerf.rating??"—"}</b></span></div></div></div><span class="chip gold profile-goat-chip">${c.goatRank===1?"CURRENT GOAT":"GOAT #"+c.goatRank}</span>`;
+  $("#playerHeader").innerHTML=`<div class="profile-name-block"><span class="profile-kicker">PLAYER IDENTITY</span><h3>${escapeHtml(p.name)}</h3><div class="profile-observer-meta"><span><small>PLAYER ID</small><b>${escapeHtml(pid)}</b></span><span><small>HONOR RANK</small><b>#${prof.honorRank}</b></span></div><div class="profile-career-status"><span class="profile-career-ovr"><small>CAREER OVR</small><b>${career.overallRating??"—"}</b></span><span class="profile-goat-status"><small>GOAT IDENTITY</small><b>${c.goatRank===1?"CURRENT GOAT":"GOAT #"+c.goatRank}</b></span></div></div>`;
   const obtainedGroups=groups.filter(group=>group.awards.length>0);
   const summary=$("#profileHonorSummary");if(summary)summary.textContent=`${obtainedGroups.length}类官方荣誉 · 生涯累计${honors.length}次`;
   const list=$("#profileHonorList");if(list)list.innerHTML=groups.map(g=>profileHonorRowHtml(g)).join("");
@@ -1512,7 +1512,7 @@ function groupPlayerHonors(honors){
 function profileHonorRowHtml(group){
   const earned=group.awards.length>0;
   const scopes=earned?group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · "):"尚未获得";
-  const content=`<strong>${escapeHtml(safeHonorName(group))}</strong><b>×${group.awards.length}</b><small>${escapeHtml(scopes)}</small>`;
+  const content=`<span class="profile-honor-copy"><strong>${escapeHtml(safeHonorName(group))}</strong><small>${escapeHtml(scopes)}</small></span><b>×${group.awards.length}</b>`;
   if(!earned)return `<div class="profile-honor-row is-unearned" aria-disabled="true">${content}</div>`;
   return `<button type="button" class="profile-honor-row profile-honor-clickable" data-profile-honor="${escapeHtml(group.honorId)}" aria-label="查看${escapeHtml(safeHonorName(group))}荣誉履历">${content}</button>`;
 }

@@ -16,7 +16,7 @@ const NUMBER_SELECTOR = [
   ".goat-rating strong",
   ".command-goat-index strong",
   ".power-score > b",
-  ".profile-rating-pills b",
+  ".profile-career-ovr b",
   ".record-table tbody td",
   ".record-table tbody td > b",
   ".record-ranking-row > b",
@@ -1038,11 +1038,10 @@ function stopPlayerDataExperience(root){
 
 function playerLayers(root){
   return [
-    root?.querySelector?.("#playerHeader"),
+    root?.querySelector?.(".player-observatory-identity-column"),
     root?.querySelector?.(".current-season-performance-card"),
     root?.querySelector?.(".player-trend-stage"),
     root?.querySelector?.(".player-season-data-card"),
-    root?.querySelector?.(".profile-honors-home"),
     root?.querySelector?.(".player-ai-report-card")
   ].filter(Boolean);
 }
@@ -1054,10 +1053,10 @@ export function animatePlayerCenterEntry(root){
   stopPlayerDataExperience(root);
   const layers=playerLayers(root);
   const headerParts=sceneHeaderParts(root);
-  const portrait=root?.querySelector?.(".player-portrait-shell");
-  const identity=[...root?.querySelectorAll?.(".profile-name-block > *, .profile-goat-chip")||[]];
-  const progressive=layers.filter(layer=>layer!==root?.querySelector?.("#playerHeader"));
-  const animated=[...headerParts,portrait,...identity,...progressive].filter(Boolean);
+  const identity=[...root?.querySelectorAll?.(".profile-name-block > *")||[]];
+  const identityColumn=root?.querySelector?.(".player-observatory-identity-column");
+  const progressive=layers.filter(layer=>layer!==identityColumn);
+  const animated=[...headerParts,...identity,...progressive].filter(Boolean);
   if(!root||motionDisabled()||!animated.length){
     animatePlayerDataExperience(root);
     return;
@@ -1073,7 +1072,6 @@ export function animatePlayerCenterEntry(root){
     }
   });
   addHeaderSequence(playerEntryTimeline,root,0);
-  if(portrait)playerEntryTimeline.fromTo(portrait,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.38:.46,ease:MOAP_MOTION.ease.enter},.1);
   if(identity.length)playerEntryTimeline.fromTo(identity,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.025:.04},.19);
   if(progressive.length)playerEntryTimeline.fromTo(progressive,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.33:.4,stagger:mobile?.035:.055},.3);
 }
