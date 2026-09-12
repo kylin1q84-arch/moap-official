@@ -23,7 +23,9 @@ const NUMBER_SELECTOR = [
   ".monthly-grid b",
   ".monthly-hero > b",
   ".split-stats strong",
-  ".rival-summary-inline td",
+  ".rival-signal strong",
+  ".rival-summary-row [role='cell']",
+  ".rival-pair-direction dd",
   ".goat-score-v2 > b"
 ].join(",");
 
@@ -193,9 +195,9 @@ export function transitionView({outgoing,incoming,swap,immediate=false,onEntered
 
 function sceneHeaderParts(root){
   return [
-    root?.querySelector?.(".hero h2, .status-live-masthead h2, .match-ledger-masthead h2"),
-    root?.querySelector?.(".hero p, .status-live-masthead p, .match-ledger-masthead p"),
-    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *, .status-current-leader, .match-ledger-total")
+    root?.querySelector?.(".hero h2, .status-live-masthead h2, .match-ledger-masthead h2, .rival-intelligence-masthead h2"),
+    root?.querySelector?.(".hero p, .status-live-masthead p, .match-ledger-masthead p, .rival-intelligence-masthead p"),
+    root?.querySelector?.(".hero > .chip, .hero > label, .hero > div + *, .status-current-leader, .match-ledger-total, .rival-tracked-signal")
   ].filter(Boolean);
 }
 
@@ -212,7 +214,7 @@ function prepareSectionReveals(root,view){
     overview:".overview-editorial-recap,.monthly-report-card",
     status:".status-observation-stage,.status-method-stage",
     player:".player-season-data-card",
-    rival:".rival-context-card",
+    rival:".rival-flow-stage,.rival-pair-lens",
     entry:".entry-matrix-stage"
   };
   const selector=selectorByView[view];
@@ -356,7 +358,7 @@ function bindRivalMatrixFocus(root){
   rivalMatrixInteractionCleanup=null;
   const table=root?.querySelector?.("#netMatrix");
   const finePointer=window.matchMedia?.("(hover:hover) and (pointer:fine)")?.matches;
-  if(!table||!finePointer||motionDisabled())return;
+  if(!table)return;
   const clear=()=>{
     table.classList.remove("is-focus-mode");
     table.querySelectorAll(".is-focus-cell,.is-focus-row,.is-focus-col").forEach(element=>element.classList.remove("is-focus-cell","is-focus-row","is-focus-col"));
@@ -372,15 +374,17 @@ function bindRivalMatrixFocus(root){
   };
   const move=event=>focus(event.target.closest?.("button.matrix-cell"));
   const leave=()=>clear();
-  const focusIn=event=>focus(event.target.closest?.("button.matrix-cell"));
+  const focusIn=event=>{
+    const cell=event.target.closest?.("button.matrix-cell");
+    if(!finePointer&&!cell?.matches?.(":focus-visible")){clear();return;}
+    focus(cell);
+  };
   const focusOut=event=>{if(!table.contains(event.relatedTarget))clear();};
-  table.addEventListener("pointermove",move,{passive:true});
-  table.addEventListener("pointerleave",leave,{passive:true});
+  if(finePointer){table.addEventListener("pointermove",move,{passive:true});table.addEventListener("pointerleave",leave,{passive:true});}
   table.addEventListener("focusin",focusIn);
   table.addEventListener("focusout",focusOut);
   rivalMatrixInteractionCleanup=()=>{
-    table.removeEventListener("pointermove",move);
-    table.removeEventListener("pointerleave",leave);
+    if(finePointer){table.removeEventListener("pointermove",move);table.removeEventListener("pointerleave",leave);}
     table.removeEventListener("focusin",focusIn);
     table.removeEventListener("focusout",focusOut);
     clear();
@@ -390,10 +394,13 @@ function bindRivalMatrixFocus(root){
 function animateRivalEntry(root){
   const gsap=motionEngine();
   rivalTimeline?.kill();
-  const kpis=[...root.querySelectorAll("#rivalKpis > .kpi")];
-  const matrixCard=root.querySelector(".rival-matrix-card");
+  const signals=[...root.querySelectorAll("#rivalKpis > .rival-signal")];
+  const matrixStage=root.querySelector(".rival-matrix-stage");
   const matrixRows=[...root.querySelectorAll("#netMatrix tbody tr")];
-  const animated=[...sceneHeaderParts(root),...kpis,matrixCard,...matrixRows].filter(Boolean);
+  const summaryRows=[...root.querySelectorAll("#rivalSummaryTable > .rival-summary-row")];
+  const flowStage=root.querySelector(".rival-flow-stage");
+  const pairLens=root.querySelector(".rival-pair-lens");
+  const animated=[...sceneHeaderParts(root),...signals,matrixStage,...matrixRows,flowStage,...summaryRows,pairLens].filter(Boolean);
   bindRivalMatrixFocus(root);
   if(motionDisabled()){
     clearMotionProps(animated);
@@ -402,22 +409,26 @@ function animateRivalEntry(root){
   clearMotionProps(animated);
   rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);rivalTimeline=null;}});
   addHeaderSequence(rivalTimeline,root,0);
-  if(kpis.length)rivalTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.32,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.13);
-  if(matrixCard)rivalTimeline.fromTo(matrixCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.42,ease:MOAP_MOTION.ease.enter},.28);
-  if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.24:.3,stagger:mobileMotion()?.025:.035,ease:MOAP_MOTION.ease.enter},.38);
+  if(signals.length)rivalTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.28,stagger:mobileMotion()?.02:.035,ease:MOAP_MOTION.ease.enter},.12);
+  if(matrixStage)rivalTimeline.fromTo(matrixStage,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:7},{autoAlpha:1,y:0,duration:mobileMotion()?.3:.38,ease:MOAP_MOTION.ease.enter},.24);
+  if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.22:.27,stagger:mobileMotion()?.02:.03,ease:MOAP_MOTION.ease.enter},.34);
+  if(flowStage)rivalTimeline.fromTo(flowStage,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.44);
+  if(summaryRows.length)rivalTimeline.fromTo(summaryRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.22,stagger:.025,ease:MOAP_MOTION.ease.enter},.5);
+  if(pairLens)rivalTimeline.fromTo(pairLens,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.58);
 }
 
 export function transitionRivalContent({root,update,onUpdated}){
-  const target=root?.querySelector?.(".rival-matrix-layout")||root;
+  const targets=[root?.querySelector?.(".rival-matrix-scroll"),root?.querySelector?.("#rivalSummaryTable"),root?.querySelector?.("#rivalKpis")].filter(Boolean);
   const gsap=motionEngine();
   rivalTimeline?.kill();
-  if(!target||motionDisabled()){
+  if(!targets.length||motionDisabled()){
     update();bindRivalMatrixFocus(root);onUpdated?.();return;
   }
-  rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);rivalTimeline=null;}})
-    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
+  rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(targets);rivalTimeline=null;}})
+    .to(targets,{autoAlpha:.66,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
     .call(()=>{update();bindRivalMatrixFocus(root);onUpdated?.();})
-    .fromTo(target,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.22,ease:MOAP_MOTION.ease.enter});
+    .set(targets,{autoAlpha:.66,y:3})
+    .to(targets,{autoAlpha:1,y:0,duration:.18,ease:MOAP_MOTION.ease.enter});
 }
 
 export function transitionRivalDetail({target,update,onUpdated}){
@@ -427,9 +438,9 @@ export function transitionRivalDetail({target,update,onUpdated}){
     update();onUpdated?.();return;
   }
   rivalDetailTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);rivalDetailTimeline=null;}})
-    .to(target,{autoAlpha:0,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
+    .to(target,{autoAlpha:.65,y:2,duration:.09,ease:MOAP_MOTION.ease.exit})
     .call(()=>{update();onUpdated?.();})
-    .fromTo(target,{autoAlpha:0,y:4},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
+    .fromTo(target,{autoAlpha:.65,y:4},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
 }
 
 function animateSystemEntry(root){

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.7-match-ledger">
+  <link rel="stylesheet" href="/style.css?v=4.0.8-rival-intelligence">
 </head>
 <body>
 
@@ -249,19 +249,52 @@
       </section>
 
       <section class="view" data-view="rival">
-        <div class="hero"><div><h2>精准对位中心</h2><p>统计逐场录入的精准对位方向矩阵。A→B 与 B→A 独立记录，吃分、被吃分和净积分均按原始方向格汇总。</p></div></div>
-        <div class="kpis rival-status-strip" id="rivalKpis"></div>
-        <div class="card section rival-matrix-card" style="margin-bottom:16px">
-          <div class="section-head rival-matrix-head"><div><h3>对位矩阵</h3><small>行攻击方 / 列承受方 · 双向独立 · 点击数字查看对位概览</small></div><div class="segmented-control" id="rivalModeToggle"><button type="button" class="active" data-rival-mode="cumulative">累计</button><button type="button" data-rival-mode="average">场均</button></div></div>
-          <div class="rival-matrix-layout">
-            <div class="matrix-wrap"><table class="matrix" id="netMatrix"></table></div>
-            <div class="rival-summary-inline"><div class="rival-summary-title">牌手汇总</div><div class="table-scroll"><table><thead><tr><th>牌手</th><th>吃分</th><th>被吃分</th><th>净分</th></tr></thead><tbody id="rivalSummaryTable"></tbody></table></div></div>
+        <header class="rival-intelligence-masthead">
+          <div>
+            <span class="rival-eyebrow">RIVAL INTELLIGENCE / DIRECTIONAL MATRIX</span>
+            <h2>精准对位中心</h2>
+            <p>逐场记录牌手之间的方向性吃分关系</p>
           </div>
-        </div>
-        <div class="card section rival-context-card" id="rivalDetailCard">
-          <div class="section-head"><h3>选中对位</h3><small>点击矩阵数字查看概览，逐场明细进入详情页</small></div>
-          <div id="rivalDetail" class="matrix-context-bar">请选择矩阵中的一个方向格，查看双方累计或场均对位概览。</div>
-        </div>
+          <div class="rival-tracked-signal" aria-label="已追踪比赛">
+            <span>TRACKED MATCHES</span>
+            <strong id="rivalTrackedMatches">0</strong>
+            <small>精准对位明细</small>
+          </div>
+        </header>
+
+        <section class="rival-signal-rail" id="rivalKpis" aria-label="对位追踪信号"></section>
+
+        <section class="rival-matrix-stage">
+          <header class="rival-stage-head">
+            <div>
+              <span class="rival-eyebrow">RELATIONSHIP MATRIX</span>
+              <h3>方向对位矩阵</h3>
+              <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
+            </div>
+            <div class="segmented-control" id="rivalModeToggle" aria-label="对位统计口径">
+              <button type="button" class="active" data-rival-mode="cumulative" aria-pressed="true">累计</button>
+              <button type="button" data-rival-mode="average" aria-pressed="false">场均</button>
+            </div>
+          </header>
+          <div class="rival-direction-note"><span>A → B</span><small>点击有数据的方向格查看双方关系；方向矩阵不要求对称。</small></div>
+          <div class="matrix-wrap rival-matrix-scroll"><table class="matrix" id="netMatrix"></table></div>
+          <p class="rival-mobile-scroll-hint">横向滑动查看完整方向矩阵</p>
+        </section>
+
+        <section class="rival-flow-stage">
+          <header class="rival-stage-head">
+            <div>
+              <span class="rival-eyebrow">PLAYER FLOW SUMMARY</span>
+              <h3>牌手流向汇总</h3>
+              <p>同一统计口径下的吃分、被吃分与净积分</p>
+            </div>
+          </header>
+          <div class="rival-summary-list" id="rivalSummaryTable" role="table" aria-label="牌手对位流向汇总"></div>
+        </section>
+
+        <section class="rival-pair-lens" id="rivalDetailCard">
+          <div id="rivalDetail" class="rival-lens-empty"><span>SELECT A DIRECTION</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p></div>
+        </section>
       </section>
 
       <section class="view" data-view="system">
@@ -284,6 +317,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.7-match-ledger"></script>
+  <script type="module" src="/app.js?v=4.0.8-rival-intelligence"></script>
 </body>
 </html>

@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.7-match-ledger";
+} from "./animations.js?v=4.0.8-rival-intelligence";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1344,11 +1344,9 @@ function rivalDisplayMatrix(){
 }
 function renderMatrix(target,dataMatrix,clickable=false){
   const names=state.players.map(p=>p.name);
-  let html=`<thead><tr><th>攻击方（吃分） ↓</th>${names.map(n=>`<th>${escapeHtml(n)}</th>`).join("")}<th class="matrix-summary-head">吃分</th><th class="matrix-summary-head">被吃分</th><th class="matrix-summary-head">净分</th></tr></thead><tbody>`;
-  const summaryRows=rivalSummaryForMode();
+  let html=`<thead><tr><th class="rival-axis-corner"><span>攻击方</span><small>承受方 →</small></th>${names.map(n=>`<th class="rival-col-header" scope="col">${escapeHtml(n)}</th>`).join("")}</tr></thead><tbody>`;
   names.forEach(a=>{
-    const summary=summaryRows.find(r=>r.player===a)||{eat:0,eaten:0,total:0};
-    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a)}</div></td>`;
+    html+=`<tr><th class="rival-row-header" scope="row"><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a)}</div></th>`;
     names.forEach(b=>{
       if(a===b)html+=`<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>`;
       else{
@@ -1356,11 +1354,12 @@ function renderMatrix(target,dataMatrix,clickable=false){
         if(!games)html+=`<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>`;
         else{
           const v=Number(dataMatrix?.[a]?.[b]||0),cls=v>0?"pos":v<0?"neg":"neutral";
-          html+=`<td><button type="button" class="matrix-cell ${cls}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${fmtRivalValue(v)}</button></td>`;
+          const value=fmtRivalValue(v);
+          html+=`<td><button type="button" class="matrix-cell ${cls}" aria-label="${escapeHtml(a)} 到 ${escapeHtml(b)}：${value}" ${clickable?`data-rival-a="${escapeHtml(a)}" data-rival-b="${escapeHtml(b)}"`:""}>${value}</button></td>`;
         }
       }
     });
-    html+=`<td class="matrix-summary-cell score-pos">${fmtRivalValue(summary.eat)}</td><td class="matrix-summary-cell score-neg">${fmtRivalEaten(summary.eaten)}</td><td class="matrix-summary-cell ${scoreClass(summary.total)}">${fmtRivalValue(summary.total)}</td></tr>`;
+    html+="</tr>";
   });
   target.innerHTML=html+"</tbody>";
 }
@@ -1378,22 +1377,23 @@ function rivalSummaryForMode(){
 function renderRival(){
   const matrix=rivalDisplayMatrix();
   renderMatrix($("#netMatrix"),matrix,true);
-  $$('[data-rival-a]').forEach(b=>b.addEventListener("click",()=>showRivalDetail(b.dataset.rivalA,b.dataset.rivalB)));
+  $("#netMatrix")?.querySelectorAll('[data-rival-a]').forEach(b=>b.addEventListener("click",()=>showRivalDetail(b.dataset.rivalA,b.dataset.rivalB)));
   const meta=state.rivalryMeta||{startDate:null,trackedMatches:0,entries:0};
+  if($("#rivalTrackedMatches"))$("#rivalTrackedMatches").textContent=String(meta.trackedMatches||0).padStart(2,"0");
   $("#rivalKpis").innerHTML=[
     ["统计起点",meta.startDate||"等待首场","旧比赛不参与推算"],
     ["已记录比赛",meta.trackedMatches+" 场","仅含精准对位明细"],
     ["矩阵方向格",meta.entries+" 条",`${meta.nonZeroEntries??0} 条非零`],
     ["当前口径",rivalMode==="average"?"场均":"累计",rivalMode==="average"?"方向净分÷共同记录场次":"方向原始格累计"]
-  ].map(x=>`<div class="card kpi rival-status-item"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>8?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
+  ].map((x,index)=>`<article class="rival-signal" data-signal-index="${index}"><span>${x[0]}</span><strong>${x[1]}</strong><small>${x[2]}</small></article>`).join("");
   const rows=rivalSummaryForMode();
-  $("#rivalSummaryTable").innerHTML=rows.map(r=>`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(r.player)}</div></td><td class="score-pos">${fmtRivalValue(r.eat)}</td><td class="score-neg">${fmtRivalEaten(r.eaten)}</td><td class="${scoreClass(r.total)}">${fmtRivalValue(r.total)}</td></tr>`).join("");
+  $("#rivalSummaryTable").innerHTML=`<div class="rival-summary-head" role="row"><span role="columnheader">牌手</span><span role="columnheader">吃分</span><span role="columnheader">被吃分</span><span role="columnheader">净积分</span></div>${rows.map(r=>`<div class="rival-summary-row" role="row"><strong role="cell">${matchupPlayerNameHtml(r.player)}</strong><span class="score-pos" role="cell">${fmtRivalValue(r.eat)}</span><span class="score-neg" role="cell">${fmtRivalEaten(r.eaten)}</span><b class="${scoreClass(r.total)}" role="cell">${fmtRivalValue(r.total)}</b></div>`).join("")}`;
   if(!meta.entries){
-    $("#rivalDetailCard")?.classList.remove("has-selection");$("#rivalDetail").className="matrix-context-bar empty";$("#rivalDetail").textContent="暂无新制对位记录。";
+    $("#rivalDetailCard")?.classList.remove("has-selection");$("#rivalDetail").className="rival-lens-empty";$("#rivalDetail").innerHTML="<span>NO TRACKED DIRECTION</span><p>暂无新制对位记录。</p>";
     return;
   }
   if(selectedRivalPair)showRivalDetail(selectedRivalPair[0],selectedRivalPair[1]);
-  else{$("#rivalDetailCard")?.classList.remove("has-selection");$("#rivalDetail").className="matrix-context-bar";$("#rivalDetail").textContent="请选择矩阵中的一个方向格，查看双方累计或场均对位概览。";}
+  else{$("#rivalDetailCard")?.classList.remove("has-selection");$("#rivalDetail").className="rival-lens-empty";$("#rivalDetail").innerHTML="<span>SELECT A DIRECTION</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p>";}
 }
 function setRivalMode(mode){
   const root=$('.view[data-view="rival"]');
@@ -1401,7 +1401,7 @@ function setRivalMode(mode){
     root,
     update:()=>{
       rivalMode=mode==="average"?"average":"cumulative";
-      $$('[data-rival-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rivalMode===rivalMode));
+      $$('[data-rival-mode]').forEach(btn=>{const active=btn.dataset.rivalMode===rivalMode;btn.classList.toggle('active',active);btn.setAttribute("aria-pressed",String(active));});
       renderRival();
     },
     onUpdated:()=>animateNumbers(root)
@@ -1430,14 +1430,12 @@ function openRivalDetailModal(a,b){
   });
   const f=summarize(history),r=summarize(reverseHistory);
   const rows=history.map((item,index)=>`<tr><td>${index+1}</td><td>${escapeHtml(item.matchId)}</td><td>${escapeHtml(item.date)}</td><td>${escapeHtml(item.venue||"—")}</td><td class="${scoreClass(item.net)}">${fmtScore(item.net)}</td></tr>`).join("");
-  $("#rivalDetailModalBody").innerHTML=`<header class="rival-detail-modal-header"><div><p>精准对位明细</p><h2 id="rivalDetailModalTitle">${escapeHtml(a)} → ${escapeHtml(b)}</h2><strong>${history.length} 场方向记录 · 累计 ${fmtScore(forward)}</strong></div><span class="record-holder-badge">MATCHUP DETAIL</span></header>
-    <div class="kpis rival-detail-kpis rival-detail-page-kpis">
-      <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtScore(forward)}</strong></div>
-      <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtScore(f.eat)} / ${f.eaten?`-${f.eaten}`:"0"}</strong></div>
-      <div class="mini-stat"><span>${escapeHtml(b)}→${escapeHtml(a)} 净积分</span><strong class="${scoreClass(reverse)}">${fmtScore(reverse)}</strong></div>
-      <div class="mini-stat"><span>反向吃分 / 被吃分</span><strong>${fmtScore(r.eat)} / ${r.eaten?`-${r.eaten}`:"0"}</strong></div>
+  $("#rivalDetailModalBody").innerHTML=`<header class="rival-detail-modal-header"><div><p>RIVAL INTELLIGENCE / MATCHUP HISTORY</p><h2 id="rivalDetailModalTitle">${escapeHtml(a)} → ${escapeHtml(b)}</h2><strong>${history.length} 场方向记录 · 累计 ${fmtScore(forward)}</strong></div><span class="record-holder-badge">MATCHUP DETAIL</span></header>
+    <div class="rival-modal-direction-grid">
+      <article class="rival-modal-direction is-forward"><header><span>FORWARD</span><strong>${escapeHtml(a)} → ${escapeHtml(b)}</strong><small>${history.length} 场</small></header><dl><div><dt>净积分</dt><dd class="${scoreClass(forward)}">${fmtScore(forward)}</dd></div><div><dt>吃分</dt><dd class="score-pos">${fmtScore(f.eat)}</dd></div><div><dt>被吃分</dt><dd class="score-neg">${f.eaten?`-${f.eaten}`:"0"}</dd></div></dl></article>
+      <article class="rival-modal-direction is-reverse"><header><span>REVERSE</span><strong>${escapeHtml(b)} → ${escapeHtml(a)}</strong><small>${reverseHistory.length} 场</small></header><dl><div><dt>净积分</dt><dd class="${scoreClass(reverse)}">${fmtScore(reverse)}</dd></div><div><dt>吃分</dt><dd class="score-pos">${fmtScore(r.eat)}</dd></div><div><dt>被吃分</dt><dd class="score-neg">${r.eaten?`-${r.eaten}`:"0"}</dd></div></dl></article>
     </div>
-    <section class="record-modal-section"><h3>${escapeHtml(a)} → ${escapeHtml(b)} 比赛明细</h3>${history.length?`<div class="table-scroll"><table class="rival-detail-table"><thead><tr><th>#</th><th>比赛</th><th>日期</th><th>场地</th><th>方向分</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">这个方向暂时没有对位记录。</div>'}</section>
+    <section class="record-modal-section rival-history-section"><span class="rival-eyebrow">FORWARD HISTORY · ${escapeHtml(a)} → ${escapeHtml(b)}</span><h3>${escapeHtml(a)} → ${escapeHtml(b)} 比赛明细</h3>${history.length?`<div class="table-scroll"><table class="rival-detail-table"><thead><tr><th>#</th><th>比赛</th><th>日期</th><th>场地</th><th>方向分</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">这个方向暂时没有对位记录。</div>'}</section>
     <footer class="record-modal-footer">两个方向完全独立记录，不互为相反数；明细直接读取对应方向格。</footer>`;
   $("#rivalDetailModalBackdrop").hidden=false;
   document.body.classList.add("modal-open");
@@ -1455,15 +1453,13 @@ function showRivalDetail(a,b){
   let f=summarize(history),r=summarize(reverseHistory);
   if(rivalMode==="average"){if(history.length)f={eat:f.eat/history.length,eaten:f.eaten/history.length,net:f.net/history.length};if(reverseHistory.length)r={eat:r.eat/reverseHistory.length,eaten:r.eaten/reverseHistory.length,net:r.net/reverseHistory.length};}
   const target=$("#rivalDetail");
-  const html=`<div class="player-head"><div><h3 style="margin:0">${escapeHtml(a)} → ${escapeHtml(b)}</h3><div class="muted" style="margin-top:5px">${rivalMode==="average"?"场均":"累计"}方向概览</div></div></div>
-    <div class="kpis rival-detail-kpis" style="margin-top:16px">
-      <div class="mini-stat"><span>${escapeHtml(a)}→${escapeHtml(b)} 净积分</span><strong class="${scoreClass(forward)}">${fmtRivalValue(forward)}</strong></div>
-      <div class="mini-stat"><span>吃分 / 被吃分</span><strong>${fmtRivalValue(f.eat)} / ${fmtRivalEaten(f.eaten)}</strong></div>
-      <div class="mini-stat"><span>${escapeHtml(b)}→${escapeHtml(a)} 净积分</span><strong class="${scoreClass(reverse)}">${fmtRivalValue(reverse)}</strong></div>
-      <div class="mini-stat"><span>反向吃分 / 被吃分</span><strong>${fmtRivalValue(r.eat)} / ${fmtRivalEaten(r.eaten)}</strong></div>
+  const html=`<header class="rival-lens-head"><div><span class="rival-eyebrow">SELECTED DIRECTION</span><h3>${escapeHtml(a)} → ${escapeHtml(b)}</h3></div><strong>${rivalMode==="average"?"场均":"累计"}</strong></header>
+    <div class="rival-pair-comparison">
+      <article class="rival-pair-direction is-forward"><header><span>FORWARD</span><strong>${escapeHtml(a)} → ${escapeHtml(b)}</strong><small>${history.length} 场</small></header><dl><div><dt>净积分</dt><dd class="${scoreClass(forward)}">${fmtRivalValue(forward)}</dd></div><div><dt>吃分</dt><dd class="score-pos">${fmtRivalValue(f.eat)}</dd></div><div><dt>被吃分</dt><dd class="score-neg">${fmtRivalEaten(f.eaten)}</dd></div></dl></article>
+      <article class="rival-pair-direction is-reverse"><header><span>REVERSE</span><strong>${escapeHtml(b)} → ${escapeHtml(a)}</strong><small>${reverseHistory.length} 场</small></header><dl><div><dt>净积分</dt><dd class="${scoreClass(reverse)}">${fmtRivalValue(reverse)}</dd></div><div><dt>吃分</dt><dd class="score-pos">${fmtRivalValue(r.eat)}</dd></div><div><dt>被吃分</dt><dd class="score-neg">${fmtRivalEaten(r.eaten)}</dd></div></dl></article>
     </div>
-    <div class="validation">两个方向完全独立记录，不要求互为相反数。当前显示${rivalMode==="average"?"场均":"累计"}口径；逐场明细不在本页叠加。</div>
-    <button type="button" class="btn rival-detail-open-btn" data-rival-detail-open="${escapeHtml(`${a}|${b}`)}">查看明细记录 · ${history.length}场</button>`;
+    <p class="rival-direction-disclaimer">两个方向完全独立记录，不要求互为相反数。当前显示${rivalMode==="average"?"场均":"累计"}口径。</p>
+    <button type="button" class="rival-history-action" data-rival-detail-open="${escapeHtml(`${a}|${b}`)}"><span>VIEW MATCHUP HISTORY →</span><small>查看逐场明细 → · ${history.length}场</small></button>`;
   transitionRivalDetail({
     target,
     update:()=>{
