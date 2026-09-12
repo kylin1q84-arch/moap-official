@@ -1672,7 +1672,7 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   border-radius:999px;
   background:rgba(215,178,91,.38);
 }
-.profile-honor-modal>.honor-modal-close{color:var(--gold2)}
+.profile-honor-modal>.honor-modal-close{z-index:2;color:var(--gold2)}
 .profile-honor-modal-header{padding-right:40px}
 .profile-honor-modal-header p{margin:0 0 5px;color:var(--muted);font-size:12px}
 .profile-honor-modal-header h2{margin:0 0 7px;font-size:27px;color:var(--text)}
