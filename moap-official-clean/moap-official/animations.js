@@ -11,9 +11,6 @@ const NUMBER_SELECTOR = [
   ".season-rating-hero strong",
   ".season-compare b",
   ".season-dimension b",
-  ".career-metric-grid b",
-  ".career-ovr strong",
-  ".goat-rating strong",
   ".command-goat-index strong",
   ".power-score > b",
   ".profile-career-ovr b",
@@ -28,8 +25,7 @@ const NUMBER_SELECTOR = [
   ".monthly-hero > b",
   ".split-stats strong",
   ".rival-summary-inline td",
-  ".goat-score-v2 > b",
-  ".scouting-index > b"
+  ".goat-score-v2 > b"
 ].join(",");
 
 export const MOAP_MOTION = Object.freeze({
@@ -62,7 +58,6 @@ let systemTimeline = null;
 let entryTimeline = null;
 let validationTimeline = null;
 let monthlyTimeline = null;
-let disclosureTimeline = null;
 let revealObserver = null;
 let rivalMatrixInteractionCleanup = null;
 const revealedSections = new WeakSet();
@@ -215,7 +210,7 @@ function prepareSectionReveals(root,view){
   const selectorByView={
     overview:".overview-editorial-recap,.monthly-report-card",
     status:".status-secondary-grid",
-    player:".player-season-data-card,.player-ai-report-card",
+    player:".player-season-data-card",
     rival:".rival-context-card",
     entry:".entry-matrix-stage"
   };
@@ -506,25 +501,6 @@ export function transitionReportContent({target,update,onUpdated}){
     .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
     .call(()=>{update();onUpdated?.();})
     .fromTo(target,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter});
-}
-
-export function toggleDisclosure({button,content,open}){
-  if(!button||!content)return;
-  disclosureTimeline?.kill();
-  const gsap=motionEngine();
-  if(motionDisabled()){
-    button.setAttribute("aria-expanded",String(open));
-    clearExtendedMotionProps([content],"height,overflow");
-    return;
-  }
-  content.classList.add("motion-disclosure-active");
-  if(open){
-    button.setAttribute("aria-expanded","true");
-    gsap.set(content,{display:"block",height:0,autoAlpha:0,overflow:"hidden"});
-    disclosureTimeline=gsap.to(content,{height:"auto",autoAlpha:1,duration:.3,ease:MOAP_MOTION.ease.enter,onComplete:()=>{content.classList.remove("motion-disclosure-active");clearExtendedMotionProps([content],"height,overflow,display");disclosureTimeline=null;}});
-    return;
-  }
-  disclosureTimeline=gsap.to(content,{height:0,autoAlpha:0,duration:.26,ease:MOAP_MOTION.ease.exit,overflow:"hidden",onComplete:()=>{button.setAttribute("aria-expanded","false");content.classList.remove("motion-disclosure-active");clearExtendedMotionProps([content],"height,overflow,display");disclosureTimeline=null;}});
 }
 
 export function animateViewExperience(root,view){
@@ -1041,8 +1017,7 @@ function playerLayers(root){
     root?.querySelector?.(".player-observatory-identity-column"),
     root?.querySelector?.(".current-season-performance-card"),
     root?.querySelector?.(".player-trend-stage"),
-    root?.querySelector?.(".player-season-data-card"),
-    root?.querySelector?.(".player-ai-report-card")
+    root?.querySelector?.(".player-season-data-card")
   ].filter(Boolean);
 }
 

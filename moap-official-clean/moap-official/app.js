@@ -18,14 +18,13 @@ import {
   transitionRivalContent,
   transitionRivalDetail,
   animateEntryValidation,
-  toggleDisclosure,
   animateNumbers,
   animateRecordDetails,
   animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.1-player-identity";
+} from "./animations.js?v=4.0.2-remove-player-ai";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -841,31 +840,6 @@ function renderStatus(){
   $("#statusMethodology").innerHTML=`<p>状态指数只衡量最近5场的即时表现与走势，与赛季OVR、生涯OVR、GOAT及官方荣誉互不影响。</p><div class="method-bars"><span>近期加权净分 <b>35%</b></span><span>正分率 <b>20%</b></span><span>MVP <b>15%</b></span><span>近期爆发表现 <b>10%</b></span><span>走势 <b>10%</b></span><span>相对赛季表现 <b>10%</b></span></div>`;
 }
 
-function renderPlayerScouting(pid){
-  const r=state.statusCenter?.rankings?.find(x=>x.playerId===pid),el=$("#playerScouting");if(!el)return;
-  if(!r){el.innerHTML='<div class="empty">暂无状态分析</div>';return;}
-  const report=r.report||{},trendClass=report.trendKey==="up"?"up":report.trendKey==="down"?"down":"hold";
-  const career=r.career||{},goat=state.goat?.find(x=>x.playerId===pid)||{};
-  const seasonCards=(career.seasonHistory||[]).map(s=>`<article class="career-season-card"><div><span>${escapeHtml(s.season)}</span><b>${escapeHtml(s.ratingLabel||"赛季评价")}</b></div><strong>${s.rating??"—"}</strong><small>积分 ${fmtScore(s.total||0)} · 排名 #${s.totalRank||"—"} · 场均 ${fmtAvg(s.average||0)} · MVP ${s.mvps||0}</small></article>`).join("")||'<div class="empty">暂无历季数据</div>';
-  const goatBreakdown=Object.values(goat.breakdown||{}).map(item=>`<div><span>${escapeHtml(item.label)}</span><b>${Number(item.score||0).toFixed(1)}<small> / ${item.max}</small></b><i><em style="width:${Math.min(100,Number(item.score||0)/Number(item.max||1)*100)}%"></em></i></div>`).join("");
-  const goatFacts=(goat.evaluation?.facts||[]).map(item=>`<span>• ${escapeHtml(item)}</span>`).join("");
-  const goatChange=Number(goat.indexChange||0),goatMove=Number(goat.movement||0);
-  const goatSection=`<div class="goat-evaluation"><div class="goat-evaluation-head"><div><span>MSL历史地位</span><h4>GOAT综合评价</h4><b>${escapeHtml(goat.evaluation?.label||"历史观察中")}</b></div><div class="goat-rating"><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><small>GOAT INDEX</small><span>联盟 #${goat.rank||"—"}${goatMove?` · ${goatMove>0?"↑":"↓"}${Math.abs(goatMove)}`:""}</span></div></div><p>${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p><div class="goat-component-grid">${goatBreakdown}</div><div class="goat-change-reason"><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)}</b><span>${escapeHtml(goat.changeReason||"")}</span></div><div class="goat-fact-list">${goatFacts}</div><p class="goat-outlook">${escapeHtml(goat.evaluation?.outlook||"")}</p><small class="goat-method-note">${escapeHtml(state.goatMethodology||"")}</small></div>`;
-  const careerSection=`<div class="career-evaluation"><div class="career-evaluation-head"><div><span>${escapeHtml(career.seasonRange||"S1–S3")}</span><h4>历季生涯综合评价</h4><b>${escapeHtml(report.careerLabel||"生涯观察中")}</b></div><div class="career-ovr"><strong>${career.overallRating??"—"}</strong><small>OVERALL</small><span>联盟 #${career.overallRank||"—"}</span></div></div><p>${escapeHtml(report.careerSummary||"暂无足够的历季数据。")}</p><div class="career-metric-grid"><div><span>历季参赛</span><b>${career.games||0}场</b></div><div><span>累计积分</span><b class="${scoreClass(career.total||0)}">${fmtScore(career.total||0)}</b></div><div><span>生涯场均</span><b>${fmtAvg(career.average||0)}</b></div><div><span>正分率</span><b>${fmtPct(career.positiveRate||0)}</b></div><div><span>MVP</span><b>${career.mvps||0}次</b></div><div><span>爆发场次</span><b>${career.explosionCount||0}场</b></div><div><span>官方荣誉</span><b>${career.officialHonorCount||0}次</b></div></div><div class="career-analysis-copy"><h5>整体评价</h5><p>${escapeHtml(report.careerEvaluation||"")}</p><h5>长期展望</h5><p>${escapeHtml(report.careerOutlook||"")}</p></div><div class="career-two-col"><section><h5>生涯优势</h5>${(report.careerStrengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")||'<span>暂无突出单项</span>'}</section><section><h5>长期隐忧</h5>${(report.careerRisks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")||'<span>暂无明显预警</span>'}</section></div><div class="career-season-stack"><h5>历季表现</h5>${seasonCards}</div></div>`;
-  const disclosure=(key,title,subtitle,content)=>`<section class="ai-report-section"><button type="button" class="ai-report-disclosure" data-ai-report-toggle aria-expanded="false" aria-controls="ai-report-${key}-${escapeHtml(pid)}"><span><b>${title}</b><small>${subtitle}</small></span><i aria-hidden="true"></i></button><div class="ai-report-collapse" id="ai-report-${key}-${escapeHtml(pid)}">${content}</div></section>`;
-  el.innerHTML=`<div class="scouting-report"><header class="ai-executive-summary"><div><span class="stock ${trendClass}">${escapeHtml(report.headline||"持续观望")}</span><h3>${escapeHtml(r.label)} · MSL实力榜 #${r.rank}</h3><p>${escapeHtml(report.summary||"")}</p></div><div class="scouting-index"><b>${r.powerIndex}</b><small>近期状态指数</small></div></header>
-  ${disclosure("goat","GOAT综合评价",goat.evaluation?.label||"历史观察中",goatSection)}
-  ${disclosure("career","历季生涯综合评价",report.careerLabel||"生涯观察中",careerSection)}
-  <div class="scouting-columns"><section><h4>近期亮点</h4>${(report.strengths||[]).map(x=>`<span>✓ ${escapeHtml(x)}</span>`).join("")}</section><section><h4>潜在风险</h4>${(report.risks||[]).map(x=>`<span>• ${escapeHtml(x)}</span>`).join("")}</section><section><h4>下一场关注</h4><p>${escapeHtml(report.next||"")}</p></section></div><footer>牌手类型：${escapeHtml(r.archetype)} · 生涯定位：${escapeHtml(report.careerLabel||"—")} · 最近5场：${r.recent.map(x=>`${x.score>=0?"+":""}${x.score}`).join(" / ")||"暂无"}</footer></div>`;
-}
-
-document.addEventListener("click",event=>{
-  const button=event.target.closest("[data-ai-report-toggle]");if(!button)return;
-  const content=document.getElementById(button.getAttribute("aria-controls"));if(!content)return;
-  const open=button.getAttribute("aria-expanded")!=="true";
-  toggleDisclosure({button,content,open});
-});
-
 document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player",{forceRender:true});});
 
 function formatRecordValue(record,value=record?.value){
@@ -1083,7 +1057,6 @@ function renderPlayer(){
   drawTrend(pid);
   const rec=playerTimeline(pid).slice(-5).reverse();
   $("#recentMatchesPlayer").innerHTML=rec.map((r,index)=>`<div class="score-row ${r.isMvp?"mvp":""} ${index===0?"recent-latest":""}" data-recent-match data-recent-index="${index}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold recent-mvp-badge">MVP</span>':""}</div><b class="${scoreClass(r.score)}" data-player-number data-animation-key="player-recent-${index}">${fmtScore(r.score)}</b></div>`).join("");
-  renderPlayerScouting(pid);
 }
 
 $("#playerSelect").addEventListener("change",e=>{

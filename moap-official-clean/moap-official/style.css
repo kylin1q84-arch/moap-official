@@ -255,14 +255,12 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .stock{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.4px}.stock.up{color:#8de8bd;background:rgba(85,214,156,.11)}.stock.down{color:#ffaaaa;background:rgba(255,118,118,.11)}.stock.hold{color:#acd4ff;background:rgba(119,185,255,.11)}
 .ai-recap{padding:4px}.ai-recap-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.ai-recap h3{margin:10px 0 5px;font-size:22px}.ai-recap small{color:var(--muted)}.ai-recap p{margin:15px 0;line-height:1.8;color:#dce6e2}
 .analysis-method p{margin:0 0 14px;line-height:1.75}.analysis-method>small{display:block;margin-top:13px;color:var(--muted)}.method-bars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.method-bars span{display:flex;justify-content:space-between;padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.035);font-size:12px}.method-bars b{color:var(--gold2)}
-.scouting-report{border:1px solid rgba(215,178,91,.17);border-radius:16px;padding:17px;background:linear-gradient(135deg,rgba(215,178,91,.055),rgba(119,185,255,.035))}.scouting-report header{display:grid;grid-template-columns:1fr 90px;gap:18px;align-items:start}.scouting-report h3{margin:10px 0 6px;font-size:20px}.scouting-report header p{margin:0;color:#dce6e2;line-height:1.75}.scouting-index{text-align:center;padding:12px;border-radius:14px;background:rgba(0,0,0,.16)}.scouting-index b{display:block;font-size:32px;color:var(--gold2)}.scouting-index small{color:var(--muted)}
-.scouting-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:17px}.scouting-columns section{padding:13px;border-radius:12px;background:rgba(255,255,255,.035)}.scouting-columns h4{margin:0 0 9px;font-size:13px;color:var(--gold2)}.scouting-columns span{display:block;margin:7px 0;font-size:12px;line-height:1.55}.scouting-columns p{margin:0;font-size:12px;line-height:1.65}.scouting-report footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2);color:var(--muted);font-size:11px}
 .status-section-head{margin:2px 0 10px}.status-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
 .status-ranking-section{margin-bottom:16px}.status-secondary-grid{grid-template-columns:1fr 1fr}
 .status-observation-grid{grid-template-columns:1fr}.power-card{grid-template-columns:42px minmax(0,1fr) 76px}
 .power-score>small{display:flex;justify-content:flex-end;gap:5px;margin-top:3px;font-variant-numeric:tabular-nums}
-@media(max-width:980px){.scouting-columns{grid-template-columns:1fr}.status-secondary-grid{grid-template-columns:1fr}}
-@media(max-width:680px){.storyline-grid,.method-bars{grid-template-columns:1fr}.status-kpis{grid-template-columns:1fr}.power-card{grid-template-columns:36px minmax(0,1fr) 64px;padding:11px}.power-card-title{align-items:flex-start;flex-direction:column}.power-score>b{font-size:21px}.power-score>small{font-size:10px}.scouting-report header{grid-template-columns:1fr}.scouting-index{display:flex;align-items:center;gap:8px;justify-content:center}.scouting-index b{font-size:25px}.ai-recap h3{font-size:18px}}
+@media(max-width:980px){.status-secondary-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.storyline-grid,.method-bars{grid-template-columns:1fr}.status-kpis{grid-template-columns:1fr}.power-card{grid-template-columns:36px minmax(0,1fr) 64px;padding:11px}.power-card-title{align-items:flex-start;flex-direction:column}.power-score>b{font-size:21px}.power-score>small{font-size:10px}.ai-recap h3{font-size:18px}}
 
 /* v1.7.2 current-season player evaluation */
 .season-evaluation{margin-top:17px;padding:15px;border:1px solid rgba(119,185,255,.17);border-radius:14px;background:rgba(119,185,255,.045)}
@@ -271,17 +269,7 @@ select:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:980px){.season-metric-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.season-metric-grid{grid-template-columns:repeat(2,1fr)}.season-evaluation-head{flex-direction:column}}
 
-/* v1.7.2 full-career player evaluation */
 .method-title{margin:16px 0 8px;font-size:12px;color:var(--gold2)}
-.career-evaluation{margin-top:17px;padding:16px;border:1px solid rgba(215,178,91,.24);border-radius:15px;background:linear-gradient(135deg,rgba(215,178,91,.075),rgba(85,214,156,.035))}
-.career-evaluation-head{display:grid;grid-template-columns:1fr 92px;gap:15px;align-items:start}.career-evaluation-head>div:first-child>span{font-size:11px;color:var(--muted)}.career-evaluation-head h4{margin:4px 0 8px;color:var(--gold2);font-size:16px}.career-evaluation-head>div:first-child>b{display:inline-flex;padding:6px 9px;border-radius:999px;background:rgba(215,178,91,.13);color:var(--gold2);font-size:12px}
-.career-ovr{text-align:center;padding:11px;border-radius:14px;background:rgba(0,0,0,.20);border:1px solid rgba(215,178,91,.16)}.career-ovr strong{display:block;font-size:35px;line-height:1;color:var(--gold2)}.career-ovr small{display:block;margin-top:4px;font-size:9px;letter-spacing:1.4px;color:var(--muted)}.career-ovr span{display:block;margin-top:6px;font-size:10px;color:#dce6e2}
-.career-evaluation>p{margin:13px 0;color:#dce6e2;line-height:1.75;font-size:13px}.career-metric-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:13px 0}.career-metric-grid>div{padding:10px 7px;border-radius:11px;background:rgba(0,0,0,.15);text-align:center}.career-metric-grid span{display:block;color:var(--muted);font-size:10px}.career-metric-grid b{display:block;margin-top:5px;font-size:14px}
-.career-analysis-copy{padding:13px;border-radius:12px;background:rgba(255,255,255,.028)}.career-analysis-copy h5,.career-two-col h5,.career-season-stack>h5{margin:0 0 8px;font-size:12px;color:var(--gold2)}.career-analysis-copy h5:not(:first-child){margin-top:13px}.career-analysis-copy p{margin:0;color:#dce6e2;line-height:1.72;font-size:12px}
-.career-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.career-two-col section{padding:12px;border-radius:12px;background:rgba(255,255,255,.028)}.career-two-col span{display:block;margin:6px 0;font-size:11px;line-height:1.55;color:#dce6e2}
-.career-season-stack{margin-top:13px}.career-season-card{display:grid;grid-template-columns:minmax(105px,.75fr) 54px 2fr;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line2);background:rgba(255,255,255,.018)}.career-season-card:first-of-type{border-radius:11px 11px 0 0}.career-season-card:last-child{border-bottom:0;border-radius:0 0 11px 11px}.career-season-card>div span{display:block;font-size:10px;color:var(--muted)}.career-season-card>div b{display:block;margin-top:3px;font-size:12px}.career-season-card>strong{font-size:22px;color:var(--gold2);text-align:center}.career-season-card>small{color:var(--muted);line-height:1.55;font-size:10px}
-@media(max-width:1080px){.career-metric-grid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:680px){.career-evaluation-head{grid-template-columns:1fr}.career-ovr{display:flex;align-items:center;justify-content:center;gap:9px}.career-ovr strong{font-size:28px}.career-ovr small,.career-ovr span{margin:0}.career-metric-grid{grid-template-columns:repeat(2,1fr)}.career-two-col{grid-template-columns:1fr}.career-season-card{grid-template-columns:1fr 48px}.career-season-card>small{grid-column:1/-1}.career-season-card>strong{text-align:right}}
 
 /* v1.8 MSL Record Center */
 .record-center-card{padding-top:15px}
@@ -311,28 +299,10 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .goat-row-title .muted{font-size:10px}
 .goat-breakdown-mini{display:flex;gap:9px;flex-wrap:wrap;margin:5px 0 7px;color:var(--muted);font-size:9px}
 .goat-score-v2{text-align:right}.goat-score-v2 b{display:block;color:var(--gold2);font-size:18px}.goat-score-v2 small{display:block;margin-top:3px;font-size:10px}
-.goat-evaluation{margin-top:17px;padding:16px;border:1px solid rgba(215,178,91,.30);border-radius:15px;background:linear-gradient(135deg,rgba(215,178,91,.10),rgba(119,185,255,.035))}
-.goat-evaluation-head{display:grid;grid-template-columns:1fr 104px;gap:15px;align-items:start}
-.goat-evaluation-head>div:first-child>span{font-size:11px;color:var(--muted)}
-.goat-evaluation-head h4{margin:4px 0 8px;color:var(--gold2);font-size:17px}
-.goat-evaluation-head>div:first-child>b{display:inline-flex;padding:6px 9px;border-radius:999px;background:rgba(215,178,91,.14);color:var(--gold2);font-size:12px}
-.goat-rating{text-align:center;padding:12px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid rgba(215,178,91,.20)}
-.goat-rating strong{display:block;font-size:35px;line-height:1;color:var(--gold2)}
-.goat-rating small{display:block;margin-top:4px;font-size:8px;letter-spacing:1.25px;color:var(--muted)}
-.goat-rating span{display:block;margin-top:6px;font-size:10px;color:#dce6e2}
-.goat-evaluation>p{margin:13px 0;color:#dce6e2;line-height:1.75;font-size:13px}
-.goat-component-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0}
-.goat-component-grid>div{padding:10px;border-radius:11px;background:rgba(0,0,0,.16)}
-.goat-component-grid span{display:block;color:var(--muted);font-size:10px}.goat-component-grid b{display:block;margin:5px 0 7px;font-size:15px}.goat-component-grid b small{color:var(--muted);font-size:9px}
-.goat-component-grid i{display:block;height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.goat-component-grid em{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.goat-change-reason{display:grid;grid-template-columns:58px 1fr;gap:11px;align-items:center;padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.035)}
-.goat-change-reason b{font-size:18px;text-align:center}.goat-change-reason span{font-size:12px;line-height:1.6;color:#dce6e2}
-.goat-fact-list{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:11px}.goat-fact-list span{padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);font-size:11px;color:#dce6e2}
-.goat-outlook{padding-top:11px;border-top:1px solid var(--line2)}.goat-method-note{display:block;color:var(--muted);line-height:1.6}
 .status-fail{color:#ff8b8b;font-weight:800}.health-item.health-fail{border-color:rgba(255,94,94,.35);background:rgba(255,94,94,.045)}
 .health-evidence{font-size:11px;margin-top:4px}.health-details{display:grid;gap:4px;margin-top:8px}.health-details span{display:block;padding:5px 7px;border-radius:7px;background:rgba(255,94,94,.07);color:#ffb0b0;font-size:10px}
-@media(max-width:760px){.record-ranking-row.no-time{grid-template-columns:36px 1fr 100px}.record-info-grid.record-info-season{grid-template-columns:1fr 1fr}.goat-component-grid{grid-template-columns:repeat(2,1fr)}.goat-fact-list{grid-template-columns:1fr}}
-@media(max-width:560px){.goat-evaluation-head{grid-template-columns:1fr}.goat-rating{display:flex;align-items:center;justify-content:center;gap:9px}.goat-rating strong{font-size:28px}.goat-rating small,.goat-rating span{margin:0}.goat-change-reason{grid-template-columns:1fr}.goat-change-reason b{text-align:left}.record-info-grid.record-info-season,.record-info-grid.record-info-career{grid-template-columns:1fr}}
+@media(max-width:760px){.record-ranking-row.no-time{grid-template-columns:36px 1fr 100px}.record-info-grid.record-info-season{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.record-info-grid.record-info-season,.record-info-grid.record-info-career{grid-template-columns:1fr}}
 
 
 /* v1.8.2 精准对位方向矩阵：统一牌手姓名宽度，二字姓名与三字姓名视觉对齐 */
@@ -1329,7 +1299,6 @@ body::-webkit-scrollbar-thumb,
 .mini-stat,
 .season-dimension,
 .season-core-stats>div,
-.career-metric-grid>div,
 .monthly-kpis>div,
 .monthly-grid article,
 .monthly-section,
@@ -2035,10 +2004,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 .player-season-summary-grid>div{min-width:0;padding:9px;border-radius:9px;background:rgba(13,41,34,.48)}
 .player-season-summary-grid span{display:block;color:var(--muted);font-size:9px}
 .player-season-summary-grid b{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}
-.ai-report-section{min-width:0}
-.ai-report-disclosure{display:none}
-.ai-report-collapse[hidden]{display:none}
-
 /* Matches · Season Match Log */
 .season-match-log-card{overflow:hidden}
 .season-match-log{position:relative;gap:9px;padding-left:22px}
@@ -2143,31 +2108,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   .profile-rating-pills b{font-size:11px}
   .player-season-desktop{display:none}
   .player-season-summary-cards{display:grid;gap:9px}
-  .player-ai-report-card{overflow:hidden}
-  .scouting-report{padding:12px}
-  .ai-executive-summary{padding-bottom:12px}
-  .ai-report-section{margin-top:9px;border:1px solid rgba(168,183,177,.09);border-radius:var(--radius-md);overflow:hidden}
-  .ai-report-disclosure{
-    display:flex;
-    width:100%;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:12px;
-    border:0;
-    background:rgba(4,16,13,.36);
-    color:var(--text);
-    text-align:left;
-  }
-  .ai-report-disclosure span b,.ai-report-disclosure span small{display:block}
-  .ai-report-disclosure span b{font-size:12px}
-  .ai-report-disclosure span small{margin-top:3px;color:var(--muted);font-size:9px}
-  .ai-report-disclosure i{width:8px;height:8px;border-right:1px solid var(--gold2);border-bottom:1px solid var(--gold2);transform:rotate(45deg);transition:transform .18s ease}
-  .ai-report-disclosure[aria-expanded="true"] i{transform:rotate(-135deg)}
-  .ai-report-disclosure[aria-expanded="false"]+.ai-report-collapse{display:none}
-  .ai-report-collapse{padding:0 10px 10px}
-  .ai-report-collapse .goat-evaluation,.ai-report-collapse .career-evaluation{margin-top:10px}
-  .scouting-columns{grid-template-columns:1fr;margin-top:10px}
   .season-match-log-card{padding:13px}
   .match-log-head{align-items:flex-start;flex-direction:column}
   .season-match-log{padding-left:0;gap:8px}
@@ -2206,7 +2146,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 
 @media(prefers-reduced-motion:reduce){
   .mobile-nav{scroll-behavior:auto}
-  .ai-report-disclosure i{transition:none}
 }
 
 /* v2.8.0 · Global Premium Dropdown System */
@@ -2562,7 +2501,6 @@ select.moap-native-select{
   box-shadow:inset 0 0 0 1px rgba(215,178,91,.1);
 }
 
-.ai-report-collapse.motion-disclosure-active{display:block!important}
 .validation,
 .validation-console-head>b,
 .validation-console-grid b{
@@ -3729,8 +3667,7 @@ select.moap-native-select{
 [data-view="player"] #recentMatchesPlayer .recent-latest{box-shadow:inset 1px 0 0 rgba(85,214,156,.28)}
 [data-view="player"] #recentMatchesPlayer .recent-latest::after{width:36%;background:linear-gradient(90deg,transparent,rgba(85,214,156,.06),transparent)}
 
-[data-view="player"] .player-season-data-card,
-[data-view="player"] .player-ai-report-card{margin-bottom:70px!important}
+[data-view="player"] .player-season-data-card{margin-bottom:0!important}
 [data-view="player"] .player-season-data-head{align-items:end}
 [data-view="player"] .player-season-data-table th{background:rgba(6,20,17,.34)}
 [data-view="player"] .player-season-data-table td{background:transparent}
@@ -3788,52 +3725,6 @@ select.moap-native-select{
   transform:none!important;
 }
 
-[data-view="player"] .player-ai-report-card .scouting-report{padding:0;background:transparent;border:0;box-shadow:none}
-[data-view="player"] .player-ai-report-card .ai-executive-summary{padding:2px 0 19px;border-bottom:1px solid var(--player-rule)}
-[data-view="player"] .player-ai-report-card .scouting-index{
-  padding:5px 0 5px 18px;
-  border-left:1px solid var(--player-rule-strong);
-  border-radius:0;
-  background:none;
-}
-[data-view="player"] .ai-report-section{margin-top:0;border:0;border-bottom:1px solid var(--player-rule);border-radius:0;overflow:visible}
-[data-view="player"] .ai-report-disclosure{
-  display:flex;
-  width:100%;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px 2px;
-  border:0;
-  background:transparent;
-  color:var(--text);
-  text-align:left;
-}
-[data-view="player"] .ai-report-disclosure span b,
-[data-view="player"] .ai-report-disclosure span small{display:block}
-[data-view="player"] .ai-report-disclosure span b{font-size:12px}
-[data-view="player"] .ai-report-disclosure span small{margin-top:3px;color:var(--muted);font-size:9px}
-[data-view="player"] .ai-report-disclosure i{width:8px;height:8px;border-right:1px solid var(--gold2);border-bottom:1px solid var(--gold2);transform:rotate(45deg);transition:transform .2s ease}
-[data-view="player"] .ai-report-disclosure[aria-expanded="true"] i{transform:rotate(-135deg)}
-[data-view="player"] .ai-report-disclosure[aria-expanded="false"]+.ai-report-collapse{display:none}
-[data-view="player"] .ai-report-collapse{padding:0 2px 14px}
-[data-view="player"] .scouting-columns{
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:0;
-  margin-top:20px;
-  border-top:1px solid var(--player-rule);
-  border-bottom:1px solid var(--player-rule);
-}
-[data-view="player"] .scouting-columns section{
-  min-width:0;
-  padding:16px 18px;
-  border:0;
-  border-left:1px solid var(--player-rule);
-  border-radius:0;
-  background:none;
-}
-[data-view="player"] .scouting-columns section:first-child{padding-left:2px;border-left:0}
-
 @media(hover:hover) and (pointer:fine){
   [data-view="player"] .season-dimension-grid:has(.season-dimension:hover) .season-dimension:not(:hover){opacity:.28}
   [data-view="player"] .season-dimension:hover{opacity:1}
@@ -3877,9 +3768,8 @@ select.moap-native-select{
   [data-view="player"] .player-observatory-masthead{min-height:0;margin-bottom:13px;padding:3px 1px 14px}
   [data-view="player"] .player-observatory-masthead h2{font-size:28px}
   [data-view="player"] .player-profile-hero,
-  [data-view="player"] .player-trend-stage,
-  [data-view="player"] .player-season-data-card,
-  [data-view="player"] .player-ai-report-card{margin-bottom:48px!important}
+  [data-view="player"] .player-trend-stage{margin-bottom:48px!important}
+  [data-view="player"] .player-season-data-card{margin-bottom:0!important}
   [data-view="player"] .player-observatory-identity-column{padding:24px 1px 27px}
   [data-view="player"] .profile-name-block h3{margin:8px 0 18px;font-size:40px}
   [data-view="player"] .profile-observer-meta>span{padding:9px 7px 9px 0}
@@ -3936,11 +3826,6 @@ select.moap-native-select{
   }
   [data-view="player"] .player-season-summary-grid>div:nth-child(odd){border-left:0}
   [data-view="player"] .player-season-summary-grid>div:nth-child(-n+2){border-top:0}
-  [data-view="player"] .player-ai-report-card .ai-executive-summary{align-items:flex-start;grid-template-columns:1fr auto}
-  [data-view="player"] .scouting-columns{grid-template-columns:1fr}
-  [data-view="player"] .scouting-columns section,
-  [data-view="player"] .scouting-columns section:first-child{padding:14px 1px;border-top:1px solid var(--player-rule);border-left:0}
-  [data-view="player"] .scouting-columns section:first-child{border-top:0}
   .profile-honor-modal .profile-honor-metric-grid>div:nth-child(odd){border-left:0}
   .profile-honor-modal .profile-honor-metric-grid>div:nth-child(n+3){border-top:1px solid rgba(168,183,177,.11)}
 }
@@ -3962,8 +3847,7 @@ select.moap-native-select{
   [data-view="player"] .profile-honor-row,
   [data-view="player"] #trendChart .trend-line,
   [data-view="player"] #trendChart .trend-area,
-  [data-view="player"] #trendChart .trend-line-ambient,
-  [data-view="player"] .ai-report-disclosure i{transition:none!important}
+  [data-view="player"] #trendChart .trend-line-ambient{transition:none!important}
   [data-view="player"].active .season-dimension .bar>i,
   [data-view="player"] .trend-ambient-ready .trend-line-ambient,
   .profile-honor-modal-backdrop:not([hidden]) #profileHonorModalBody{animation:none!important}
