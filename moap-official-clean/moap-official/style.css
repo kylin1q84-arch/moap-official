@@ -5975,3 +5975,41 @@ select.moap-native-select{
   [data-view="status"] .status-index-rail>i::after{animation:none!important;transform:none!important}
 }
 
+/* v4.0.13 · Status Ranking recent-five polish
+   Scores carry the only status color; MVP context remains available in the item title/aria label. */
+[data-view="status"] .status-recent-strip{grid-template-columns:repeat(5,minmax(0,1fr));}
+[data-view="status"] .status-recent-node,
+[data-view="status"] .status-recent-node:first-child{
+  align-items:center;
+  justify-content:flex-start;
+  padding-left:8px;
+  padding-right:8px;
+  border-left:1px solid var(--status-rule);
+  text-align:center;
+}
+[data-view="status"] .status-recent-node:first-child{border-left:0;}
+[data-view="status"] .status-recent-node.is-positive b{color:var(--green);}
+[data-view="status"] .status-recent-node.is-negative b{color:var(--red);}
+[data-view="status"] .status-recent-node.is-neutral b{color:var(--status-soft);}
+[data-view="status"] .status-recent-node::before{display:none!important;}
+[data-view="status"] .status-match-id{letter-spacing:.03em;}
+
+@media(max-width:760px){
+  [data-view="status"] .status-recent-node,
+  [data-view="status"] .status-recent-node:first-child{
+    padding-left:3px;
+    padding-right:3px;
+  }
+  [data-view="status"] .status-recent-node small{font-size:8px;letter-spacing:.02em;}
+  [data-view="status"] .status-recent-node b{font-size:14px;line-height:1;}
+}
+
+@media(max-width:340px){
+  [data-view="status"] .status-recent-node,
+  [data-view="status"] .status-recent-node:first-child{
+    padding-left:1px;
+    padding-right:1px;
+  }
+  [data-view="status"] .status-recent-node small{font-size:7px;}
+  [data-view="status"] .status-recent-node b{font-size:13px;}
+}

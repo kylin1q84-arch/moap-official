@@ -845,7 +845,7 @@ function renderStatus(){
       const rawMatchId=String(item.matchId||"—"),matchNumber=rawMatchId.replace(/^MSL/i,"")||rawMatchId;
       const shortNumber=matchNumber.replace(/^0+(?=\d)/,"")||matchNumber;
       const fullLabel=`${rawMatchId} · ${item.date||"日期未知"}${item.isMvp?" · MVP":""}`;
-      return `<span class="status-recent-node ${item.score>0?"is-positive":item.score<0?"is-negative":"is-neutral"} ${item.isMvp?"is-mvp":""}" title="${escapeHtml(fullLabel)}" aria-label="${escapeHtml(fullLabel)}"><small class="status-match-id" data-mobile-id="#${escapeHtml(shortNumber)}">#${escapeHtml(matchNumber)}</small><b>${fmtScore(item.score)}</b>${item.isMvp?'<i class="status-mvp-dot" aria-label="MVP"></i>':""}</span>`;
+      return `<span class="status-recent-node ${item.score>0?"is-positive":item.score<0?"is-negative":"is-neutral"}" title="${escapeHtml(fullLabel)}" aria-label="${escapeHtml(fullLabel)}"><small class="status-match-id" data-mobile-id="#${escapeHtml(shortNumber)}">#${escapeHtml(matchNumber)}</small><b>${fmtScore(item.score)}</b></span>`;
     }).join("");
     const statusSummary=[r.label,r.report?.headline,r.archetype].filter(Boolean).join(" · ");
     const seasonLabel=r.seasonPerformance?.season||latestActualSeason();
