@@ -214,8 +214,7 @@ function prepareSectionReveals(root,view){
     overview:".overview-editorial-recap,.monthly-report-card",
     status:".status-observation-stage,.status-method-stage",
     player:".player-season-data-card",
-    rival:".rival-flow-stage,.rival-pair-lens",
-    entry:".entry-matrix-stage"
+    rival:".rival-flow-stage,.rival-pair-lens"
   };
   const selector=selectorByView[view];
   if(!selector)return;
@@ -464,23 +463,26 @@ function animateSystemEntry(root){
 function animateEntryCenter(root){
   const gsap=motionEngine();
   entryTimeline?.kill();
-  const workflow=root.querySelector(".entry-workflow-card");
-  const steps=[...root.querySelectorAll(".entry-workflow-step")];
+  const masthead=root.querySelector(".entry-console-masthead");
+  const steps=[...root.querySelectorAll(".entry-step")];
   const validation=root.querySelector("#entryValidation");
-  const actions=root.querySelector(".entry-actions");
-  const guide=root.querySelector(".grid-2 > .card:not(.entry-workflow-card)");
-  const animated=[...sceneHeaderParts(root),workflow,...steps,validation,actions,guide].filter(Boolean);
+  const rules=root.querySelector(".entry-rules");
+  const matrix=root.querySelector(".entry-matrix-stage");
+  const matrixCheck=root.querySelector("#matchupValidation");
+  const commit=root.querySelector(".entry-commit-bar");
+  const animated=[masthead,...steps,validation,rules,matrix,matrixCheck,commit].filter(Boolean);
   if(motionDisabled()){
     clearMotionProps(animated);return;
   }
   clearMotionProps(animated);
   entryTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);entryTimeline=null;}});
-  addHeaderSequence(entryTimeline,root,0);
-  if(workflow)entryTimeline.fromTo(workflow,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:.38,ease:MOAP_MOTION.ease.enter},.13);
-  if(steps.length)entryTimeline.fromTo(steps,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.04:.06,ease:MOAP_MOTION.ease.enter},.23);
-  if(validation)entryTimeline.fromTo(validation,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.38);
-  if(actions)entryTimeline.fromTo(actions,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter},.42);
-  if(guide)entryTimeline.fromTo(guide,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.34,ease:MOAP_MOTION.ease.enter},.26);
+  if(masthead)entryTimeline.fromTo(masthead,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.22,ease:MOAP_MOTION.ease.enter},0);
+  if(steps.length)entryTimeline.fromTo(steps,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,stagger:mobileMotion()?.035:.05,ease:MOAP_MOTION.ease.enter},.06);
+  if(validation)entryTimeline.fromTo(validation,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.2,ease:MOAP_MOTION.ease.enter},.14);
+  if(rules)entryTimeline.fromTo(rules,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.22,ease:MOAP_MOTION.ease.enter},.18);
+  if(matrix)entryTimeline.fromTo(matrix,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.22);
+  if(matrixCheck)entryTimeline.fromTo(matrixCheck,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.2,ease:MOAP_MOTION.ease.enter},.26);
+  if(commit)entryTimeline.fromTo(commit,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.22,ease:MOAP_MOTION.ease.enter},.3);
 }
 
 export function animateEntryValidation({summary,detail,readyButton,signature,ready=false}){
@@ -492,9 +494,9 @@ export function animateEntryValidation({summary,detail,readyButton,signature,rea
   summary.dataset.motionReady=String(ready);
   if(motionDisabled())return;
   validationTimeline?.kill();
-  const targets=[summary,detail].filter(Boolean);
+  const targets=[summary?.querySelector(".validation-console-head"),detail?.querySelector(".entry-matrix-check-head")].filter(Boolean);
   const gsap=motionEngine();
-  validationTimeline=gsap.fromTo(targets,{autoAlpha:.78,y:2},{autoAlpha:1,y:0,duration:.21,stagger:.025,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",onComplete:()=>{validationTimeline=null;}});
+  validationTimeline=gsap.fromTo(targets,{autoAlpha:.82},{autoAlpha:1,duration:.19,stagger:.025,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility",onComplete:()=>{validationTimeline=null;}});
   if(ready&&!wasReady&&readyButton){
     readyButton.classList.remove("motion-ready-once");
     void readyButton.offsetWidth;

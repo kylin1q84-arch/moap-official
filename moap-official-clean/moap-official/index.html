@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.1.0-records-workbench">
+  <link rel="stylesheet" href="/style.css?v=4.2.0-entry-console">
 </head>
 <body>
 
@@ -207,48 +207,68 @@
       </section>
 
       <section class="view" data-view="entry">
-        <div class="hero"><div><h2>录入新比赛</h2><p>直接录入 Supabase 云端数据库，自动校验、判定MVP并实时更新。</p></div></div>
-        <div class="grid-2">
-          <div class="card section entry-workflow-card">
-            <section class="entry-workflow-step">
-              <div class="workflow-step-label"><span>STEP 01</span><small>比赛信息</small></div>
-              <div class="section-head"><h3>比赛信息</h3><small>确认赛季、日期、类型与场地</small></div>
-              <div class="form-row">
-              <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
-              <label>比赛日期<input type="date" id="entryDate"></label>
-              <label>比赛类型<select id="entryType"><option>五人局</option><option>四人局</option></select></label>
-              <label>场地<input id="entryVenue" placeholder="例如：棋牌室"></label>
+        <header class="entry-console-masthead">
+          <div>
+            <span class="entry-console-kicker">ENTRY CONSOLE / OFFICIAL INPUT</span>
+            <h2>录入比赛</h2>
+            <p>正式比赛数据录入与方向对位校验</p>
+          </div>
+          <div class="entry-connection-status" aria-live="polite">
+            <span>SUPABASE</span>
+            <strong id="entryConnectionStatus">BASELINE</strong>
+            <small id="entryConnectionNote">等待云端同步</small>
+          </div>
+        </header>
+
+        <div class="entry-workspace">
+          <div class="entry-input-column">
+            <section class="entry-step entry-step-metadata" aria-labelledby="entryMetadataTitle">
+              <div class="entry-step-label"><span>STEP 01</span><small>比赛信息</small></div>
+              <div class="entry-section-head"><div><h3 id="entryMetadataTitle">比赛信息</h3><small>确认赛季、日期、类型与场地</small></div></div>
+              <div class="entry-fields">
+                <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
+                <label>比赛日期<input type="date" id="entryDate"></label>
+                <label>比赛类型<select id="entryType"><option>五人局</option><option>四人局</option></select></label>
+                <label>场地<input id="entryVenue" placeholder="例如：棋牌室"></label>
               </div>
             </section>
-            <section class="entry-workflow-step">
-              <div class="workflow-step-label"><span>STEP 02</span><small>牌手与比赛分</small></div>
-              <div class="section-head"><h3>牌手与比赛分</h3><small>选择参赛牌手并填写本场总分</small></div>
+            <section class="entry-step entry-step-players" aria-labelledby="entryPlayersTitle">
+              <div class="entry-step-label"><span>STEP 02</span><small>牌手与比赛分</small></div>
+              <div class="entry-section-head"><div><h3 id="entryPlayersTitle">牌手与比赛分</h3><small>选择参赛牌手并填写本场总分</small></div></div>
+              <div class="entry-score-sheet-head" aria-hidden="true"><span>参赛牌手</span><span>比赛分</span></div>
               <div id="entryPlayers"></div>
             </section>
-            <div id="entryValidation" class="validation">请选择参赛牌手并填写分数。</div>
-            <div class="entry-actions">
-              <button class="btn primary" id="saveMatchBtn" type="button">保存比赛与精准对位</button>
-              <button class="btn" id="clearEntryBtn" type="button">清空</button>
-              <button class="btn" id="resetDemoBtn" type="button">重新同步云端</button>
-            </div>
           </div>
-          <div class="card section">
-            <div class="section-head"><h3>录入说明</h3><small>已连接 Supabase 云端</small></div>
-            <div class="list">
-              <div class="honor-item"><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div>
-              <div class="honor-item"><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div>
-              <div class="honor-item"><strong>精准对位</strong><small>每个方向格独立填写：A→B 与 B→A 不互相反推。正数代表吃分，负数代表被吃分，0也必须明确填写；每名牌手的整行合计必须等于本场比赛分。</small></div>
-              <div class="honor-item"><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和新制对位中心立即重算。</small></div>
-              <div class="honor-item"><strong>公开模式</strong><small>无需邮箱密码。任何拿到网址的人都可以查看和录入，请避免误操作。</small></div>
-            </div>
+
+          <aside class="entry-control-column">
+            <section id="entryValidation" class="validation entry-validation-console" aria-live="polite">请选择参赛牌手并填写分数。</section>
+            <section class="entry-rules" aria-labelledby="entryRulesTitle">
+              <div class="entry-section-head"><div><span class="entry-console-kicker">ENTRY RULES</span><h3 id="entryRulesTitle">录入规则</h3><small>保存前实时检查，规则语义保持不变</small></div></div>
+              <div class="entry-rule-list">
+                <div class="entry-rule"><b>01</b><div><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div></div>
+                <div class="entry-rule"><b>02</b><div><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div></div>
+                <div class="entry-rule"><b>03</b><div><strong>精准对位</strong><small>每个方向格独立填写：A→B 与 B→A 不互相反推。正数代表吃分，负数代表被吃分，0也必须明确填写；每名牌手的整行合计必须等于本场比赛分。</small></div></div>
+                <div class="entry-rule"><b>04</b><div><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和新制对位中心立即重算。</small></div></div>
+                <div class="entry-rule"><b>05</b><div><strong>公开模式</strong><small>无需邮箱密码。任何拿到网址的人都可以查看和录入，请避免误操作。</small></div></div>
+              </div>
+            </section>
+          </aside>
+          <section class="entry-matrix-stage" aria-labelledby="entryMatrixTitle">
+            <div class="entry-step-label"><span>STEP 03</span><small>精准对位矩阵</small></div>
+            <div class="entry-section-head"><div><h3 id="entryMatrixTitle">本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；两个方向分别统计，不互为相反数。正数=吃分，负数=被吃分，0也需要明确填写。</small></div><span class="chip gold">新制必填</span></div>
+            <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
+            <div id="matchupValidation" class="validation entry-matrix-check" aria-live="polite">每个方向格都要独立填写，且每名牌手的对位行合计必须对应比赛总分。</div>
+          </section>
+        </div>
+
+        <footer class="entry-commit-bar">
+          <div class="entry-commit-status"><span>VALIDATION STATUS</span><strong id="entryCommitStatus">CHECK REQUIRED</strong></div>
+          <div class="entry-actions">
+            <button class="btn primary" id="saveMatchBtn" type="button">保存比赛与精准对位</button>
+            <button class="btn" id="clearEntryBtn" type="button">清空</button>
+            <button class="btn utility" id="resetDemoBtn" type="button">重新同步云端</button>
           </div>
-        </div>
-        <div class="card section entry-matrix-stage" style="margin-top:16px">
-          <div class="workflow-step-label"><span>STEP 03</span><small>精准对位矩阵</small></div>
-          <div class="section-head"><div><h3>本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；两个方向分别统计，不互为相反数。正数=吃分，负数=被吃分，0也需要明确填写。</small></div><span class="chip gold">新制必填</span></div>
-          <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
-          <div id="matchupValidation" class="validation">每个方向格都要独立填写，且每名牌手的对位行合计必须对应比赛总分。</div>
-        </div>
+        </footer>
       </section>
 
       <section class="view" data-view="rival">

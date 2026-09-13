@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.1.0-records-workbench";
+} from "./animations.js?v=4.2.0-entry-console";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -291,6 +291,9 @@ async function reloadCloudData(){
   if(appBooted){renderedViews.clear();initNav();populateSelects();initEntry();showView(currentView,{forceRender:true});}
   document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
+  const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
+  if(entryStatus)entryStatus.textContent="LIVE";
+  if(entryNote)entryNote.textContent="Supabase 已连接";
 }
 
 const $ = s => document.querySelector(s);
@@ -1201,10 +1204,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target?.matches?.(
 
 function initEntry(){
   $("#entryDate").value=new Date().toISOString().slice(0,10);
-  $("#entryPlayers").innerHTML=state.players.map(p=>`<div class="entry-player">
-    <input class="entry-check" type="checkbox" id="check-${p.playerId}" data-pid="${p.playerId}" checked>
-    <label for="check-${p.playerId}" style="margin:0;color:var(--text)"><span class="player-cell">${p.name}</span></label>
-    <input class="entry-score" type="number" step="1" data-score="${p.playerId}" placeholder="比赛总分（可填0）">
+  $("#entryPlayers").innerHTML=state.players.map(p=>`<div class="entry-player" data-entry-player-row="${p.playerId}">
+    <label class="entry-player-select" for="check-${p.playerId}"><input class="entry-check" type="checkbox" id="check-${p.playerId}" data-pid="${p.playerId}" checked><span class="entry-checkmark" aria-hidden="true"></span></label>
+    <label class="entry-player-name" for="check-${p.playerId}"><span class="player-cell">${p.name}</span></label>
+    <label class="entry-score-field"><span class="entry-sr-only">${p.name}比赛分</span><input class="entry-score" type="number" step="1" inputmode="numeric" data-score="${p.playerId}" placeholder="0" aria-label="${escapeHtml(p.name)}比赛分"></label>
   </div>`).join("");
   renderEntryMatchupMatrix();
   $$(".entry-check, .entry-score").forEach(x=>x.addEventListener("input",()=>{updateEntryMatrixAvailability();validateEntry();}));
@@ -1218,17 +1221,19 @@ function initEntry(){
 }
 function renderEntryMatchupMatrix(){
   const ps=state.players;
-  let html=`<thead><tr><th>攻击方（吃分） ↓</th>${ps.map(p=>`<th>${escapeHtml(p.name)}</th>`).join("")}<th>行合计</th><th>比赛分</th></tr></thead><tbody>`;
+  let html=`<thead><tr><th>攻击方（吃分） ↓</th>${ps.map(p=>`<th data-entry-col="${p.playerId}">${escapeHtml(p.name)}</th>`).join("")}<th>行合计</th><th>比赛分</th></tr></thead><tbody>`;
   ps.forEach(a=>{
-    html+=`<tr data-matchup-row="${a.playerId}"><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a.name)}</div></td>`;
+    html+=`<tr data-matchup-row="${a.playerId}"><td class="entry-matrix-row-label"><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(a.name)}</div></td>`;
     ps.forEach(b=>{
       if(a.playerId===b.playerId)html+=`<td class="matchup-diagonal">—</td>`;
       else html+=`<td><input class="matchup-input" type="number" step="1" inputmode="numeric" data-matchup-from="${a.playerId}" data-matchup-to="${b.playerId}" aria-label="${escapeHtml(a.name)} 对 ${escapeHtml(b.name)} 的独立方向对位分"></td>`;
     });
-    html+=`<td><strong data-row-total="${a.playerId}">0</strong></td><td><strong data-entry-score-view="${a.playerId}">—</strong></td></tr>`;
+    html+=`<td class="entry-matrix-row-total"><strong data-row-total="${a.playerId}">0</strong></td><td class="entry-matrix-match-score"><strong data-entry-score-view="${a.playerId}">—</strong></td></tr>`;
   });
   $("#entryMatchupMatrix").innerHTML=html+"</tbody>";
   $$(".matchup-input").forEach(input=>{
+    input.addEventListener("focus",()=>setEntryMatrixFocus(input,true));
+    input.addEventListener("blur",()=>setEntryMatrixFocus(input,false));
     input.addEventListener("input",e=>{
       // 每个方向格完全独立：不再自动修改反向格。
       updateMatchupCellStyle(e.target);validateEntry();
@@ -1238,6 +1243,13 @@ function renderEntryMatchupMatrix(){
       updateMatchupCellStyle(e.target);validateEntry();
     });
   });
+}
+function setEntryMatrixFocus(input,focused){
+  const table=$("#entryMatchupMatrix");if(!table||!input)return;
+  const from=input.dataset.matchupFrom,to=input.dataset.matchupTo;
+  table.querySelector(`[data-matchup-row="${from}"]`)?.classList.toggle("is-focus-row",focused);
+  table.querySelector(`thead th[data-entry-col="${to}"]`)?.classList.toggle("is-focus-col",focused);
+  input.closest("td")?.classList.toggle("is-focus-cell",focused);
 }
 function updateMatchupCellStyle(input){
   if(!input)return;const v=Number(input.value);
@@ -1292,7 +1304,7 @@ function validateEntry(){
   });
   const matchupOk=matchup.valid&&matchup.complete&&comparisons.every(x=>x.ok);
   const ok=basicOk&&matchupOk;
-  const el=$("#entryValidation");el.className="validation "+(ok?"ok":"bad");
+  const el=$("#entryValidation");el.className="validation entry-validation-console "+(ok?"ok":"bad");
   const consoleRows=[
     ["参赛人数",`${rows.length}/${required}`,rows.length===required],
     ["比赛分合计",`${sum>0?"+":""}${sum}`,complete&&sum===0],
@@ -1301,14 +1313,16 @@ function validateEntry(){
   ];
   el.innerHTML=`<div class="validation-console-head"><div><span>VALIDATION CONSOLE</span><strong>${ok?"READY TO SAVE":"等待完成校验"}</strong></div><b class="${ok?"status-pass":"status-fail"}">${ok?"PASS":"CHECK"}</b></div><div class="validation-console-grid">${consoleRows.map(([label,value,pass])=>`<div><span>${label}</span><b class="${pass?"is-pass":"is-pending"}">${value}</b></div>`).join("")}</div>`;
   $("#saveMatchBtn")?.classList.toggle("is-ready",ok);
-  $("#matchupValidation").className="validation "+(matchupOk?"ok":"bad");
-  $("#matchupValidation").innerHTML=`<span class="matchup-check ${matchup.complete?"pass":"fail"}">${matchup.complete?"所有方向格均已填写":"每个参赛牌手之间的两个方向格都要分别填写（0也要填）"}</span>`+comparisons.map(x=>`<span class="matchup-check ${x.ok?"pass":"fail"}">${escapeHtml(x.player)}：对位行和 ${fmtScore(x.rowTotal)} / 比赛 ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span>`).join("");
+  const commitStatus=$("#entryCommitStatus");
+  if(commitStatus){commitStatus.textContent=ok?"READY TO SAVE":"CHECK REQUIRED";commitStatus.className=ok?"is-ready":"is-check";}
+  $("#matchupValidation").className="validation entry-matrix-check "+(matchupOk?"ok":"bad");
+  $("#matchupValidation").innerHTML=`<div class="entry-matrix-check-head"><div><span>MATRIX CHECK</span><strong>DIRECTION CELLS</strong></div><b class="${matchup.complete?"status-pass":"status-fail"}">${matchup.complete?"COMPLETE":"INCOMPLETE"}</b></div><div class="entry-matrix-check-note">${matchup.complete?"所有方向格均已填写":"每个参赛牌手之间的两个方向格都要分别填写（0也要填）"}</div><div class="entry-matrix-check-rows">${comparisons.map(x=>`<div class="entry-matrix-check-row"><strong>${escapeHtml(x.player)}</strong><span>${fmtScore(x.rowTotal)} / ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span><b class="${x.ok?"is-pass":"is-pending"}">${x.ok?"PASS":"CHECK"}</b></div>`).join("")}</div>`;
   animateEntryValidation({
     summary:el,
     detail:$("#matchupValidation"),
     readyButton:$("#saveMatchBtn"),
     ready:ok,
-    signature:[ok,rows.length,required,complete,sum,matchup.complete,matchupOk,...comparisons.map(x=>`${x.playerId}:${x.rowTotal}:${x.raw}:${x.ok}`)].join("|")
+    signature:[ok,rows.length,required,complete,sum===0,matchup.complete,matchup.valid,matchupOk,...comparisons.map(x=>`${x.playerId}:${x.selected}:${x.ok}`)].join("|")
   });
   return ok;
 }
@@ -1677,6 +1691,9 @@ async function start(){
   if(!MOAP_CONFIG.supabaseUrl || !MOAP_CONFIG.supabaseKey){
     currentRole="readonly";
     if(badge){badge.hidden=false;badge.textContent="认证基线模式 · 缺少云端配置";}
+    const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
+    if(entryStatus)entryStatus.textContent="BASELINE";
+    if(entryNote)entryNote.textContent="云端配置缺失";
     initNav();
     toast("缺少 Supabase 配置，当前显示 v10.1 LTS 认证基线。");
     return;
@@ -1690,6 +1707,9 @@ async function start(){
     currentRole="readonly";
     if(badge){badge.hidden=false;badge.textContent="认证基线模式 · 云端未授权";}
     document.querySelector("#healthBadge").textContent="云端同步失败 · 基线可用";
+    const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
+    if(entryStatus)entryStatus.textContent="OFFLINE";
+    if(entryNote)entryNote.textContent="当前使用认证基线";
     initNav();
     if(currentView==="entry") currentView="overview";
     showView(currentView);
