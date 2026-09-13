@@ -1044,14 +1044,6 @@ button:not(:disabled):active,
   }
 }
 
-/* Overview GOAT ranking placement */
-.overview-goat-ranking{overflow:hidden}
-@media(max-width:620px){
-  .overview-goat-ranking .goat-row{grid-template-columns:34px minmax(0,1fr) 64px;gap:8px}
-  .overview-goat-ranking .goat-breakdown-mini{gap:5px}
-}
-
-
 /* Player official-honor history details · dual-track rules */
 .profile-honor-clickable{
   appearance:none;
@@ -1259,8 +1251,7 @@ body::-webkit-scrollbar-thumb,
 }
 .card-hero,
 .player-profile-hero,
-.current-season-performance-card,
-.overview-goat-ranking{
+.current-season-performance-card{
   border-color:var(--border-gold);
   background:linear-gradient(135deg,rgba(16,53,43,.93),rgba(8,29,24,.92));
   box-shadow:var(--shadow-hero);
@@ -1896,22 +1887,11 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 .command-goat-index small{display:block;margin-top:7px;color:var(--muted);font-size:9px;letter-spacing:.16em}
 .command-goat-index b{display:block;margin-top:8px;font-size:11px}
 .command-goat-copy{grid-column:1/-1;max-width:690px;margin:8px 0 0;padding-top:14px;border-top:1px solid rgba(168,183,177,.09);color:#d7e2dd;font-size:12px;line-height:1.75}
-.command-latest-match{background:linear-gradient(155deg,rgba(13,41,34,.94),rgba(6,20,17,.96))}
-#latestMatchCommand{display:grid;gap:15px}
-.latest-match-meta{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:13px;border-bottom:1px solid rgba(168,183,177,.08)}
-.latest-match-meta strong{color:var(--gold2);font-size:22px;letter-spacing:.03em}
-.latest-match-meta span{color:var(--muted);font-size:10px;text-align:right}
-.latest-match-result{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.latest-match-result>div{padding:11px;border:1px solid rgba(168,183,177,.07);border-radius:var(--radius-sm);background:rgba(4,16,13,.34)}
-.latest-match-result span{display:block;color:var(--muted);font-size:9px}
-.latest-match-result b{display:block;margin-top:5px;font-size:12px}
-#latestMatchCommand>p{margin:0;color:#d7e2dd;font-size:11px;line-height:1.7}
 .overview-metrics-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .overview-metrics-strip .kpi{min-height:78px;padding:12px 14px;border-radius:var(--radius-md);box-shadow:var(--shadow-soft)}
 .overview-metrics-strip .kpi::after{width:48px;height:48px;opacity:.34}
 .overview-metrics-strip .kpi-value{display:inline-block;margin:6px 8px 0 0;font-size:20px}
 .overview-metrics-strip .kpi-sub{display:inline;font-size:9px}
-.overview-second-screen{margin-top:4px}
 .overview-editorial-recap{background:rgba(8,31,26,.78);box-shadow:var(--shadow-soft)}
 
 /* Status and records · quieter tools, stronger primary result */
@@ -1995,12 +1975,11 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 @media(max-width:760px){
   .league-command-center{grid-template-columns:1fr;gap:10px}
   .league-command-center>.card{min-height:0}
-  .command-goat-spotlight,.command-latest-match{padding:15px}
+  .command-goat-spotlight{padding:15px}
   .command-goat-identity h3{font-size:27px}
   .command-goat-index{min-width:95px}
   .command-goat-index strong{font-size:39px}
   .command-goat-copy{font-size:11px}
-  .latest-match-meta strong{font-size:18px}
   .overview-metrics-strip{grid-template-columns:1fr 1fr}
   .overview-metrics-strip .kpi:last-child{grid-column:1/-1}
   .record-data-head .record-query-toolbar{margin-left:0}
@@ -2025,7 +2004,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   .mobile-nav{scroll-behavior:auto}
   #overviewGoatHero{grid-template-columns:minmax(0,1fr) 82px;gap:10px}
   .command-goat-index strong{font-size:34px}
-  .latest-match-result{grid-template-columns:1fr}
   .overview-metrics-strip .kpi-value{display:block;margin-right:0}
   .monthly-kpis{grid-template-columns:1fr 1fr}
   .monthly-kpis>div{min-width:0}
@@ -2682,8 +2660,8 @@ select.moap-native-select{
   min-height:410px;
 }
 [data-view="overview"] .command-goat-zone,
-[data-view="overview"] .command-transmission-zone{min-width:0;padding:36px 40px 32px}
-[data-view="overview"] .command-transmission-zone{
+[data-view="overview"] .command-goat-standing{min-width:0;padding:36px 40px 32px}
+[data-view="overview"] .command-goat-standing{
   border-left:1px solid var(--overview-rule);
   background:transparent;
 }
@@ -2833,33 +2811,6 @@ select.moap-native-select{
   line-height:1.7;
 }
 
-[data-view="overview"] #latestMatchCommand{display:grid;gap:24px}
-[data-view="overview"] .latest-transmission-id{display:flex;align-items:end;justify-content:space-between;gap:18px}
-[data-view="overview"] .latest-transmission-id strong{
-  color:var(--text);
-  font-size:clamp(25px,2.4vw,34px);
-  font-weight:770;
-  letter-spacing:-.02em;
-}
-[data-view="overview"] .latest-transmission-id span{color:var(--gold);font-size:9px;font-weight:720;letter-spacing:.13em;white-space:nowrap}
-[data-view="overview"] .latest-transmission-data{display:grid;grid-template-columns:1fr 1fr;margin:0}
-[data-view="overview"] .latest-transmission-data>div{
-  min-width:0;
-  padding:15px 0;
-  border-top:1px solid var(--overview-rule);
-}
-[data-view="overview"] .latest-transmission-data>div:nth-child(even){padding-left:20px;border-left:1px solid var(--overview-rule)}
-[data-view="overview"] .latest-transmission-data dt{color:rgba(168,183,177,.58);font-size:8px;font-weight:700;letter-spacing:.14em}
-[data-view="overview"] .latest-transmission-data dd{overflow:hidden;margin:7px 0 0;color:#e9eee9;font-size:13px;font-weight:700;white-space:nowrap;text-overflow:ellipsis}
-[data-view="overview"] #latestMatchCommand>p{
-  margin:0;
-  padding-top:18px;
-  border-top:1px solid var(--overview-rule);
-  color:rgba(220,230,226,.72);
-  font-size:10px;
-  line-height:1.8;
-}
-
 [data-view="overview"] .overview-metrics-strip,
 [data-view="overview"] #overviewKpis{
   display:grid;
@@ -2882,14 +2833,6 @@ select.moap-native-select{
   padding-top:24px;
   border-top:1px solid var(--overview-rule-gold);
 }
-[data-view="overview"] .overview-goat-ranking{
-  background:transparent;
-  box-shadow:none;
-  border:0;
-  border-top:1px solid var(--overview-rule-gold);
-  border-radius:0;
-}
-[data-view="overview"] .overview-second-screen{margin-top:0}
 [data-view="overview"] .overview-section-head{
   display:flex;
   align-items:end;
@@ -3024,9 +2967,7 @@ select.moap-native-select{
 
 @media(hover:hover) and (pointer:fine){
   [data-view="overview"] .league-command-scene:has(.command-goat-index:is(:hover,:focus-visible)) .command-goat-composition{opacity:1;filter:saturate(1.12)}
-  [data-view="overview"] .league-command-scene:has(.command-goat-index:is(:hover,:focus-visible)) .command-transmission-zone,
   [data-view="overview"] .league-command-scene:has(.command-goat-index:is(:hover,:focus-visible)) .overview-metrics-strip{opacity:.52}
-  [data-view="overview"] .command-transmission-zone,
   [data-view="overview"] .overview-metrics-strip{transition:opacity .2s ease}
   [data-view="overview"] #goatRanking:has(.goat-row:hover) .goat-row:not(:hover){opacity:.32}
   [data-view="overview"] #goatRanking .goat-row:hover{background:linear-gradient(90deg,rgba(215,178,91,.05),transparent 75%);border-bottom-color:rgba(215,178,91,.22)}
@@ -3035,7 +2976,7 @@ select.moap-native-select{
 @media(max-width:1080px){
   [data-view="overview"] .league-command-grid{grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr)}
   [data-view="overview"] .command-goat-zone,
-  [data-view="overview"] .command-transmission-zone{padding:30px}
+  [data-view="overview"] .command-goat-standing{padding:30px}
   [data-view="overview"] .command-goat-index{min-width:156px}
   [data-view="overview"] .command-composition-rail{gap:12px}
   [data-view="overview"] .command-composition-segment>div:first-child small{display:none}
@@ -3048,8 +2989,8 @@ select.moap-native-select{
   [data-view="overview"] .league-command-scene{margin-bottom:48px;border-radius:0}
   [data-view="overview"] .league-command-grid{grid-template-columns:1fr;min-height:0}
   [data-view="overview"] .command-goat-zone,
-  [data-view="overview"] .command-transmission-zone{padding:22px 20px}
-  [data-view="overview"] .command-transmission-zone{border-top:1px solid var(--overview-rule-gold);border-left:0;background:transparent}
+  [data-view="overview"] .command-goat-standing{padding:22px 20px}
+  [data-view="overview"] .command-goat-standing{border-top:1px solid var(--overview-rule-gold);border-left:0;background:transparent}
   [data-view="overview"] .command-zone-head{margin-bottom:23px;padding-bottom:10px}
   [data-view="overview"] #overviewGoatHero{column-gap:14px;row-gap:21px}
   [data-view="overview"] .command-goat-identity h3{font-size:29px}
@@ -3058,7 +2999,6 @@ select.moap-native-select{
   [data-view="overview"] .command-goat-index>span{font-size:7px;letter-spacing:.12em}
   [data-view="overview"] .command-composition-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 15px}
   [data-view="overview"] .command-goat-copy{font-size:9px}
-  [data-view="overview"] .latest-transmission-id strong{font-size:27px}
   [data-view="overview"] .overview-metric{padding:16px 12px 18px}
   [data-view="overview"] #overviewKpis{grid-template-columns:repeat(3,minmax(0,1fr))}
   [data-view="overview"] .overview-metric:first-child{padding-left:20px}
@@ -3090,12 +3030,11 @@ select.moap-native-select{
 
 @media(max-width:420px){
   [data-view="overview"] .command-goat-zone,
-  [data-view="overview"] .command-transmission-zone{padding:20px 17px}
+  [data-view="overview"] .command-goat-standing{padding:20px 17px}
   [data-view="overview"] .command-zone-head small{display:none}
   [data-view="overview"] .command-goat-identity h3{font-size:27px}
   [data-view="overview"] .command-goat-index{min-width:101px}
   [data-view="overview"] .command-goat-index strong{font-size:53px}
-  [data-view="overview"] .latest-transmission-data dd{font-size:12px}
   [data-view="overview"] .overview-metric{padding-right:7px;padding-left:7px}
   [data-view="overview"] .overview-metric:first-child{padding-left:14px}
   [data-view="overview"] .overview-metric strong{font-size:21px}
@@ -3104,7 +3043,6 @@ select.moap-native-select{
 
 @media(prefers-reduced-motion:reduce){
   [data-view="overview"] .command-goat-composition,
-  [data-view="overview"] .command-transmission-zone,
   [data-view="overview"] .overview-metrics-strip,
   [data-view="overview"] #goatRanking .goat-row{transition:none!important}
 }
@@ -5791,5 +5729,85 @@ select.moap-native-select{
   [data-view="entry"] .entry-matrix-check,
   [data-view="entry"] .entry-commit-bar,
   [data-view="entry"] #saveMatchBtn.is-ready{transition:none!important;animation:none!important}
+}
+
+/* v4.0.10 · Overview GOAT Standing integration
+   The existing #goatRanking is presented once, beside League Authority. */
+[data-view="overview"] .league-command-grid{
+  grid-template-columns:minmax(0,2.2fr) minmax(270px,.9fr);
+}
+[data-view="overview"] .command-goat-standing{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  padding:36px 30px 32px;
+  border-left:1px solid var(--overview-rule);
+  background:transparent;
+}
+[data-view="overview"] .command-goat-standing .command-zone-head{margin-bottom:20px}
+[data-view="overview"] .command-goat-standing .command-zone-head small{max-width:110px;text-align:right;line-height:1.45}
+[data-view="overview"] .command-goat-standing #goatRanking{min-width:0}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row{
+  grid-template-columns:30px minmax(0,1fr) auto;
+  gap:11px;
+  min-height:65px;
+  padding:13px 0;
+}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child{
+  min-height:91px;
+  padding-top:15px;
+}
+[data-view="overview"] .command-goat-standing #goatRanking .rank{font-size:18px}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .rank{font-size:29px}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row-title{display:block;min-width:0}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row-title strong{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-row-title strong{font-size:20px}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row-title .muted{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-breakdown-mini,
+[data-view="overview"] .command-goat-standing #goatRanking .bar{display:none}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-score-v2{text-align:right}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-score-v2>span{display:none}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-score-v2 b{margin:0;font-size:19px;line-height:1;font-variant-numeric:tabular-nums}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-score-v2 small{display:block;margin-top:5px;font-size:8px}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-score-v2 b{font-size:28px}
+[data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-score-v2 small{font-size:8px}
+@media(hover:hover) and (pointer:fine){
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:hover .goat-breakdown-mini,
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:focus-within .goat-breakdown-mini{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px 9px;
+    margin:7px 0 0;
+    color:rgba(168,183,177,.66);
+    font-size:8px;
+    line-height:1.35;
+  }
+}
+@media(max-width:760px){
+  [data-view="overview"] .league-command-grid{grid-template-columns:1fr;min-height:0}
+  [data-view="overview"] .command-goat-standing{padding:22px 20px;border-top:1px solid var(--overview-rule-gold);border-left:0}
+  [data-view="overview"] .command-goat-standing .command-zone-head{margin-bottom:16px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row{
+    grid-template-columns:35px minmax(0,1fr) 64px;
+    gap:10px;
+    min-height:68px;
+    padding:12px 0;
+  }
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child{min-height:84px;padding-top:13px}
+  [data-view="overview"] .command-goat-standing #goatRanking .rank{font-size:18px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .rank{font-size:27px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row-title{align-items:flex-start;flex-direction:column;gap:3px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row-title strong{font-size:13px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-row-title strong{font-size:20px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-breakdown-mini{display:none}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-score-v2 b{font-size:17px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-score-v2 b{font-size:27px}
+}
+@media(max-width:340px){
+  [data-view="overview"] .command-goat-standing{padding-right:17px;padding-left:17px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row{grid-template-columns:31px minmax(0,1fr) 58px;gap:8px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row-title strong{font-size:12px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-row-title strong{font-size:18px}
+  [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-score-v2 b{font-size:24px}
 }
 

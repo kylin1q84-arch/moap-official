@@ -245,13 +245,11 @@ function animateOverviewEntry(root){
   const gsap=motionEngine();
   overviewTimeline?.kill();
   const goatCard=root.querySelector(".command-goat-spotlight");
-  const latestCard=root.querySelector(".command-latest-match");
   const goatParts=[...root.querySelectorAll("#overviewGoatHero > *")];
-  const latestParts=[...root.querySelectorAll("#latestMatchCommand > *")];
   const metrics=[...root.querySelectorAll("#overviewKpis > .overview-metric")];
-  const rankingCard=root.querySelector(".overview-goat-ranking");
+  const standingCard=root.querySelector(".command-goat-standing");
   const rankingRows=[...root.querySelectorAll("#goatRanking > .goat-row")];
-  const animated=[...sceneHeaderParts(root),goatCard,latestCard,...goatParts,...latestParts,...metrics,rankingCard,...rankingRows].filter(Boolean);
+  const animated=[...sceneHeaderParts(root),goatCard,...goatParts,...metrics,standingCard,...rankingRows].filter(Boolean);
   goatCard?.classList.toggle("motion-atmosphere",!motionDisabled());
   rankingRows[0]?.classList.toggle("motion-leader",!motionDisabled());
   if(motionDisabled()){
@@ -264,10 +262,8 @@ function animateOverviewEntry(root){
   addHeaderSequence(overviewTimeline,root,0);
   overviewTimeline.fromTo(goatCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?7:12},{autoAlpha:1,y:0,duration:mobile?.36:.5,ease:MOAP_MOTION.ease.emphasis},.11);
   if(goatParts.length)overviewTimeline.fromTo(goatParts,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:7},{autoAlpha:1,y:0,duration:mobile?.3:.38,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.22);
-  overviewTimeline.fromTo(latestCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?6:9},{autoAlpha:1,y:0,duration:mobile?.32:.42,ease:MOAP_MOTION.ease.enter},.25);
-  if(latestParts.length)overviewTimeline.fromTo(latestParts,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.28,stagger:.035,ease:MOAP_MOTION.ease.enter},.33);
   if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
-  if(rankingCard)overviewTimeline.fromTo(rankingCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8},{autoAlpha:1,y:0,duration:mobile?.3:.38,ease:MOAP_MOTION.ease.enter},.48);
+  if(standingCard)overviewTimeline.fromTo(standingCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,ease:MOAP_MOTION.ease.enter},.36);
   if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
 }
 
