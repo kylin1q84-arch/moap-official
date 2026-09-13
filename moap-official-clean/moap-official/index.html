@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.2.0-entry-console">
+  <link rel="stylesheet" href="/style.css?v=4.3.0-system-audit-console">
 </head>
 <body>
 
@@ -321,18 +321,41 @@
       </section>
 
       <section class="view" data-view="system">
-        <div class="hero"><div><h2>系统与审计</h2><p>展示版本状态、健康检查及数据迁移信息。</p></div></div>
-        <div class="kpis system-metrics-strip" id="systemKpis"></div>
-        <div class="grid-2 system-audit-grid">
-          <div class="card section">
-            <div class="section-head"><h3>健康检查</h3><small>实时检查</small></div>
-            <div class="health-grid" id="healthList"></div>
+        <header class="system-audit-masthead">
+          <div class="system-audit-masthead-copy">
+            <span class="system-eyebrow">SYSTEM AUDIT / DATA INTEGRITY</span>
+            <h2>系统审计</h2>
+            <p>正式数据完整性、认证状态与版本信息</p>
           </div>
-          <div class="card section">
-            <div class="section-head"><h3>版本信息</h3><small>LTS Official</small></div>
-            <div id="versionInfo" class="list"></div>
-          </div>
-        </div>
+          <aside class="system-health-anchor" aria-label="系统健康度">
+            <span>SYSTEM HEALTH</span>
+            <strong id="systemHealthValue">—</strong>
+            <small id="systemHealthStatus">—</small>
+          </aside>
+        </header>
+
+        <section class="system-signal-stage" aria-labelledby="systemSignalTitle">
+          <header class="system-section-head">
+            <div><span>INTEGRITY SIGNAL</span><h3 id="systemSignalTitle">系统完整性信号</h3></div>
+            <small>CURRENT DATASET</small>
+          </header>
+          <div class="system-signal-rail" id="systemKpis"></div>
+        </section>
+
+        <section class="system-audit-stage" aria-labelledby="systemAuditTitle">
+          <header class="system-section-head system-audit-head">
+            <div><span>AUDIT CHECKS</span><h3 id="systemAuditTitle">数据完整性检查</h3></div>
+            <strong class="system-audit-pass-count" id="systemAuditPassCount">—</strong>
+          </header>
+          <div class="system-audit-list" id="healthList"></div>
+        </section>
+
+        <section class="system-release-stage" aria-labelledby="systemReleaseTitle">
+          <header class="system-section-head">
+            <div><span>RELEASE MANIFEST</span><h3 id="systemReleaseTitle">版本与发布清单</h3></div>
+          </header>
+          <dl class="system-manifest" id="versionInfo"></dl>
+        </section>
       </section>
     </main>
   </div>

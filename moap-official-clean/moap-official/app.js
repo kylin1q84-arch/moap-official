@@ -1635,19 +1635,43 @@ function renderGoatRows(sel,limit=5){
   }).join("")||'<div class="empty">暂无GOAT评分</div>';
 }
 function renderSystem(){
+  const present=value=>value===undefined||value===null||value===""?"—":escapeHtml(String(value));
+  const version=state.version||{};
+  const meta=state.meta||{};
+  const checks=Array.isArray(state.healthChecks)?state.healthChecks:[];
+  const passCount=checks.filter(check=>check?.result==="PASS").length;
+  const totalChecks=checks.length;
+  const healthScore=meta.healthScore;
+  const healthScoreNumber=Number(healthScore);
+  const healthValue=healthScore===undefined||healthScore===null||healthScore===""?"—":`${present(healthScore)}%`;
+  const healthVerified=healthScoreNumber===100;
+  const matchesCount=Array.isArray(state.matches)?state.matches.length:0;
+  const resultCount=meta.results===undefined||meta.results===null||meta.results===""?"—":`${present(meta.results)} 条原始成绩`;
+  $("#systemHealthValue").textContent=healthValue;
+  $("#systemHealthStatus").textContent=healthVerified?"VERIFIED":"CHECK REQUIRED";
+  $("#systemHealthValue").className=healthVerified?"is-verified":"is-review";
+  $("#systemHealthStatus").className=healthVerified?"is-verified":"is-review";
   $("#systemKpis").innerHTML=[
-    ["当前版本",state.version.version,"Official Feature Release"],["认证状态",state.version.certification,state.version.formulaIntegrity],
-    ["数据规模",state.matches.length+" 场",state.meta.results+" 条原始成绩"],["系统健康",state.meta.healthScore+"%",`${state.healthChecks.filter(x=>x.result==="PASS").length}/${state.healthChecks.length} 检查通过`]
-  ].map(x=>`<div class="card kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value" style="font-size:${String(x[1]).length>14?20:27}px">${x[1]}</div><div class="kpi-sub">${x[2]}</div></div>`).join("");
-  $("#healthList").innerHTML=(state.healthChecks||[]).map(h=>{
-    const details=(h.details||[]).length?`<div class="health-details">${h.details.map(item=>`<span>${escapeHtml(item)}</span>`).join("")}</div>`:"";
-    return `<div class="health-item ${h.result==="PASS"?"health-pass":"health-fail"}"><div><strong>${escapeHtml(h.item)}</strong><div class="muted health-evidence">${escapeHtml(h.id)} · ${escapeHtml(h.evidence||"")} · 异常 ${Number(h.found||0)}</div>${details}</div><span class="${h.result==="PASS"?"status-pass quiet-pass":"status-fail"}">${escapeHtml(h.result)}</span></div>`;
-  }).join("");
-  const v=state.version;
+    ["SYSTEM VERSION",present(version.version),"DATA PLATFORM VERSION","version"],
+    ["CERTIFICATION",present(version.certification),`FORMULA ${present(version.formulaIntegrity)}`,"certification"],
+    ["DATASET",`${matchesCount} 场`,resultCount,"dataset"],
+    ["INTEGRITY",healthValue,`${passCount} / ${totalChecks} CHECKS PASS`,"integrity"]
+  ].map(([label,value,metaText,kind])=>`<div class="system-signal" data-signal="${kind}"><span class="system-signal-label">${label}</span><strong class="system-signal-value">${value}</strong><small class="system-signal-meta">${metaText}</small></div>`).join("");
+  const healthList=$("#healthList");
+  healthList.innerHTML=checks.length?checks.map((health,index)=>{
+    const details=Array.isArray(health?.details)?health.details:[];
+    const result=health?.result;
+    const resultClass=result==="PASS"?"is-pass":"is-issue";
+    const foundNumber=Number(health?.found);
+    const foundText=Number.isFinite(foundNumber)?`${foundNumber} ${foundNumber===1?"ISSUE":"ISSUES"}`:"—";
+    const detailMarkup=details.length?`<div class="system-audit-details"><span>ISSUE DETAILS</span><ul>${details.map(item=>`<li>${present(item)}</li>`).join("")}</ul></div>`:"";
+    return `<article class="system-audit-row ${resultClass}" data-check-index="${index}"><div class="system-audit-row-main"><div class="system-audit-row-title"><span class="system-audit-id">${present(health?.id)}</span><strong>${present(health?.item)}</strong></div><div class="system-audit-result ${resultClass}"><i aria-hidden="true"></i><span>${present(result)}</span></div><p class="system-audit-evidence">${present(health?.evidence)}</p><small class="system-audit-found">${foundText}</small>${detailMarkup}</div></article>`;
+  }).join(""):"<div class=\"system-audit-empty\"><strong>NO AUDIT CHECKS AVAILABLE</strong><span>暂无可用数据检查</span></div>";
+  $("#systemAuditPassCount").textContent=`${passCount} / ${totalChecks} PASS`;
   $("#versionInfo").innerHTML=[
-    ["发布日期",v.releaseDate],["发布阶段",v.releaseStage],["当前状态",v.currentStatus],
-    ["GOAT模型",state.goatMethodology||"四维数据模型"],["v2.3.0更新",v.note]
-  ].map(x=>`<div class="honor-item"><strong>${x[0]}</strong><small>${x[1]}</small></div>`).join("");
+    ["RELEASE DATE",version.releaseDate],["RELEASE STAGE",version.releaseStage],["CURRENT STATUS",version.currentStatus],
+    ["GOAT MODEL",state.goatMethodology||"四维数据模型"],["RELEASE NOTE",version.note]
+  ].map(([label,value])=>`<div class="system-manifest-row"><dt>${label}</dt><dd>${present(value)}</dd></div>`).join("");
 }
 
 $("#exportBtn").addEventListener("click",()=>{

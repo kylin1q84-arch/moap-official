@@ -64,6 +64,7 @@ let rivalMatrixInteractionCleanup = null;
 const revealedSections = new WeakSet();
 const enteredStatusViews = new WeakSet();
 const enteredMatchesViews = new WeakSet();
+const enteredSystemViews = new WeakSet();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
@@ -445,19 +446,22 @@ export function transitionRivalDetail({target,update,onUpdated}){
 function animateSystemEntry(root){
   const gsap=motionEngine();
   systemTimeline?.kill();
-  const kpis=[...root.querySelectorAll("#systemKpis > .kpi")];
-  const audit=root.querySelector(".system-audit-grid");
-  const health=[...root.querySelectorAll("#healthList > .health-item")];
-  const animated=[...sceneHeaderParts(root),...kpis,audit,...health].filter(Boolean);
-  if(motionDisabled()){
+  const masthead=root.querySelector(".system-audit-masthead");
+  const signals=[...root.querySelectorAll("#systemKpis > .system-signal")];
+  const audit=root.querySelector(".system-audit-stage");
+  const release=root.querySelector(".system-release-stage");
+  const animated=[masthead,...signals,audit,release].filter(Boolean);
+  const firstEntry=!enteredSystemViews.has(root);
+  enteredSystemViews.add(root);
+  if(motionDisabled()||!firstEntry){
     clearMotionProps(animated);return;
   }
   clearMotionProps(animated);
   systemTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);systemTimeline=null;}});
-  addHeaderSequence(systemTimeline,root,0);
-  if(kpis.length)systemTimeline.fromTo(kpis,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.14);
-  if(audit)systemTimeline.fromTo(audit,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?5:8},{autoAlpha:1,y:0,duration:mobileMotion()?.32:.4,ease:MOAP_MOTION.ease.enter},.3);
-  if(health.length)systemTimeline.fromTo(health,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.26,stagger:.03,ease:MOAP_MOTION.ease.enter},.38);
+  if(masthead)systemTimeline.fromTo(masthead,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:6},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},0);
+  if(signals.length)systemTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.12);
+  if(audit)systemTimeline.fromTo(audit,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.28);
+  if(release)systemTimeline.fromTo(release,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.32);
 }
 
 function animateEntryCenter(root){
