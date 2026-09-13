@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.3.9-player-career";
+} from "./animations.js?v=4.3.10-career-motion";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";

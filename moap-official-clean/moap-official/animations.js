@@ -46,6 +46,9 @@ let playerSwitchTimeline = null;
 let playerDataTimeline = null;
 let playerTrendTimeline = null;
 let playerTrendInteractionCleanup = null;
+const playerTrendPlayed = new WeakSet();
+let playerTrendRevealObserver = null;
+let playerTrendRevealToken = 0;
 let goatRankingTimeline = null;
 let shellTimeline = null;
 let overviewTimeline = null;
@@ -535,9 +538,7 @@ function applyAmbientViewState(root,view){
     root.querySelector(".command-goat-spotlight")?.classList.toggle("motion-atmosphere",enabled);
     root.querySelector("#goatRanking > .goat-row")?.classList.toggle("motion-leader",enabled);
   }else if(view==="player"){
-    const chart=root.querySelector("#trendChart");
-    chart?.classList.toggle("trend-ambient-ready",Boolean(chart.querySelector(".trend-line")));
-    bindPlayerTrendInteraction(root);
+    animatePlayerTrend(root,{delay:.08});
   }else if(view==="rival"){
     bindRivalMatrixFocus(root);
   }
@@ -751,6 +752,12 @@ function clearPlayerTrendInteraction(){
   playerTrendInteractionCleanup=null;
 }
 
+function clearPlayerTrendReveal(){
+  playerTrendRevealObserver?.disconnect?.();
+  playerTrendRevealObserver=null;
+  playerTrendRevealToken+=1;
+}
+
 function bindPlayerTrendInteraction(root){
   clearPlayerTrendInteraction();
   const chart=root?.querySelector?.("#trendChart")||root;
@@ -758,6 +765,7 @@ function bindPlayerTrendInteraction(root){
   const tooltip=wrap?.querySelector?.(".trend-tooltip");
   const guide=chart?.querySelector?.(".trend-guide");
   const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
+  const persistentDot=dots.at(-1);
   const finePointer=window.matchMedia?.("(hover:hover) and (pointer:fine)")?.matches;
   if(!chart||!wrap||!tooltip||!guide||!dots.length||!finePointer)return;
 
@@ -778,7 +786,9 @@ function bindPlayerTrendInteraction(root){
     if(activeDot){
       activeDot.classList.remove("is-active");
       gsap.killTweensOf(activeDot);
-      if(reduced)gsap.set(activeDot,{autoAlpha:0,attr:{r:baseRadius}});
+      if(activeDot===persistentDot){
+        gsap.set(activeDot,{autoAlpha:.9,attr:{r:baseRadius},scale:1});
+      }else if(reduced)gsap.set(activeDot,{autoAlpha:0,attr:{r:baseRadius}});
       else gsap.to(activeDot,{autoAlpha:0,attr:{r:baseRadius},duration:.12,ease:"power1.out",overwrite:true});
       activeDot=null;
     }
@@ -798,7 +808,8 @@ function bindPlayerTrendInteraction(root){
       if(activeDot){
         activeDot.classList.remove("is-active");
         gsap.killTweensOf(activeDot);
-        gsap.to(activeDot,{autoAlpha:0,attr:{r:baseRadius},duration:reduced?0:.1,ease:"power1.out",overwrite:true});
+        if(activeDot===persistentDot)gsap.set(activeDot,{autoAlpha:.9,attr:{r:baseRadius},scale:1});
+        else gsap.to(activeDot,{autoAlpha:0,attr:{r:baseRadius},duration:reduced?0:.1,ease:"power1.out",overwrite:true});
       }
       activeDot=dot;
       activeDot.classList.add("is-active");
@@ -883,52 +894,98 @@ function bindPlayerTrendInteraction(root){
   };
 }
 
-export function animatePlayerTrend(root,{delay=0}={}){
+export function animatePlayerTrend(root,{delay=0,force=false}={}){
   const chart=root?.querySelector?.("#trendChart")||root;
   const line=chart?.querySelector?.(".trend-line");
   const reveal=chart?.querySelector?.(".trend-area-reveal");
+  const dots=chart?.querySelectorAll ? [...chart.querySelectorAll(".trend-dot")] : [];
+  const latest=dots.at(-1);
+  const frame=chart?.closest?.(".trend-wrap")||chart;
   chart?.classList?.remove("trend-ambient-ready");
-  const animated=[line,reveal].filter(Boolean);
   playerTrendTimeline?.kill();
+  playerTrendTimeline=null;
+  clearPlayerTrendReveal();
   clearPlayerTrendInteraction();
 
   if(!line){
-    clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+    clearExtendedMotionProps([line,reveal,frame].filter(Boolean),"strokeDasharray,strokeDashoffset,transformOrigin");
     return;
   }
 
   let length=0;
   try{length=line.getTotalLength();}catch{return;}
   const gsap=motionEngine();
+  const animated=[line,reveal].filter(Boolean);
   clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
 
-  if(motionDisabled()){
+  const showStable=()=>{
+    clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+    gsap.set(line,{strokeDasharray:"none",strokeDashoffset:0});
+    if(reveal)gsap.set(reveal,{scaleX:1,transformOrigin:"left center"});
+    if(latest)gsap.set(latest,{autoAlpha:.9,scale:1,transformOrigin:"center",attr:{r:Number(latest.getAttribute("r")||3.2)}});
     chart?.classList?.add("trend-ambient-ready");
     bindPlayerTrendInteraction(root);
+  };
+
+  if(motionDisabled()||(!force&&playerTrendPlayed.has(root))){
+    playerTrendPlayed.add(root);
+    showStable();
     return;
   }
 
-  const mobile=mobileMotion();
-  const duration=mobile?.72:.86;
-  gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
-  if(reveal)gsap.set(reveal,{scaleX:0,transformOrigin:"left center"});
+  const playToken=playerTrendRevealToken;
+  const play=()=>{
+    if(playToken!==playerTrendRevealToken||!line.isConnected)return;
+    playerTrendPlayed.add(root);
+    const mobile=mobileMotion();
+    const duration=force?(mobile?.72:.74):(mobile?.78:.98);
+    const areaDelay=.08;
+    const areaDuration=Math.max(.34,duration*.9);
+    gsap.killTweensOf([frame,line,reveal,...dots].filter(Boolean));
+    gsap.set(frame,{autoAlpha:.96});
+    gsap.set(line,{strokeDasharray:length,strokeDashoffset:length});
+    if(reveal)gsap.set(reveal,{scaleX:0,transformOrigin:"left center"});
+    if(dots.length)gsap.set(dots,{autoAlpha:0,scale:.88,transformOrigin:"center",attr:{r:Number(dots[0]?.getAttribute("r")||3.2)}});
 
-  playerTrendTimeline=gsap.timeline({
-    delay,
-    onComplete:()=>{
-      clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
-      chart?.classList?.add("trend-ambient-ready");
-      playerTrendTimeline=null;
-      bindPlayerTrendInteraction(root);
+    playerTrendTimeline=gsap.timeline({
+      delay,
+      onComplete:()=>{
+        clearExtendedMotionProps(animated,"strokeDasharray,strokeDashoffset,transformOrigin");
+        gsap.set(frame,{clearProps:"opacity,visibility"});
+        chart?.classList?.add("trend-ambient-ready");
+        playerTrendTimeline=null;
+        bindPlayerTrendInteraction(root);
+      }
+    })
+      .to(frame,{autoAlpha:1,duration:.18,ease:"power1.out"},0)
+      .to(line,{strokeDashoffset:0,duration,ease:"power1.inOut"},0);
+    if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:areaDuration,ease:"power1.inOut"},areaDelay);
+    if(latest)playerTrendTimeline.to(latest,{autoAlpha:.9,scale:1,duration:mobile?.18:.2,ease:"power1.out"},duration+.04);
+  };
+
+  if(typeof IntersectionObserver!=="function"){
+    play();
+    return;
+  }
+  const rect=chart.getBoundingClientRect();
+  const visible=rect.bottom>0&&rect.top<window.innerHeight&&rect.right>0&&rect.left<window.innerWidth;
+  if(visible){
+    play();
+    return;
+  }
+  playerTrendRevealObserver=new IntersectionObserver(entries=>{
+    if(entries.some(entry=>entry.isIntersecting)){
+      playerTrendRevealObserver?.disconnect?.();
+      playerTrendRevealObserver=null;
+      play();
     }
-  })
-    .to(line,{strokeDashoffset:0,duration,ease:"power1.inOut"},0);
-  if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:duration*.94,ease:"none"},.04);
+  },{threshold:.18});
+  playerTrendRevealObserver.observe(chart);
 }
 
-function animatePlayerDataExperience(root,{delay=0}={}){
+function animatePlayerDataExperience(root,{delay=0,forceTrend=false}={}){
   animatePlayerSeasonNumbers(root,{baseDelay:delay+.08});
-  animatePlayerTrend(root,{delay:delay+.16});
+  animatePlayerTrend(root,{delay:delay+.16,force:forceTrend});
   const bars=[...root.querySelectorAll(".season-dimension .bar i")];
   const gsap=motionEngine();
   if(bars.length&&!motionDisabled()){
@@ -940,11 +997,14 @@ function animatePlayerDataExperience(root,{delay=0}={}){
 function stopPlayerDataExperience(root){
   playerTrendTimeline?.kill();
   playerTrendTimeline=null;
+  clearPlayerTrendReveal();
   clearPlayerTrendInteraction();
   const chart=root?.querySelector?.("#trendChart");
   chart?.classList?.remove("trend-ambient-ready");
   const trendParts=chart?[chart.querySelector(".trend-line"),chart.querySelector(".trend-area-reveal"),...chart.querySelectorAll(".trend-dot")].filter(Boolean):[];
   clearExtendedMotionProps(trendParts,"strokeDasharray,strokeDashoffset,transformOrigin");
+  const trendFrame=chart?.closest?.(".trend-wrap");
+  clearExtendedMotionProps(trendFrame);
   const dimensionBars=root?.querySelectorAll ? [...root.querySelectorAll(".season-dimension .bar i")] : [];
   motionEngine()?.killTweensOf?.(dimensionBars);
   clearExtendedMotionProps(dimensionBars,"transformOrigin");
@@ -1015,7 +1075,7 @@ export function transitionPlayerProfile({root,update,onUpdated}){
     .call(()=>{
       update();
       onUpdated?.();
-      animatePlayerDataExperience(root,{delay:.08});
+      animatePlayerDataExperience(root,{delay:.08,forceTrend:true});
     })
     .fromTo(
       playerLayers(root),
