@@ -370,9 +370,8 @@ function animateMatchesEntry(root){
   const gsap=motionEngine();
   matchTimeline?.kill();
   const query=root.querySelector(".match-query-stage");
-  const head=root.querySelector(".match-ledger-head");
   const list=root.querySelector("#matchList");
-  const animated=[...sceneHeaderParts(root),query,head].filter(Boolean);
+  const animated=[...sceneHeaderParts(root),query].filter(Boolean);
   const firstEntry=!enteredMatchesViews.has(root);
   enteredMatchesViews.add(root);
   if(motionDisabled()||!firstEntry){
@@ -383,7 +382,6 @@ function animateMatchesEntry(root){
   matchTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);matchTimeline=null;}});
   addHeaderSequence(matchTimeline,root,0);
   if(query)matchTimeline.fromTo(query,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:mobileMotion()?.29:.34,ease:MOAP_MOTION.ease.enter},.14);
-  if(head)matchTimeline.fromTo(head,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.27,ease:MOAP_MOTION.ease.enter},.25);
   matchTimeline.call(()=>animateMatchRows(list,{delay:0}),null,.31);
 }
 
