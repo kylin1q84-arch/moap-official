@@ -4582,36 +4582,39 @@ select.moap-native-select{
   padding:0 0 25px;
   border-bottom:1px solid var(--rival-rule);
 }
-[data-view="rival"] .rival-flow-stage .rival-stage-head{max-width:1000px;margin-bottom:8px}
-[data-view="rival"] .rival-summary-list{width:100%;max-width:1000px;border-top:1px solid var(--rival-rule-strong)}
+[data-view="rival"] .rival-flow-stage .rival-stage-head{max-width:940px;margin-bottom:8px}
+[data-view="rival"] .rival-summary-list{width:100%;max-width:940px;border-top:1px solid var(--rival-rule-strong)}
 [data-view="rival"] .rival-summary-head,
 [data-view="rival"] .rival-summary-row{
   display:grid;
-  grid-template-columns:minmax(180px,1.35fr) minmax(120px,.8fr) minmax(120px,.8fr) minmax(130px,.9fr);
-  gap:32px;
+  grid-template-columns:minmax(180px,1fr) 140px 140px 160px;
+  column-gap:34px;
   align-items:baseline;
   padding:0 4px;
 }
 [data-view="rival"] .rival-summary-head{
-  min-height:30px;
+  min-height:36px;
   align-items:center;
-  color:var(--rival-muted);
-  font-size:8px;
-  letter-spacing:.07em;
+  color:rgba(190,203,197,.78);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.04em;
 }
+[data-view="rival"] .rival-summary-head>span:first-child{text-align:left}
+[data-view="rival"] .rival-summary-head>span:nth-child(n+2){text-align:right}
 [data-view="rival"] .rival-summary-row{
-  min-height:58px;
+  min-height:60px;
   align-items:center;
   border-top:1px solid rgba(168,183,177,.07);
   font-size:14px;
   font-variant-numeric:tabular-nums;
 }
 [data-view="rival"] .rival-summary-head+.rival-summary-row{border-top:0}
-[data-view="rival"] .rival-summary-row strong{color:var(--rival-soft);font-size:13px;font-weight:680}
+[data-view="rival"] .rival-summary-row strong{color:var(--rival-soft);font-size:15px;font-weight:680;text-align:left}
 [data-view="rival"] .rival-summary-row span,
 [data-view="rival"] .rival-summary-row b{text-align:right;font-variant-numeric:tabular-nums}
-[data-view="rival"] .rival-summary-row span{font-size:14px;font-weight:680}
-[data-view="rival"] .rival-summary-row b{font-size:19px;font-weight:760}
+[data-view="rival"] .rival-summary-row span{font-size:17px;font-weight:700}
+[data-view="rival"] .rival-summary-row b{font-size:21px;font-weight:760}
 
 [data-view="rival"] .rival-pair-lens{
   min-height:104px;
@@ -4762,7 +4765,7 @@ select.moap-native-select{
   [data-view="rival"] .rival-summary-row span:nth-child(3){grid-area:eaten}
   [data-view="rival"] .rival-summary-row b:nth-child(4){grid-area:net}
   [data-view="rival"] .rival-summary-row span::before,
-  [data-view="rival"] .rival-summary-row b::before{color:var(--rival-muted);font-size:9px;font-weight:560;letter-spacing:.04em;line-height:1.2}
+  [data-view="rival"] .rival-summary-row b::before{color:var(--rival-muted);font-size:10px;font-weight:560;letter-spacing:.04em;line-height:1.2}
   [data-view="rival"] .rival-summary-row span:nth-child(2)::before{content:"吃分"}
   [data-view="rival"] .rival-summary-row span:nth-child(3)::before{content:"被吃"}
   [data-view="rival"] .rival-summary-row b::before{content:"净分"}
@@ -4786,7 +4789,7 @@ select.moap-native-select{
   [data-view="rival"] .rival-signal{padding-right:8px;padding-left:8px}
   [data-view="rival"] .rival-summary-row{gap:8px;padding-right:0;padding-left:0}
   [data-view="rival"] .rival-summary-row span::before,
-  [data-view="rival"] .rival-summary-row b::before{font-size:8px}
+  [data-view="rival"] .rival-summary-row b::before{font-size:9px}
   [data-view="rival"] .rival-summary-row span{font-size:15px}
   [data-view="rival"] .rival-summary-row b{font-size:17px}
   [data-view="rival"] .rival-pair-direction dl,
