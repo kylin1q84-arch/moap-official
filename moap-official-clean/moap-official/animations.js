@@ -553,17 +553,19 @@ export function animateRecordCenterEntry(root){
   recordTimeline?.kill();
   if(!root||motionDisabled())return;
 
-  const title=root.querySelector(".hero");
+  const title=root.querySelector(".records-workbench-masthead");
   const filters=[
     root.querySelector(".record-data-head"),
     root.querySelector(".record-toolbar")
   ].filter(Boolean);
   const regions=[
-    root.querySelector(".record-data-leaderboard .table-scroll"),
+    root.querySelector(".records-desktop-ranking"),
+    root.querySelector("#dataLeaderboardMobile"),
     root.querySelector("#recordSummary"),
-    root.querySelector(".record-center-card .record-table-scroll")
+    root.querySelector(".records-desktop-ledger"),
+    root.querySelector("#recordLedgerMobile")
   ].filter(Boolean);
-  const rows=[...root.querySelectorAll("#dataLeaderboardBody tr, #recordTableBody tr")].slice(0,18);
+  const rows=[...root.querySelectorAll("#dataLeaderboardBody tr, #recordTableBody tr, .records-mobile-data-row, .records-mobile-record")].filter(item=>getComputedStyle(item).display!=="none").slice(0,18);
   const animated=[title,...filters,...regions,...rows].filter(Boolean);
   clearMotionProps(animated);
 
@@ -592,22 +594,16 @@ export function transitionRecordContent({targets,update,onUpdated}){
     return;
   }
 
+  update();
+  onUpdated?.();
+  gsap.set(elements,{opacity:.7});
   filterTimeline=gsap.timeline({
     onComplete:()=>{
       clearMotionProps(elements);
       filterTimeline=null;
     }
   })
-    .to(elements,{autoAlpha:0,y:4,duration:.12,ease:"power1.in",stagger:.015})
-    .call(()=>{
-      update();
-      onUpdated?.();
-    })
-    .fromTo(
-      elements,
-      {autoAlpha:0,y:6},
-      {autoAlpha:1,y:0,duration:.2,ease:"power2.out",stagger:.02}
-    );
+    .to(elements,{opacity:1,duration:.18,ease:"power1.out",stagger:.01});
 }
 
 function parseNumericText(text){
@@ -1185,3 +1181,4 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
     .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
     .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
 }
+

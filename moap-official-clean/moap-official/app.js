@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.0.8-rival-intelligence";
+} from "./animations.js?v=4.1.0-records-workbench";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -860,23 +860,44 @@ function recordCurrentHolders(record){return (record?.ranking||[]).filter(row=>r
 function recordFirstHolder(record){return [...recordCurrentHolders(record)].sort((a,b)=>String(a.createdAt||"9999").localeCompare(String(b.createdAt||"9999"))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
 function recordLatestCoHolder(record,first){return [...recordCurrentHolders(record)].filter(row=>!first||row.playerId!==first.playerId).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
 function dataMetricLabel(metric){return ({points:"积分",mvp:"MVP",positive:"正分",negative:"负分",soloWin:"独赢",soloLoss:"独输",explosion:"爆发",explosionTier:"爆发档位"})[metric]||"积分";}
+function dataLeaderboardMobileHtml(rows){
+  if(!rows.length)return '<div class="records-mobile-empty empty">当前筛选范围暂无数据。</div>';
+  return rows.map(r=>{
+    const rank=String(r.rank).padStart(2,"0");
+    if(dataMetric==="points"){
+      return `<article class="records-mobile-data-row ${r.rank===1?"is-leader":""}"><header><span>${rank}</span><strong>${escapeHtml(r.player)}</strong><b class="${scoreClass(r.total)}">${fmtScore(r.total)}</b></header><div class="records-mobile-data-meta"><span>场次 <b>${r.games}</b></span><span>场均积分 <b>${fmtAvg(r.average)}</b></span><span>累计最高 <b class="${scoreClass(r.cumulativeHigh)}">${fmtScore(r.cumulativeHigh)}</b></span><span>累计最低 <b class="${scoreClass(r.cumulativeLow)}">${fmtScore(r.cumulativeLow)}</b></span></div></article>`;
+    }
+    if(dataMetric==="explosionTier"){
+      const x=r.explosionBins||{};
+      return `<article class="records-mobile-data-row records-mobile-tier-row ${r.rank===1?"is-leader":""}"><header><span>${rank}</span><strong>${escapeHtml(r.player)}</strong><b>${r.explosion?.count||0}场</b></header><div class="records-mobile-tier-grid"><span><small>50+</small><b>${x.over50||0}</b></span><span><small>60+</small><b>${x.over60||0}</b></span><span><small>70+</small><b>${x.over70||0}</b></span><span><small>80+</small><b>${x.over80||0}</b></span><span><small>90+</small><b>${x.over90||0}</b></span><span><small>100+</small><b>${x.over100||0}</b></span></div><small class="records-mobile-games">参赛 ${r.games} 场 · 爆发档位按原始比赛积分统计</small></article>`;
+    }
+    const x=r[dataMetric],labels={mvp:["MVP次数","MVP积分","MVP场均","MVP率"],positive:["正分次数","正分积分","正分场均","正分率"],negative:["负分次数","负分积分","负分场均","负分率"],soloWin:["独赢次数","独赢积分","独赢场均","独赢率"],soloLoss:["独输次数","独输积分","独输场均","独输率"],explosion:["爆发次数","爆发积分","爆发场均","爆发率"]}[dataMetric];
+    return `<article class="records-mobile-data-row ${r.rank===1?"is-leader":""}"><header><span>${rank}</span><strong>${escapeHtml(r.player)}</strong><b>${x.count}次</b></header><div class="records-mobile-data-meta"><span>参赛场次 <b>${r.games}</b></span><span>${labels[1]} <b class="${scoreClass(x.points)}">${fmtScore(x.points)}</b></span><span>${labels[2]} <b>${x.count?fmtAvg(x.average):"—"}</b></span><span>${labels[3]} <b>${fmtPct(x.rate)}</b></span></div></article>`;
+  }).join("");
+}
 function renderDataLeaderboard(){
   const seasonSel=$("#dataSeasonFilter"),typeSel=$("#dataMatchTypeFilter"),metricSel=$("#dataMetricFilter");if(!seasonSel)return;
   dataSeason=seasonSel.value||dataSeason;dataMatchType=typeSel.value||dataMatchType;dataMetric=metricSel.value||dataMetric;
   const rows=buildDataLeaderboard(state.players||[],state.matches||[],{season:dataSeason,type:dataMatchType,metric:dataMetric});
   const head=$("#dataLeaderboardHead"),body=$("#dataLeaderboardBody");
+  const stage=head?.closest(".record-data-leaderboard");if(stage)stage.dataset.metric=dataMetric;
   if(dataMetric==="points"){
     head.innerHTML='<tr><th>排名</th><th>牌手</th><th>场次</th><th>积分</th><th>场均积分</th><th>最高累计积分</th><th>最低累计积分</th></tr>';
-    body.innerHTML=rows.map(r=>`<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td><td>${fmtAvg(r.average)}</td><td class="${scoreClass(r.cumulativeHigh)}">${fmtScore(r.cumulativeHigh)}</td><td class="${scoreClass(r.cumulativeLow)}">${fmtScore(r.cumulativeLow)}</td></tr>`).join("");
+    body.innerHTML=rows.map(r=>`<tr><td><span class="rank ${r.rank===1?"top":""}">${String(r.rank).padStart(2,"0")}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td class="${scoreClass(r.total)}">${fmtScore(r.total)}</td><td>${fmtAvg(r.average)}</td><td class="${scoreClass(r.cumulativeHigh)}">${fmtScore(r.cumulativeHigh)}</td><td class="${scoreClass(r.cumulativeLow)}">${fmtScore(r.cumulativeLow)}</td></tr>`).join("");
   }else if(dataMetric==="explosionTier"){
     head.innerHTML='<tr><th>排名</th><th>牌手</th><th>场次</th><th>50+</th><th>60+</th><th>70+</th><th>80+</th><th>90+</th><th>100+</th><th>爆发场次</th></tr>';
-    body.innerHTML=rows.map(r=>{const x=r.explosionBins||{};return `<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.over50||0}</td><td>${x.over60||0}</td><td>${x.over70||0}</td><td>${x.over80||0}</td><td>${x.over90||0}</td><td>${x.over100||0}</td><td><b>${r.explosion?.count||0}</b></td></tr>`;}).join("");
+    body.innerHTML=rows.map(r=>{const x=r.explosionBins||{};return `<tr><td><span class="rank ${r.rank===1?"top":""}">${String(r.rank).padStart(2,"0")}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.over50||0}</td><td>${x.over60||0}</td><td>${x.over70||0}</td><td>${x.over80||0}</td><td>${x.over90||0}</td><td>${x.over100||0}</td><td><b>${r.explosion?.count||0}</b></td></tr>`;}).join("");
   }else{
     const key=dataMetric,labels={mvp:["MVP次数","MVP积分","MVP场均积分","MVP率"],positive:["正分次数","正分积分","正分场均积分","正分率"],negative:["负分次数","负分积分","负分场均积分","负分率"],soloWin:["独赢次数","独赢积分","独赢场均积分","独赢率"],soloLoss:["独输次数","独输积分","独输场均积分","独输率"],explosion:["爆发次数","爆发积分","爆发场均积分","爆发率"]}[key];
     head.innerHTML=`<tr><th>排名</th><th>牌手</th><th>场次</th><th>${labels[0]}</th><th>${labels[1]}</th><th>${labels[2]}</th><th>${labels[3]}</th></tr>`;
-    body.innerHTML=rows.map(r=>{const x=r[key];return `<tr><td><span class="rank ${r.rank===1?"top":""}">${r.rank}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.count}</td><td class="${scoreClass(x.points)}">${fmtScore(x.points)}</td><td>${x.count?fmtAvg(x.average):"—"}</td><td>${fmtPct(x.rate)}</td></tr>`;}).join("");
+    body.innerHTML=rows.map(r=>{const x=r[key];return `<tr><td><span class="rank ${r.rank===1?"top":""}">${String(r.rank).padStart(2,"0")}</span></td><td><strong>${escapeHtml(r.player)}</strong></td><td>${r.games}</td><td>${x.count}</td><td class="${scoreClass(x.points)}">${fmtScore(x.points)}</td><td>${x.count?fmtAvg(x.average):"—"}</td><td>${fmtPct(x.rate)}</td></tr>`;}).join("");
   }
   if(!rows.length)body.innerHTML=`<tr><td colspan="10" class="empty">当前筛选范围暂无数据。</td></tr>`;
+  const mobile=$("#dataLeaderboardMobile");if(mobile)mobile.innerHTML=dataLeaderboardMobileHtml(rows);
+}
+function recordLedgerMobileHtml(records){
+  if(!records.length)return '<div class="records-mobile-empty empty">暂无记录。</div>';
+  return records.map(record=>`<button type="button" class="records-mobile-record" data-record-id="${escapeHtml(record.id)}" aria-label="查看${escapeHtml(record.name)}纪录"><span class="records-mobile-record-title"><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(recordHolderText(record))}</small></span><b class="records-mobile-record-value ${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b><time>${escapeHtml(record.createdAt||"—")}</time><span class="records-mobile-record-action">查看纪录 →</span><small class="records-mobile-record-rule">${escapeHtml(record.rule)}</small></button>`).join("");
 }
 function renderRecords({includeLeaderboard=true}={}){
   const center=state.recordCenter||buildRecordCenter(state.players||[],state.matches||[]);const sectionSel=$("#recordSectionFilter"),seasonSel=$("#recordSeasonFilter"),typeSel=$("#recordTypeFilter");
@@ -885,9 +906,10 @@ function renderRecords({includeLeaderboard=true}={}){
   if(typeSel){recordType=typeSel.value||recordType;typeSel.value=recordType;}
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
   const sectionNames={single:"单场记录",continuous:"连续记录"},typeNames={all:"全部比赛",four:"四人局",five:"五人局"},seasonName=recordSeason==="all"?"全部赛季":recordSeason;
-  $("#recordSummary").innerHTML=`<div><b>${sectionNames[recordSection]}</b><span>${seasonName} · ${typeNames[recordType]} · 共 ${records.length} 项记录</span></div><small>${escapeHtml(center.methodology||"")}</small>`;
+  $("#recordSummary").innerHTML=`<div class="records-context-facts"><span><small>RECORD TYPE</small><b>${sectionNames[recordSection]}</b></span><span><small>SEASON</small><b>${seasonName}</b></span><span><small>MATCH TYPE</small><b>${typeNames[recordType]}</b></span><span><small>RESULT</small><b>${records.length} 项记录</b></span></div><small class="records-method-note">${escapeHtml(center.methodology||"")}</small>`;
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
-  $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="btn record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看详情</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
+  $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看纪录 →</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
+  const mobile=$("#recordLedgerMobile");if(mobile)mobile.innerHTML=recordLedgerMobileHtml(records);
   if(includeLeaderboard)renderDataLeaderboard();
 }
 function currentRecordById(recordId){return state.recordCenter?.views?.[recordSeason]?.[recordType]?.[recordSection]?.find(record=>record.id===recordId)||null;}
@@ -901,15 +923,15 @@ function renderRecordEvidence(evidence){if(!evidence?.length)return '<div class=
 function openRecordModal(recordId){
   const record=currentRecordById(recordId);if(!record)return;ensureRecordModal();const topFive=(record.ranking||[]).filter(row=>Number(row.rank)<=5);const ranking=topFive.map(row=>`<div class="record-ranking-row ${row.rank===1?"is-holder":""}"><span>#${row.rank}</span><div><strong>${escapeHtml(row.player)}</strong><small>${escapeHtml(recordRankingNote(row))}</small></div><b>${escapeHtml(formatRecordValue(record,row.value))}</b><time>${escapeHtml(row.createdAt||"—")}</time></div>`).join("")||'<div class="empty">暂无历史排名。</div>';
   const holders=recordCurrentHolders(record),first=recordFirstHolder(record),latest=recordLatestCoHolder(record,first);const typeName=recordType==="all"?"全部比赛":recordType==="four"?"四人局":"五人局",seasonName=recordSeason==="all"?"全部赛季":recordSeason,recentTie=latest?`${latest.player} · ${latest.createdAt}`:"暂无后来追平";
-  const infoGrid=`<div><span>保持者</span><b>${escapeHtml(recordHolderText(record))}</b></div><div><span>当前记录</span><b>${escapeHtml(record.displayValue)}</b></div><div><span>首次创造</span><b>${escapeHtml(first?`${first.player} · ${first.createdAt}`:"—")}</b></div><div><span>最近追平</span><b>${escapeHtml(recentTie)}</b></div>`;
+  const infoGrid=`<div><span>保持者</span><b>${escapeHtml(recordHolderText(record))}</b></div><div class="is-current-record"><span>当前记录</span><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue)}</b></div><div><span>首次创造</span><b>${escapeHtml(first?`${first.player} · ${first.createdAt}`:"—")}</b></div><div><span>最近追平</span><b>${escapeHtml(recentTie)}</b></div>`;
   const evidence=(record.evidence||[]).length?record.evidence:holders.flatMap(item=>item.evidence||[]);
-  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><div><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></div><span class="record-holder-badge">MSL RECORD</span></header><section class="record-modal-section"><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;
+  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><span class="record-dossier-kicker">MSL RECORD</span><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></header><section class="record-modal-section record-dossier-info"><span class="record-dossier-label">RECORD PROFILE</span><h3>记录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><span class="record-dossier-label">HISTORICAL RANKING</span><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><span class="record-dossier-label">RECORD EVIDENCE</span><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">记录由MOAP正式比赛数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;
   const modal=$("#recordModalBackdrop");modal.hidden=false;document.body.classList.add("modal-open");animateRecordDetails(modal,{open:true});animateNumbers(modal);
 }
 function refreshRecordResults(updateState){
   const root=$('.view[data-view="records"]');
   transitionRecordContent({
-    targets:[$("#recordSummary"),root?.querySelector(".record-center-card .record-table-scroll")].filter(Boolean),
+    targets:[$("#recordSummary"),root?.querySelector(".records-desktop-ledger"),$("#recordLedgerMobile")].filter(Boolean),
     update:()=>{updateState();renderRecords({includeLeaderboard:false});},
     onUpdated:()=>animateNumbers(root)
   });
@@ -917,7 +939,7 @@ function refreshRecordResults(updateState){
 function refreshDataLeaderboard(updateState){
   const root=$('.view[data-view="records"]');
   transitionRecordContent({
-    targets:[root?.querySelector(".record-data-leaderboard .table-scroll")].filter(Boolean),
+    targets:[root?.querySelector(".records-desktop-ranking"),$("#dataLeaderboardMobile")].filter(Boolean),
     update:()=>{updateState();renderDataLeaderboard();},
     onUpdated:()=>animateNumbers(root?.querySelector(".record-data-leaderboard"))
   });
@@ -1675,3 +1697,4 @@ async function start(){
   }
 }
 start();
+

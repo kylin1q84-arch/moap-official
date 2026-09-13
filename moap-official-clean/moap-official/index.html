@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.0.10-rival-flow-alignment">
+  <link rel="stylesheet" href="/style.css?v=4.1.0-records-workbench">
 </head>
 <body>
 
@@ -81,39 +81,42 @@
       </section>
 
       <section class="view" data-view="records">
-        <div class="hero">
-          <div><h2>记录中心</h2><p>查询综合数据榜、单场纪录与连续纪录。</p></div>
-          <span class="chip gold">MSL RECORD BOOK</span>
-        </div>
+        <header class="records-workbench-masthead">
+          <div><span class="records-kicker">RECORDS WORKBENCH / OFFICIAL DATA</span><h2>记录中心</h2><p>查询综合排名、单场纪录与连续纪录</p></div>
+          <div class="records-official-mark" aria-label="MSL官方纪录册"><span>RECORD BOOK</span><strong>OFFICIAL</strong></div>
+        </header>
 
-        <div class="card section record-data-leaderboard" style="margin-bottom:16px">
-          <div class="section-head record-data-head">
-            <div><h3>MSL综合数据榜</h3><small>按赛季、比赛类型和数据类型查询</small></div>
-            <div class="record-filter-row record-query-toolbar">
+        <section class="records-query-stage records-data-stage record-data-leaderboard" aria-labelledby="dataQueryTitle">
+          <header class="records-query-head record-data-head">
+            <div><span class="records-kicker">DATA QUERY</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、比赛类型和数据类型查询</small></div>
+            <div class="records-filter-bar record-filter-row record-query-toolbar records-data-filters">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>比赛类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               <label>数据类型<select id="dataMetricFilter"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
             </div>
-          </div>
-          <div class="table-scroll"><table class="record-table"><thead id="dataLeaderboardHead"></thead><tbody id="dataLeaderboardBody"></tbody></table></div>
-        </div>
+          </header>
+          <div class="records-table-surface records-desktop-ranking table-scroll"><table class="record-table"><thead id="dataLeaderboardHead"></thead><tbody id="dataLeaderboardBody"></tbody></table></div>
+          <div class="records-mobile-ranking" id="dataLeaderboardMobile" aria-live="polite"></div>
+        </section>
 
-        <div class="card section record-center-card" style="margin-bottom:16px">
-          <div class="record-toolbar record-query-toolbar">
-            <div class="record-filter-row compact">
+        <section class="records-query-stage records-ledger-stage record-center-card" aria-labelledby="recordQueryTitle">
+          <header class="records-query-head record-toolbar">
+            <div><span class="records-kicker">RECORD QUERY</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与证据链</small></div>
+            <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
               <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
               <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
             </div>
-          </div>
-          <div class="record-summary" id="recordSummary"></div>
-          <div class="table-scroll record-table-scroll">
+          </header>
+          <div class="record-summary records-context-rail" id="recordSummary"></div>
+          <div class="records-table-surface records-desktop-ledger table-scroll record-table-scroll">
             <table class="record-table">
               <thead id="recordTableHead"><tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>
               <tbody id="recordTableBody"></tbody>
             </table>
           </div>
-        </div>
+          <div class="records-mobile-ledger" id="recordLedgerMobile" aria-live="polite"></div>
+        </section>
       </section>
 
       <section class="view" data-view="status">
@@ -317,6 +320,7 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.0.8-rival-intelligence"></script>
+  <script type="module" src="/app.js?v=4.1.0-records-workbench"></script>
 </body>
 </html>
+
