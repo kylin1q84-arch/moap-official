@@ -990,34 +990,6 @@ button:not(:disabled):active,
 .trend-tooltip [data-trend-mvp]{color:var(--gold2);font-weight:700}
 .trend-tooltip [data-trend-total]{color:var(--text)}
 
-#recentMatchesPlayer .score-row{position:relative}
-#recentMatchesPlayer .score-row>*{position:relative;z-index:1}
-#recentMatchesPlayer .recent-latest{
-  overflow:hidden;
-  isolation:isolate;
-  box-shadow:inset 2px 0 0 rgba(85,214,156,.17);
-}
-#recentMatchesPlayer .recent-latest::after{
-  content:"";
-  position:absolute;
-  z-index:0;
-  inset:0 auto 0 0;
-  width:30%;
-  pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(85,214,156,.075),transparent);
-  transform:translate3d(-120%,0,0);
-}
-#recentMatchesPlayer .recent-latest.recent-glow-once::after{
-  will-change:transform;
-  animation:recentLatestGlow 1.15s linear .08s 1 both;
-}
-#recentMatchesPlayer .recent-mvp-badge{transform-origin:center}
-
-@keyframes recentLatestGlow{
-  from{transform:translate3d(-120%,0,0)}
-  to{transform:translate3d(455%,0,0)}
-}
-
 @media (hover:hover) and (pointer:fine){
   #trendChart{cursor:crosshair}
 }
@@ -1026,19 +998,12 @@ button:not(:disabled):active,
   .trend-tooltip,
   .trend-guide{display:none!important}
   .trend-dot{stroke-width:1.6}
-  #recentMatchesPlayer .recent-latest::after{
-    background:linear-gradient(90deg,transparent,rgba(85,214,156,.045),transparent);
-  }
 }
 
 @media(prefers-reduced-motion:reduce){
   .trend-area-reveal{transform:none!important}
   .trend-tooltip,
   .trend-guide{transition:none!important}
-  #recentMatchesPlayer .recent-latest::after{
-    display:none!important;
-    animation:none!important;
-  }
 }
 
 /* Player official-honor history details · dual-track rules */
@@ -3295,9 +3260,10 @@ select.moap-native-select{
 [data-view="player"] .season-rating-method{padding-top:12px;border-top:1px solid var(--player-rule);font-size:8px}
 
 [data-view="player"] .player-trend-stage{
-  grid-template-columns:minmax(0,1.55fr) minmax(280px,.72fr);
-  gap:44px;
-  margin-bottom:70px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  margin-bottom:56px;
 }
 [data-view="player"] .player-observatory-panel{
   overflow:visible;
@@ -3310,7 +3276,7 @@ select.moap-native-select{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
-[data-view="player"] .player-career-trajectory .trend-wrap{height:300px}
+[data-view="player"] .player-career-trajectory .trend-wrap{height:350px}
 [data-view="player"] #trendChart .axis{stroke:rgba(168,183,177,.10)}
 [data-view="player"] #trendChart .trend-line,
 [data-view="player"] #trendChart .trend-area,
@@ -3334,34 +3300,6 @@ select.moap-native-select{
 [data-view="player"] .trend-tooltip strong{font-size:12px}
 [data-view="player"] .trend-tooltip span{font-size:9px}
 [data-view="player"] .trend-guide{stroke-dasharray:2 5}
-[data-view="player"] #recentMatchesPlayer{gap:0;border-top:1px solid var(--player-rule)}
-[data-view="player"] #recentMatchesPlayer .score-row{
-  min-height:52px;
-  padding:11px 2px;
-  border:0;
-  border-bottom:1px solid var(--player-rule);
-  border-radius:0;
-  background:transparent;
-  box-shadow:none;
-}
-[data-view="player"] #recentMatchesPlayer .score-row.mvp{border:0;border-bottom:1px solid var(--player-rule);background:transparent}
-[data-view="player"] #recentMatchesPlayer .score-row:hover{border-bottom-color:rgba(215,178,91,.2)}
-[data-view="player"] #recentMatchesPlayer .left{min-width:0;gap:9px}
-[data-view="player"] #recentMatchesPlayer .left>.chip:first-child{
-  padding:0;
-  border:0;
-  border-radius:0;
-  background:none;
-  color:var(--gold2);
-  font-size:9px;
-  font-weight:720;
-}
-[data-view="player"] #recentMatchesPlayer .left>span:not(.chip){color:var(--player-muted);font-size:9px}
-[data-view="player"] #recentMatchesPlayer>div>b{font-size:14px;font-variant-numeric:tabular-nums}
-[data-view="player"] #recentMatchesPlayer .recent-mvp-badge{padding:3px 5px;font-size:7px}
-[data-view="player"] #recentMatchesPlayer .recent-latest{box-shadow:inset 1px 0 0 rgba(85,214,156,.28)}
-[data-view="player"] #recentMatchesPlayer .recent-latest::after{width:36%;background:linear-gradient(90deg,transparent,rgba(85,214,156,.06),transparent)}
-
 [data-view="player"] .player-season-data-card{margin-bottom:0!important}
 [data-view="player"] .player-season-data-head{align-items:end}
 [data-view="player"] .player-season-data-table th{background:rgba(6,20,17,.34)}
@@ -3516,7 +3454,6 @@ select.moap-native-select{
   [data-view="player"] .season-performance-copy>div+div{padding:13px 0 2px;border-top:1px solid var(--player-rule);border-left:0}
   [data-view="player"] .player-observatory-panel{padding-top:18px}
   [data-view="player"] .player-career-trajectory .trend-wrap{height:250px}
-  [data-view="player"] #recentMatchesPlayer .score-row{min-height:48px}
   [data-view="player"] .profile-honor-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;min-height:62px;padding:14px 2px 14px 17px}
   [data-view="player"] .profile-honor-copy>strong{font-size:12px}
   [data-view="player"] .profile-honor-row>b{font-size:13px}
@@ -3588,8 +3525,6 @@ select.moap-native-select{
   [data-view="player"] .season-rating-hero{grid-template-columns:minmax(0,1fr) 105px}
   [data-view="player"] .season-rating-hero>div:first-child>strong{font-size:59px}
   [data-view="player"] .season-dimension{grid-template-columns:88px minmax(64px,1fr) 42px;gap:7px}
-  [data-view="player"] #recentMatchesPlayer .left{gap:6px}
-  [data-view="player"] #recentMatchesPlayer .left>span:not(.chip){font-size:8px}
 }
 
 @media(max-width:340px){
@@ -6012,4 +5947,17 @@ select.moap-native-select{
   }
   [data-view="status"] .status-recent-node small{font-size:7px;}
   [data-view="status"] .status-recent-node b{font-size:13px;}
+}
+
+
+/* v4.3.9 · Player Observatory career trajectory expansion */
+@media(max-width:760px){
+  [data-view="player"] .player-trend-stage{grid-template-columns:minmax(0,1fr);gap:0;margin-bottom:48px!important}
+  [data-view="player"] .player-career-trajectory .trend-wrap{height:280px}
+  [data-view="player"] .player-career-trajectory .player-observatory-section-head{display:flex;align-items:flex-start;flex-wrap:wrap}
+  [data-view="player"] .player-career-trajectory #chartCaption{width:100%;margin-top:4px;text-align:left}
+}
+@media(max-width:340px){
+  [data-view="player"] .player-career-trajectory .trend-wrap{height:260px}
+  [data-view="player"] #trendChart .chart-label{font-size:9px}
 }

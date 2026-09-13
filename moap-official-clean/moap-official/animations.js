@@ -45,7 +45,6 @@ let playerEntryTimeline = null;
 let playerSwitchTimeline = null;
 let playerDataTimeline = null;
 let playerTrendTimeline = null;
-let playerRecentTimeline = null;
 let playerTrendInteractionCleanup = null;
 let goatRankingTimeline = null;
 let shellTimeline = null;
@@ -731,20 +730,6 @@ export function animatePlayerSeasonNumbers(root=document,{baseDelay=0}={}){
   });
 }
 
-function animatePlayerRecentNumbers(root=document,{baseDelay=0}={}){
-  const holder=root?.matches?.("#recentMatchesPlayer")?root:root?.querySelector?.("#recentMatchesPlayer");
-  if(!holder)return;
-  const rows=[...holder.querySelectorAll("[data-recent-match]")];
-  const candidates=[...holder.querySelectorAll("[data-player-number]")];
-  animateNumberCandidates(candidates,holder,{
-    duration:mobileMotion()?.42:.52,
-    delayFor:element=>{
-      const rowIndex=Math.max(0,rows.indexOf(element.closest("[data-recent-match]")));
-      return baseDelay+.1+rowIndex*.06;
-    }
-  });
-}
-
 function mobileMotion(){
   return Boolean(window.matchMedia?.("(max-width: 760px)")?.matches);
 }
@@ -941,55 +926,9 @@ export function animatePlayerTrend(root,{delay=0}={}){
   if(reveal)playerTrendTimeline.to(reveal,{scaleX:1,duration:duration*.94,ease:"none"},.04);
 }
 
-function animateRecentMatches(root,{delay=0,glow=false}={}){
-  const holder=root?.querySelector?.("#recentMatchesPlayer")||root;
-  const rows=holder?.querySelectorAll ? [...holder.querySelectorAll("[data-recent-match]")] : [];
-  const badges=holder?.querySelectorAll ? [...holder.querySelectorAll(".recent-mvp-badge")] : [];
-  const latest=rows[0];
-  playerRecentTimeline?.kill();
-  clearMotionProps(rows);
-  clearExtendedMotionProps(badges);
-  latest?.classList.remove("recent-glow-once");
-  animatePlayerRecentNumbers(root,{baseDelay:delay});
-
-  if(!rows.length||motionDisabled())return;
-
-  const gsap=motionEngine();
-  const mobile=mobileMotion();
-  const rowDuration=mobile?.28:.34;
-  const stagger=mobile?.05:.06;
-  gsap.set(rows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?5:8});
-  if(badges.length)gsap.set(badges,{autoAlpha:0,scale:.9,transformOrigin:"center"});
-
-  playerRecentTimeline=gsap.timeline({
-    delay,
-    onComplete:()=>{
-      clearMotionProps(rows);
-      clearExtendedMotionProps(badges);
-      if(glow&&latest?.isConnected){
-        latest.classList.remove("recent-glow-once");
-        void latest.offsetWidth;
-        latest.classList.add("recent-glow-once");
-      }
-      playerRecentTimeline=null;
-    }
-  }).to(rows,{autoAlpha:1,y:0,duration:rowDuration,stagger,ease:MOAP_MOTION.ease.enter},0);
-
-  badges.forEach(badge=>{
-    const rowIndex=Math.max(0,rows.indexOf(badge.closest("[data-recent-match]")));
-    playerRecentTimeline.fromTo(
-      badge,
-      {autoAlpha:0,scale:.9},
-      {autoAlpha:1,scale:1,duration:mobile?.2:.24,ease:MOAP_MOTION.ease.enter},
-      rowDuration+rowIndex*stagger+.07
-    );
-  });
-}
-
-function animatePlayerDataExperience(root,{delay=0,recentGlow=false}={}){
+function animatePlayerDataExperience(root,{delay=0}={}){
   animatePlayerSeasonNumbers(root,{baseDelay:delay+.08});
   animatePlayerTrend(root,{delay:delay+.16});
-  animateRecentMatches(root,{delay:delay+.22,glow:recentGlow});
   const bars=[...root.querySelectorAll(".season-dimension .bar i")];
   const gsap=motionEngine();
   if(bars.length&&!motionDisabled()){
@@ -1001,18 +940,11 @@ function animatePlayerDataExperience(root,{delay=0,recentGlow=false}={}){
 function stopPlayerDataExperience(root){
   playerTrendTimeline?.kill();
   playerTrendTimeline=null;
-  playerRecentTimeline?.kill();
-  playerRecentTimeline=null;
   clearPlayerTrendInteraction();
   const chart=root?.querySelector?.("#trendChart");
   chart?.classList?.remove("trend-ambient-ready");
   const trendParts=chart?[chart.querySelector(".trend-line"),chart.querySelector(".trend-area-reveal"),...chart.querySelectorAll(".trend-dot")].filter(Boolean):[];
   clearExtendedMotionProps(trendParts,"strokeDasharray,strokeDashoffset,transformOrigin");
-  const recentRows=root?.querySelectorAll ? [...root.querySelectorAll("#recentMatchesPlayer [data-recent-match]")] : [];
-  const recentBadges=root?.querySelectorAll ? [...root.querySelectorAll("#recentMatchesPlayer .recent-mvp-badge")] : [];
-  clearMotionProps(recentRows);
-  clearExtendedMotionProps(recentBadges);
-  recentRows[0]?.classList.remove("recent-glow-once");
   const dimensionBars=root?.querySelectorAll ? [...root.querySelectorAll(".season-dimension .bar i")] : [];
   motionEngine()?.killTweensOf?.(dimensionBars);
   clearExtendedMotionProps(dimensionBars,"transformOrigin");
@@ -1083,7 +1015,7 @@ export function transitionPlayerProfile({root,update,onUpdated}){
     .call(()=>{
       update();
       onUpdated?.();
-      animatePlayerDataExperience(root,{delay:.08,recentGlow:true});
+      animatePlayerDataExperience(root,{delay:.08});
     })
     .fromTo(
       playerLayers(root),

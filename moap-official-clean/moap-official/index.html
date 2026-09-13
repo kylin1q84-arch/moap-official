@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.3.8-status-ranking-recent">
+  <link rel="stylesheet" href="/style.css?v=4.3.9-player-career">
 </head>
 <body>
 
@@ -159,14 +159,10 @@
             <div id="currentSeasonPerformance"></div>
           </div>
         </div>
-        <div class="grid-2 player-trend-stage">
+        <div class="player-trend-stage">
           <div class="card section player-observatory-panel player-career-trajectory">
             <div class="section-head player-observatory-section-head"><div><span>CAREER TRAJECTORY</span><h3>生涯积分曲线</h3></div><small id="chartCaption"></small></div>
             <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
-          </div>
-          <div class="card section player-observatory-panel player-recent-form">
-            <div class="section-head player-observatory-section-head"><div><span>RECENT FORM</span><h3>最近五场</h3></div><small>最近参加的5场正式比赛 · 得分与MVP</small></div>
-            <div id="recentMatchesPlayer" class="score-list"></div>
           </div>
         </div>
         <div class="card section player-season-data-card player-observatory-panel" style="margin-bottom:16px">
@@ -362,7 +358,7 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.3.8-status-ranking-recent"></script>
+  <script type="module" src="/app.js?v=4.3.9-player-career"></script>
 </body>
 </html>
 

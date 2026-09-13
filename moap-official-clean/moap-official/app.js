@@ -24,7 +24,7 @@ import {
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator
-} from "./animations.js?v=4.2.0-entry-console";
+} from "./animations.js?v=4.3.9-player-career";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1095,8 +1095,6 @@ function renderPlayer(){
   renderCurrentSeasonPerformance(pid);
   renderPlayerSeasonData(pid);
   drawTrend(pid);
-  const rec=playerTimeline(pid).slice(-5).reverse();
-  $("#recentMatchesPlayer").innerHTML=rec.map((r,index)=>`<div class="score-row ${r.isMvp?"mvp":""} ${index===0?"recent-latest":""}" data-recent-match data-recent-index="${index}"><div class="left"><span class="chip">${r.season}·${r.round}</span><span>${r.date}</span>${r.isMvp?'<span class="chip gold recent-mvp-badge">MVP</span>':""}</div><b class="${scoreClass(r.score)}" data-player-number data-animation-key="player-recent-${index}">${fmtScore(r.score)}</b></div>`).join("");
 }
 
 $("#playerSelect").addEventListener("change",e=>{
