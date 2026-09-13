@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.3.9-player-career">
+  <link rel="stylesheet" href="/style.css?v=4.3.10-semantic-icons">
 </head>
 <body>
 
@@ -28,7 +28,7 @@
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
       <span class="badge" id="versionBadge">v2.3.0 Matchup & Honor Detail Upgrade</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
-      <button class="btn" id="exportBtn" type="button">导出当前数据</button>
+      <button class="btn" id="exportBtn" type="button"><svg class="semantic-icon export-icon" data-motion-icon="download" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path data-icon-part="arrow" d="M12 3v11"></path><path data-icon-part="arrow" d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>导出当前数据</span></button>
     </div>
   </header>
 
@@ -257,9 +257,9 @@
         </div>
 
         <footer class="entry-commit-bar">
-          <div class="entry-commit-status"><span>VALIDATION STATUS</span><strong id="entryCommitStatus">CHECK REQUIRED</strong></div>
+          <div class="entry-commit-status"><span>VALIDATION STATUS</span><strong id="entryCommitStatus"><span class="entry-check-icon" data-entry-check-icon hidden><svg class="semantic-icon" data-motion-icon="check-circle" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12 2.6 2.6L16.5 9"></path></svg></span><span data-entry-status-label>CHECK REQUIRED</span></strong></div>
           <div class="entry-actions">
-            <button class="btn primary" id="saveMatchBtn" type="button">保存比赛与精准对位</button>
+            <button class="btn primary" id="saveMatchBtn" type="button"><svg class="semantic-icon save-icon" data-motion-icon="save" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h8V4M8 20v-6h8v6"></path></svg><span data-save-label>保存比赛与精准对位</span></button>
             <button class="btn" id="clearEntryBtn" type="button">清空</button>
             <button class="btn utility" id="resetDemoBtn" type="button">重新同步云端</button>
           </div>
@@ -323,7 +323,7 @@
             <p>正式数据完整性、认证状态与版本信息</p>
           </div>
           <aside class="system-health-anchor" aria-label="系统健康度">
-            <span>SYSTEM HEALTH</span>
+            <span class="system-health-label"><svg class="semantic-icon system-shield-icon" data-motion-icon="shield" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z"></path><path d="m9 12 2 2 4-4"></path></svg><span>SYSTEM HEALTH</span></span>
             <strong id="systemHealthValue">—</strong>
             <small id="systemHealthStatus">—</small>
           </aside>
@@ -358,7 +358,7 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.3.10-career-motion"></script>
+  <script type="module" src="/app.js?v=4.3.11-semantic-icons"></script>
 </body>
 </html>
 

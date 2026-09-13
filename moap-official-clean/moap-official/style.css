@@ -5961,3 +5961,59 @@ select.moap-native-select{
   [data-view="player"] .player-career-trajectory .trend-wrap{height:260px}
   [data-view="player"] #trendChart .chart-label{font-size:9px}
 }
+
+/* v4.3.10 · semantic SVG icon motion
+   Icons stay inline, inherit the existing semantic color, and never become a global decoration layer. */
+:where(.top-actions,[data-view="overview"],[data-view="status"],[data-view="entry"],[data-view="system"]) .semantic-icon{
+  display:inline-block;
+  flex:0 0 auto;
+  width:1em;
+  height:1em;
+  overflow:visible;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vertical-align:-.16em;
+  pointer-events:none;
+}
+#exportBtn,
+[data-view="entry"] #saveMatchBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+#exportBtn .export-icon{width:14px;height:14px;stroke-width:1.65}
+[data-view="overview"] .command-goat-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+[data-view="overview"] .command-goat-kicker .overview-trophy-icon{width:15px;height:15px;stroke-width:1.65;vertical-align:0}
+[data-view="status"] .status-change-panel b{display:flex;align-items:center;min-height:18px}
+[data-view="status"] .status-trend-value{display:inline-flex;align-items:center;gap:4px;line-height:1}
+[data-view="status"] .status-trend-icon{width:14px;height:14px;stroke-width:1.7;vertical-align:0}
+[data-view="entry"] .entry-commit-status strong{display:flex;align-items:center;gap:6px}
+[data-view="entry"] .entry-check-icon{display:inline-flex;width:15px;height:15px;color:var(--green)}
+[data-view="entry"] #saveMatchBtn .save-icon{width:15px;height:15px;stroke-width:1.65}
+[data-view="system"] .system-health-label{display:flex!important;align-items:center;justify-content:flex-end;gap:6px}
+[data-view="system"] .system-shield-icon{width:14px;height:14px;stroke-width:1.6;vertical-align:0}
+[data-view="system"] .system-audit-result .system-audit-check-icon{display:block;width:14px;height:14px;stroke-width:1.8;vertical-align:0}
+[data-view="system"] .system-audit-result.is-issue .system-audit-check-icon{display:none}
+
+@media(max-width:760px){
+  #exportBtn .export-icon{width:13px;height:13px}
+  [data-view="overview"] .command-goat-kicker .overview-trophy-icon{width:14px;height:14px}
+  [data-view="status"] .status-trend-icon{width:13px;height:13px}
+  [data-view="system"] .system-health-label{justify-content:flex-start}
+}
+
+@media(prefers-reduced-motion:reduce){
+  :where(.top-actions,[data-view="overview"],[data-view="status"],[data-view="entry"],[data-view="system"]) .semantic-icon{
+    transition:none!important;
+    animation:none!important;
+  }
+}
+

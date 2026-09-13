@@ -70,6 +70,63 @@ const enteredSystemViews = new WeakSet();
 const numberHistory = new Map();
 const numberTweens = new Map();
 
+function semanticIconParts(icon){
+  return icon?[...icon.querySelectorAll("path,circle,polyline,line,rect")]:[];
+}
+
+function finishSemanticIcon(icon){
+  if(!icon)return;
+  const gsap=motionEngine();
+  const parts=semanticIconParts(icon);
+  if(gsap&&parts.length)gsap.set(parts,{clearProps:"strokeDasharray,strokeDashoffset"});
+  icon.dataset.iconMotionState="complete";
+}
+
+export function animateSemanticIcon(icon,{delay=0,duration=.42,force=false}={}){
+  if(!icon||!icon.isConnected)return;
+  if(icon.dataset.iconMotionState==="complete"&&!force)return;
+  const parts=semanticIconParts(icon),gsap=motionEngine();
+  if(!parts.length){icon.dataset.iconMotionState="complete";return;}
+  if(motionDisabled()||!gsap){finishSemanticIcon(icon);return;}
+  const lengths=parts.map(part=>{
+    try{return typeof part.getTotalLength==="function"?part.getTotalLength():0;}catch{return 0;}
+  });
+  gsap.killTweensOf(parts);
+  gsap.set(parts,{strokeDasharray:index=>lengths[index]||1,strokeDashoffset:index=>lengths[index]||1});
+  icon.dataset.iconMotionState="drawing";
+  gsap.to(parts,{strokeDashoffset:0,duration,delay,stagger:.018,ease:"power2.out",overwrite:true,onComplete:()=>finishSemanticIcon(icon)});
+}
+
+export function animateSemanticIcons(root,selector="[data-motion-icon]",options={}){
+  if(!root?.querySelectorAll)return;
+  [...root.querySelectorAll(selector)].forEach((icon,index)=>animateSemanticIcon(icon,{...options,delay:(options.delay||0)+index*(options.stagger||.035)}));
+}
+
+export function animateStatusTrendChanges(root,{delay=.12}={}){
+  if(!root?.querySelectorAll)return;
+  const icons=[...root.querySelectorAll('[data-motion-icon="trend-up"], [data-motion-icon="trend-down"]')];
+  const signature=icons.map(icon=>{
+    const holder=icon.closest("[data-icon-key]");
+    return `${holder?.dataset.iconKey||""}:${holder?.dataset.iconState||""}`;
+  }).join("|");
+  if(root.dataset.statusIconSignature===signature){icons.forEach(finishSemanticIcon);return;}
+  root.dataset.statusIconSignature=signature;
+  animateSemanticIcons(root,'[data-motion-icon="trend-up"], [data-motion-icon="trend-down"]',{delay,stagger:.045,duration:.34});
+}
+
+export function animateIconClick(icon,{kind="generic"}={}){
+  if(!icon||motionDisabled())return;
+  const gsap=motionEngine();
+  gsap.killTweensOf(icon);
+  if(kind==="download"){
+    const arrow=[...icon.querySelectorAll('[data-icon-part="arrow"]')];
+    gsap.killTweensOf(arrow);
+    gsap.timeline({defaults:{overwrite:true}}).to(arrow,{y:2,duration:.08,ease:"power1.out"}).to(arrow,{y:0,duration:.12,ease:"power2.out",clearProps:"transform"});
+    return;
+  }
+  gsap.timeline({defaults:{overwrite:true}}).to(icon,{scale:.93,duration:.08,ease:"power1.out"}).to(icon,{scale:1,duration:.14,ease:"power2.out",clearProps:"transform"});
+}
+
 function motionEngine(){
   return gsap;
 }
@@ -256,6 +313,7 @@ function animateOverviewEntry(root){
   rankingRows[0]?.classList.toggle("motion-leader",!motionDisabled());
   if(motionDisabled()){
     clearMotionProps(animated);
+    animateSemanticIcons(root,'[data-motion-icon="trophy"]');
     return;
   }
   clearMotionProps(animated);
@@ -267,6 +325,7 @@ function animateOverviewEntry(root){
   if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
   if(standingCard)overviewTimeline.fromTo(standingCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,ease:MOAP_MOTION.ease.enter},.36);
   if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
+  animateSemanticIcons(root,'[data-motion-icon="trophy"]',{delay:.3,duration:.42});
 }
 
 function animateStatusEntry(root){
@@ -281,6 +340,7 @@ function animateStatusEntry(root){
   enteredStatusViews.add(root);
   if(motionDisabled()||!firstEntry){
     clearMotionProps(animated);
+    animateStatusTrendChanges(root.querySelector("#powerRanking"));
     return;
   }
   clearMotionProps(animated);
@@ -291,6 +351,7 @@ function animateStatusEntry(root){
   if(signals.length)statusTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.32,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.18);
   if(rankingHead)statusTimeline.fromTo(rankingHead,{autoAlpha:SCENE_ENTRY_ALPHA,y:4},{autoAlpha:1,y:0,duration:.27,ease:MOAP_MOTION.ease.enter},.3);
   if(rows.length)statusTimeline.fromTo(rows,{autoAlpha:.6,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,stagger:mobile?.035:.05,ease:MOAP_MOTION.ease.enter},.36);
+  animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.48});
 }
 
 export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}){
@@ -452,7 +513,9 @@ function animateSystemEntry(root){
   const firstEntry=!enteredSystemViews.has(root);
   enteredSystemViews.add(root);
   if(motionDisabled()||!firstEntry){
-    clearMotionProps(animated);return;
+    clearMotionProps(animated);
+    animateSemanticIcons(root,'[data-motion-icon="shield"], [data-motion-icon="audit-check"]');
+    return;
   }
   clearMotionProps(animated);
   systemTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(animated);systemTimeline=null;}});
@@ -460,6 +523,7 @@ function animateSystemEntry(root){
   if(signals.length)systemTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.3,stagger:mobileMotion()?.025:.04,ease:MOAP_MOTION.ease.enter},.12);
   if(audit)systemTimeline.fromTo(audit,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.28);
   if(release)systemTimeline.fromTo(release,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.32);
+  animateSemanticIcons(root,'[data-motion-icon="shield"], [data-motion-icon="audit-check"]',{delay:.34,duration:.4,stagger:.055});
 }
 
 function animateEntryCenter(root){
@@ -485,6 +549,8 @@ function animateEntryCenter(root){
   if(matrix)entryTimeline.fromTo(matrix,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.24,ease:MOAP_MOTION.ease.enter},.22);
   if(matrixCheck)entryTimeline.fromTo(matrixCheck,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.2,ease:MOAP_MOTION.ease.enter},.26);
   if(commit)entryTimeline.fromTo(commit,{autoAlpha:SCENE_ENTRY_ALPHA},{autoAlpha:1,duration:.22,ease:MOAP_MOTION.ease.enter},.3);
+  const checkIcon=root.querySelector('[data-motion-icon="check-circle"]');
+  if(checkIcon&&!checkIcon.closest("[data-entry-check-icon]")?.hidden)animateSemanticIcon(checkIcon,{delay:.46,duration:.35});
 }
 
 export function animateEntryValidation({summary,detail,readyButton,signature,ready=false}){
@@ -503,6 +569,8 @@ export function animateEntryValidation({summary,detail,readyButton,signature,rea
     readyButton.classList.remove("motion-ready-once");
     void readyButton.offsetWidth;
     readyButton.classList.add("motion-ready-once");
+    const checkIcon=document.querySelector('#entryCommitStatus [data-motion-icon="check-circle"]');
+    if(checkIcon)animateSemanticIcon(checkIcon,{delay:.04,duration:.34});
   }
 }
 
@@ -548,6 +616,13 @@ export function prepareViewExperience(root,view){
   if(!root)return;
   prepareSectionReveals(root,view);
   applyAmbientViewState(root,view);
+  if(view==="overview")animateSemanticIcons(root,'[data-motion-icon="trophy"]',{delay:.14,duration:.42});
+  else if(view==="status")animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.16});
+  else if(view==="system")animateSemanticIcons(root,'[data-motion-icon="shield"], [data-motion-icon="audit-check"]',{delay:.16,duration:.4,stagger:.055});
+  else if(view==="entry"){
+    const checkIcon=root.querySelector('[data-motion-icon="check-circle"]');
+    if(checkIcon&&!checkIcon.closest("[data-entry-check-icon]")?.hidden)animateSemanticIcon(checkIcon,{delay:.16,duration:.35});
+  }
 }
 
 export function animateRecordCenterEntry(root){
