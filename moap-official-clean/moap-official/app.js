@@ -45,7 +45,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.11-semantic-icons";
+} from "./animations.js?v=4.3.12-status-intelligence";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";

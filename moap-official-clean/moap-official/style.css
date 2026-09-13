@@ -5750,25 +5750,6 @@ select.moap-native-select{
 
 /* v4.0.12 · Status Ranking information architecture
    The ranking row is an evidence rail: profile, recent scores, change and live index. */
-[data-view="status"] .status-ranking-guide{
-  display:grid;
-  grid-template-columns:72px 230px minmax(360px,1fr) 160px 140px;
-  gap:24px;
-  align-items:baseline;
-  margin:0 0 1px;
-  padding:0 3px 9px 13px;
-  color:rgba(181,198,191,.55);
-  font-size:9px;
-  font-weight:650;
-  letter-spacing:.1em;
-  line-height:1.3;
-  text-transform:uppercase;
-}
-[data-view="status"] .status-ranking-guide span{min-width:0;white-space:nowrap}
-[data-view="status"] .status-ranking-guide span:nth-child(3){text-align:left}
-[data-view="status"] .status-ranking-guide span:nth-child(4),
-[data-view="status"] .status-ranking-guide span:nth-child(5){text-align:right}
-[data-view="status"] .status-ranking-guide i{margin-left:5px;color:rgba(181,198,191,.4);font-size:8px;font-style:normal;letter-spacing:.04em;text-transform:none}
 [data-view="status"] .status-ranking-row,
 [data-view="status"] .status-ranking-row.is-leader{
   box-sizing:border-box;
@@ -5823,10 +5804,8 @@ select.moap-native-select{
 [data-view="status"] .status-ranking-row:active{transform:none!important}
 
 @media(max-width:1320px) and (min-width:761px){
-  [data-view="status"] .status-ranking-guide,
   [data-view="status"] .status-ranking-row,
   [data-view="status"] .status-ranking-row.is-leader{grid-template-columns:58px 190px minmax(270px,1fr) 130px 112px;gap:18px;padding-left:9px}
-  [data-view="status"] .status-ranking-guide{font-size:8px}
   [data-view="status"] .status-player-primary strong{font-size:20px}
   [data-view="status"] .status-ranking-row.is-leader .status-player-primary strong{font-size:24px}
   [data-view="status"] .status-recent-node{padding-right:8px;padding-left:8px}
@@ -5834,7 +5813,6 @@ select.moap-native-select{
 }
 
 @media(max-width:760px){
-  [data-view="status"] .status-ranking-guide{display:none}
   [data-view="status"] .status-ranking-row,
   [data-view="status"] .status-ranking-row.is-leader{
     display:grid;
@@ -6015,4 +5993,109 @@ select.moap-native-select{
     transition:none!important;
     animation:none!important;
   }
+}
+
+/* Status Center · State Intelligence integration */
+[data-view="status"] .status-ranking-stage{margin-bottom:72px}
+[data-view="status"] .status-intelligence-stage{
+  margin:0;
+  padding:0 0 4px;
+}
+[data-view="status"] .status-intelligence-head{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:20px;
+  margin:0;
+  padding:0 2px 13px;
+  border-bottom:1px solid var(--status-rule-strong);
+}
+[data-view="status"] .status-intelligence-head span,
+[data-view="status"] .status-intelligence-subhead span{
+  display:block;
+  color:var(--gold2);
+  font-size:9px;
+  font-weight:760;
+  letter-spacing:.14em;
+}
+[data-view="status"] .status-intelligence-head h3{
+  margin:6px 0 0;
+  color:var(--text);
+  font-size:clamp(20px,1.9vw,26px);
+  letter-spacing:-.018em;
+}
+[data-view="status"] .status-intelligence-head>small{
+  color:var(--status-muted);
+  font-size:9px;
+  letter-spacing:.06em;
+  text-align:right;
+}
+[data-view="status"] .status-intelligence-signal,
+[data-view="status"] .status-intelligence-observation,
+[data-view="status"] .status-intelligence-method{
+  margin:0;
+  padding:31px 0 0;
+}
+[data-view="status"] .status-intelligence-observation,
+[data-view="status"] .status-intelligence-method{
+  margin-top:34px;
+  border-top:1px solid var(--status-rule);
+}
+[data-view="status"] .status-intelligence-subhead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  margin:0 0 17px;
+  padding:0 2px;
+}
+[data-view="status"] .status-intelligence-subhead small{
+  color:var(--status-muted);
+  font-size:9px;
+  letter-spacing:.06em;
+}
+[data-view="status"] .status-intelligence-signal .status-signal-rail{border-bottom:0}
+[data-view="status"] .status-intelligence-observation .status-observation-grid{border-top:0}
+[data-view="status"] .status-intelligence-method .status-method-list{border-top:0}
+[data-view="status"] .status-intelligence-method .status-method-list{
+  display:flex;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--status-rule);
+}
+[data-view="status"] .status-intelligence-method .status-method-row,
+[data-view="status"] .status-intelligence-method .status-method-row:nth-child(3n+1){
+  flex:1 1 16%;
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  padding:11px 16px;
+  border-top:0;
+  border-left:1px solid var(--status-rule);
+}
+[data-view="status"] .status-intelligence-method .status-method-row:first-child{padding-left:2px;border-left:0}
+[data-view="status"] .status-intelligence-method .status-method-row>i{display:none}
+
+@media(max-width:760px){
+  [data-view="status"] .status-ranking-stage{margin-bottom:52px}
+  [data-view="status"] .status-intelligence-stage{padding-bottom:0}
+  [data-view="status"] .status-intelligence-head{align-items:flex-start;gap:9px;padding:0 1px 12px}
+  [data-view="status"] .status-intelligence-head h3{font-size:21px}
+  [data-view="status"] .status-intelligence-head>small{max-width:145px;font-size:8px;line-height:1.45;text-align:right}
+  [data-view="status"] .status-intelligence-signal,
+  [data-view="status"] .status-intelligence-observation,
+  [data-view="status"] .status-intelligence-method{padding-top:25px}
+  [data-view="status"] .status-intelligence-observation,
+  [data-view="status"] .status-intelligence-method{margin-top:29px}
+  [data-view="status"] .status-intelligence-subhead{margin-bottom:12px;padding:0 1px}
+  [data-view="status"] .status-intelligence-subhead span{font-size:8px}
+  [data-view="status"] .status-intelligence-subhead small{font-size:8px}
+  [data-view="status"] .status-intelligence-method .status-method-list{display:flex;flex-direction:column}
+  [data-view="status"] .status-intelligence-method .status-method-row,
+  [data-view="status"] .status-intelligence-method .status-method-row:nth-child(3n+1){
+    flex:1 1 auto;
+    padding:11px 1px;
+    border-top:1px solid var(--status-rule);
+    border-left:0;
+  }
+  [data-view="status"] .status-intelligence-method .status-method-row:first-child{padding-left:1px;border-top:0}
 }

@@ -272,7 +272,7 @@ function prepareSectionReveals(root,view){
   if(!root?.querySelectorAll)return;
   const selectorByView={
     overview:".overview-editorial-recap,.monthly-report-card",
-    status:".status-observation-stage,.status-method-stage",
+    status:".status-intelligence-stage",
     player:".player-season-data-card",
     rival:".rival-flow-stage,.rival-pair-lens"
   };
@@ -331,7 +331,7 @@ function animateOverviewEntry(root){
 function animateStatusEntry(root){
   const gsap=motionEngine();
   statusTimeline?.kill();
-  const signalHead=root.querySelector(".status-signal-stage .status-stage-head");
+  const signalHead=root.querySelector(".status-signal-stage .status-intelligence-subhead");
   const signals=[...root.querySelectorAll("#statusKpis > .status-signal-cell")];
   const rankingHead=root.querySelector(".status-ranking-stage .status-stage-head");
   const rows=[...root.querySelectorAll("#powerRanking > .status-ranking-row")].slice(0,6);
@@ -1249,4 +1249,3 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
     .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
     .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
 }
-
