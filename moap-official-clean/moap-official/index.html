@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.3.1-goat-standing">
+  <link rel="stylesheet" href="/style.css?v=4.3.3-record-query-layout">
 </head>
 <body>
 
@@ -97,14 +97,16 @@
 
         <section class="records-query-stage records-ledger-stage record-center-card" aria-labelledby="recordQueryTitle">
           <header class="records-query-head record-toolbar">
-            <div><span class="records-kicker">RECORD QUERY</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与证据链</small></div>
-            <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
-              <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
-              <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-              <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+            <div class="record-query-copy"><span class="records-kicker">RECORD QUERY</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与证据链</small><small class="records-method-note" id="recordMethodNote"></small></div>
+            <div class="record-filter-cluster">
+              <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
+                <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
+                <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
+                <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+              </div>
+              <div class="records-result-count" id="recordResultCount" aria-live="polite"><span>RESULT</span><strong>— RECORDS</strong><small>— 项记录</small></div>
             </div>
           </header>
-          <div class="record-summary records-context-rail" id="recordSummary"></div>
           <div class="records-table-surface records-desktop-ledger table-scroll record-table-scroll">
             <table class="record-table">
               <thead id="recordTableHead"><tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>

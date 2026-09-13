@@ -262,8 +262,6 @@ select:disabled{opacity:.48;cursor:not-allowed}
 /* v1.8 MSL Record Center */
 .record-center-card{padding-top:15px}
 .record-toolbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-.record-summary{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;padding:12px 13px;border:1px solid rgba(215,178,91,.15);border-radius:12px;background:rgba(215,178,91,.055)}
-.record-summary div{display:flex;gap:9px;align-items:center}.record-summary span,.record-summary small{color:var(--muted);font-size:11px;line-height:1.55}.record-summary small{max-width:720px;text-align:right}
 .record-table-scroll{max-height:70vh;border:1px solid var(--line2);border-radius:14px;overflow:auto}
 .record-table{min-width:900px}.record-table thead th{position:sticky;top:0;z-index:3;background:#0b2922;white-space:nowrap}.record-table td{vertical-align:middle}.record-table td:first-child{min-width:260px}.record-table td:first-child strong{display:block}.record-table td:first-child small{display:block;margin-top:5px;max-width:520px;color:var(--muted);font-size:10px;line-height:1.5}.record-row{cursor:pointer}.record-row:hover{background:rgba(215,178,91,.035)}.record-detail-btn{padding:7px 10px;font-size:11px;white-space:nowrap}
 .record-modal-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(3,7,18,.8);backdrop-filter:blur(8px)}
@@ -274,7 +272,7 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .record-modal-section{margin-top:22px}.record-modal-section>h3{margin:0 0 10px;color:var(--gold2);font-size:14px}.record-modal-section>p{margin:0;color:#dce6e2;line-height:1.75;font-size:13px}.record-info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:13px}.record-info-grid>div{padding:11px;border-radius:11px;background:rgba(255,255,255,.035)}.record-info-grid span{display:block;color:var(--muted);font-size:10px}.record-info-grid b{display:block;margin-top:5px;font-size:13px}
 .record-ranking-list{border:1px solid var(--line2);border-radius:13px;overflow:hidden}.record-ranking-row{display:grid;grid-template-columns:45px 1fr 130px 95px;gap:11px;align-items:center;padding:11px 13px;border-top:1px solid var(--line2)}.record-ranking-row:first-child{border-top:0}.record-ranking-row.is-holder{background:rgba(215,178,91,.075)}.record-ranking-row>span{color:var(--muted)}.record-ranking-row small{display:block;margin-top:3px;color:var(--muted);font-size:10px}.record-ranking-row>b{text-align:right;color:var(--gold2)}.record-ranking-row time{text-align:right;color:var(--muted);font-size:11px}
 .record-evidence-list{display:grid;gap:8px}.record-evidence-list article{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035)}.record-evidence-list article span{display:block;margin-top:4px;color:var(--muted);font-size:10px}.record-evidence-list article>div:last-child{text-align:right}.record-evidence-list article>div:last-child b{display:block;font-size:17px}.record-evidence-list article>div:last-child small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.record-modal-footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line2);color:var(--muted);font-size:11px}
-@media(max-width:760px){.record-toolbar,.record-summary{align-items:stretch;flex-direction:column}.record-summary small{text-align:left}.record-info-grid{grid-template-columns:repeat(2,1fr)}.record-modal{padding:19px;border-radius:17px}.record-modal-header{flex-direction:column}.record-modal-header h2{font-size:22px}.record-ranking-row{grid-template-columns:36px 1fr 100px}.record-ranking-row time{display:none}}
+@media(max-width:760px){.record-toolbar{align-items:stretch;flex-direction:column}.record-info-grid{grid-template-columns:repeat(2,1fr)}.record-modal{padding:19px;border-radius:17px}.record-modal-header{flex-direction:column}.record-modal-header h2{font-size:22px}.record-ranking-row{grid-template-columns:36px 1fr 100px}.record-ranking-row time{display:none}}
 @media(max-width:480px){.record-info-grid{grid-template-columns:1fr 1fr}.record-evidence-list article{grid-template-columns:1fr}.record-evidence-list article>div:last-child{text-align:left}}
 
 /* v1.8.1 Record Center + GOAT model */
@@ -418,7 +416,6 @@ select:disabled{opacity:.48;cursor:not-allowed}
 .record-filter-row select{display:block;margin-top:5px;min-width:116px}
 .record-filter-row.compact{align-items:center}
 .record-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.record-summary{margin-bottom:10px;font-size:10px;line-height:1.6;color:var(--muted)}
 .record-table th,.record-table td{white-space:nowrap}
 .record-table tbody tr{transition:background .15s ease}.record-table tbody tr:hover{background:rgba(255,255,255,.018)}
 .explosion-table{min-width:1120px}
@@ -1903,16 +1900,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
 }
 .record-data-head .record-query-toolbar{margin-left:auto}
 .record-center-card .record-toolbar{margin-bottom:0;border-radius:var(--radius-md) var(--radius-md) 0 0}
-.record-center-card .record-summary{
-  margin:0;
-  border-top:0;
-  border-radius:0;
-  background:rgba(215,178,91,.035);
-}
-.record-summary div{min-width:max-content}
-.record-summary div b{color:var(--gold2);font-size:12px}
-.record-summary div span{font-weight:620;color:var(--text)}
-.record-summary>small{max-width:68%;opacity:.68;font-size:9px}
 .record-table-scroll{border:1px solid rgba(168,183,177,.08);border-top:0;border-radius:0 0 var(--radius-md) var(--radius-md)}
 .record-center-card #recordTableBody td:first-child strong{display:block;color:var(--text);font-size:12px}
 .record-center-card #recordTableBody td:first-child small{display:block;max-width:420px;margin-top:4px;color:rgba(168,183,177,.65);font-size:9px;white-space:normal;line-height:1.55}
@@ -1984,9 +1971,6 @@ tbody tr:hover{background:rgba(215,178,91,.025)}
   .overview-metrics-strip .kpi:last-child{grid-column:1/-1}
   .record-data-head .record-query-toolbar{margin-left:0}
   .record-query-toolbar{width:100%;align-items:stretch}
-  .record-summary{gap:7px}
-  .record-summary div{min-width:0;align-items:flex-start;flex-direction:column;gap:3px}
-  .record-summary>small{max-width:none}
   .profile-identity{gap:12px}
   .player-portrait-shell{flex:0 0 104px;width:104px;height:110px}
   .profile-name-block h3{font-size:21px}
@@ -5199,22 +5183,14 @@ select.moap-native-select{
 [data-view="records"] .record-data-leaderboard[data-metric="soloLoss"] td:nth-child(5),
 [data-view="records"] .record-data-leaderboard[data-metric="explosion"] td:nth-child(5){font-weight:720}
 
-[data-view="records"] .records-context-rail,
-[data-view="records"] .record-center-card .record-summary{
-  display:block;
-  margin:0;
-  padding:16px 0 17px;
-  border:0;
-  border-top:1px solid var(--records-rule-strong);
-  border-radius:0;
-  background:transparent;
-  box-shadow:none;
-}
-[data-view="records"] .records-context-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;align-items:start;min-width:0}
-[data-view="records"] .records-context-facts>span{display:block;min-width:0}
-[data-view="records"] .records-context-facts small{display:block;color:rgba(168,183,177,.57);font-size:8px;letter-spacing:.1em}
-[data-view="records"] .records-context-facts b{display:block;margin-top:5px;color:var(--records-soft);font-size:12px;font-weight:680}
-[data-view="records"] .records-method-note{display:block;max-width:930px!important;margin-top:14px;color:rgba(168,183,177,.57)!important;font-size:9px!important;line-height:1.65!important;text-align:left!important}
+[data-view="records"] .record-filter-cluster{display:flex;min-width:0;flex-direction:column;align-items:flex-end;gap:11px}
+[data-view="records"] .record-filter-cluster .record-query-toolbar{grid-template-columns:repeat(3,minmax(130px,150px))}
+[data-view="records"] .records-result-count{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;min-height:15px;color:var(--records-muted);font-size:9px;line-height:1.4;text-align:right}
+[data-view="records"] .records-result-count>span{color:rgba(168,183,177,.55);font-size:8px;font-weight:700;letter-spacing:.12em}
+[data-view="records"] .records-result-count>strong{color:var(--gold2);font-size:12px;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+[data-view="records"] .records-result-count>small{color:var(--records-muted);font-size:9px}
+[data-view="records"] .record-query-copy .records-method-note{display:block;max-width:560px!important;margin-top:11px;color:rgba(168,183,177,.57)!important;font-size:11px!important;line-height:1.55!important;text-align:left!important}
+[data-view="records"] .record-query-copy .records-method-note:empty{display:none}
 [data-view="records"] .records-desktop-ledger{border-top-color:var(--records-rule)}
 [data-view="records"] .record-center-card .record-table th:nth-child(1),
 [data-view="records"] .record-center-card .record-table td:nth-child(1){width:auto;min-width:280px;text-align:left}
@@ -5333,10 +5309,6 @@ select.moap-native-select{
   [data-view="records"] .records-mobile-tier-grid b{font-size:11px;font-variant-numeric:tabular-nums}
   [data-view="records"] .records-mobile-games{display:block;margin:9px 0 0 36px;color:rgba(168,183,177,.55);font-size:8px;line-height:1.5}
   [data-view="records"] .records-ledger-stage{margin-top:47px;padding-top:39px}
-  [data-view="records"] .records-context-rail,
-  [data-view="records"] .record-center-card .record-summary{padding:14px 0 15px}
-  [data-view="records"] .records-context-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 18px}
-  [data-view="records"] .records-method-note{margin-top:13px!important;font-size:8px!important}
   [data-view="records"] .records-mobile-ledger{border-top-color:var(--records-rule)}
   [data-view="records"] .records-mobile-record{
     display:grid;
@@ -5388,7 +5360,6 @@ select.moap-native-select{
   [data-view="records"] .records-mobile-tier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   [data-view="records"] .records-mobile-tier-grid>span:nth-child(3n+1){padding-left:10px;border-left:1px solid rgba(168,183,177,.075)}
   [data-view="records"] .records-mobile-tier-grid>span:nth-child(odd){padding-left:0;border-left:0}
-  [data-view="records"] .records-context-facts{gap:11px 12px}
   [data-view="records"] .records-mobile-record{column-gap:10px}
   [data-view="records"] .records-mobile-record-value{font-size:19px}
   #recordModalBackdrop .record-info-grid{grid-template-columns:1fr}
@@ -5809,5 +5780,36 @@ select.moap-native-select{
   [data-view="overview"] .command-goat-standing #goatRanking .goat-row-title strong{font-size:12px}
   [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-row-title strong{font-size:18px}
   [data-view="overview"] .command-goat-standing #goatRanking .goat-row:first-child .goat-score-v2 b{font-size:24px}
+}
+
+/* v4.0.11 · Records Query layout cleanup
+   Filters and result count share the query header; the legacy context rail is gone. */
+[data-view="records"] .records-query-stage .records-query-head.record-toolbar{
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) auto;
+  gap:36px;
+  align-items:end;
+  margin-bottom:24px;
+}
+[data-view="records"] .record-query-copy{min-width:0}
+[data-view="records"] .record-filter-cluster{max-width:100%;align-items:flex-end}
+[data-view="records"] .records-result-count{padding-right:2px}
+[data-view="records"] .records-ledger-stage .records-table-surface{margin-top:0}
+@media(max-width:900px){
+  [data-view="records"] .record-toolbar{gap:28px}
+}
+@media(max-width:760px){
+  [data-view="records"] .records-query-stage .records-query-head.record-toolbar{display:block;margin-bottom:22px}
+  [data-view="records"] .record-filter-cluster{width:100%;margin-top:20px;align-items:stretch;gap:12px}
+  [data-view="records"] .record-filter-cluster .record-query-toolbar{width:100%;margin-top:0}
+  [data-view="records"] .records-query-stage .record-filter-cluster .records-record-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-view="records"] .records-result-count{justify-content:flex-start;padding:0 1px;text-align:left}
+  [data-view="records"] .records-result-count>strong{font-size:12px}
+  [data-view="records"] .record-query-copy .records-method-note{max-width:none!important;margin-top:10px}
+}
+@media(max-width:340px){
+  [data-view="records"] .record-filter-cluster{margin-top:17px}
+  [data-view="records"] .records-query-stage .record-filter-cluster .records-record-filters{grid-template-columns:1fr}
+  [data-view="records"] .records-result-count{gap:6px}
 }
 

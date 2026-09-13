@@ -906,8 +906,9 @@ function renderRecords({includeLeaderboard=true}={}){
   if(seasonSel){recordSeason=seasonSel.value||recordSeason;seasonSel.value=recordSeason;}
   if(typeSel){recordType=typeSel.value||recordType;typeSel.value=recordType;}
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
-  const sectionNames={single:"单场记录",continuous:"连续记录"},typeNames={all:"全部比赛",four:"四人局",five:"五人局"},seasonName=recordSeason==="all"?"全部赛季":recordSeason;
-  $("#recordSummary").innerHTML=`<div class="records-context-facts"><span><small>RECORD TYPE</small><b>${sectionNames[recordSection]}</b></span><span><small>SEASON</small><b>${seasonName}</b></span><span><small>MATCH TYPE</small><b>${typeNames[recordType]}</b></span><span><small>RESULT</small><b>${records.length} 项记录</b></span></div><small class="records-method-note">${escapeHtml(center.methodology||"")}</small>`;
+  const resultCount=$("#recordResultCount"),methodNote=$("#recordMethodNote");
+  if(resultCount)resultCount.innerHTML=`<span>RESULT</span><strong>${records.length} RECORDS</strong><small>${records.length} 项记录</small>`;
+  if(methodNote)methodNote.textContent=center.methodology||"";
   $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
   $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看纪录 →</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
   const mobile=$("#recordLedgerMobile");if(mobile)mobile.innerHTML=recordLedgerMobileHtml(records);
@@ -932,7 +933,7 @@ function openRecordModal(recordId){
 function refreshRecordResults(updateState){
   const root=$('.view[data-view="records"]');
   transitionRecordContent({
-    targets:[$("#recordSummary"),root?.querySelector(".records-desktop-ledger"),$("#recordLedgerMobile")].filter(Boolean),
+    targets:[$("#recordResultCount"),root?.querySelector(".records-desktop-ledger"),$("#recordLedgerMobile")].filter(Boolean),
     update:()=>{updateState();renderRecords({includeLeaderboard:false});},
     onUpdated:()=>animateNumbers(root)
   });

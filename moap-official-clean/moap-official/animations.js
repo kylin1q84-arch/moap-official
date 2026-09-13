@@ -563,7 +563,6 @@ export function animateRecordCenterEntry(root){
   const regions=[
     root.querySelector(".records-desktop-ranking"),
     root.querySelector("#dataLeaderboardMobile"),
-    root.querySelector("#recordSummary"),
     root.querySelector(".records-desktop-ledger"),
     root.querySelector("#recordLedgerMobile")
   ].filter(Boolean);
