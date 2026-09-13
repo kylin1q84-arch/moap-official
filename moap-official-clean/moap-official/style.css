@@ -5442,9 +5442,9 @@ select.moap-native-select{
 [data-view="entry"] .entry-sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 
 [data-view="entry"] .entry-validation-console{
-  position:sticky;
-  top:18px;
-  z-index:2;
+  position:static;
+  top:auto;
+  z-index:auto;
   margin:0;
   padding:16px 0 18px;
   border-top:1px solid var(--entry-rule-strong);
@@ -6016,4 +6016,3 @@ select.moap-native-select{
     animation:none!important;
   }
 }
-
