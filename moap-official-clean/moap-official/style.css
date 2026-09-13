@@ -2287,15 +2287,6 @@ select.moap-native-select{
   to{transform:translate3d(4px,0,0) scale(1.01);opacity:.38}
 }
 
-.season-match-log.motion-rail-reveal::before{
-  transform-origin:top center;
-  animation:moapRailReveal .62s cubic-bezier(.22,.61,.36,1) both;
-}
-@keyframes moapRailReveal{
-  from{transform:scaleY(0);opacity:0}
-  to{transform:scaleY(1);opacity:1}
-}
-
 .validation,
 .validation-console-head>b,
 .validation-console-grid b{
@@ -2324,7 +2315,6 @@ select.moap-native-select{
 @media(prefers-reduced-motion:reduce){
   .command-goat-spotlight.motion-atmosphere::after,
   .goat-row.motion-leader::after,
-  .season-match-log.motion-rail-reveal::before,
   #saveMatchBtn.motion-ready-once{
     animation:none!important;
     transform:none!important;
@@ -3965,22 +3955,13 @@ select.moap-native-select{
 [data-view="matches"] .match-ledger{
   position:relative;
   display:block;
-  padding-left:29px;
-}
-[data-view="matches"] .match-ledger::before{
-  content:"";
-  position:absolute;
-  top:6px;
-  bottom:6px;
-  left:7px;
-  width:1px;
-  background:linear-gradient(180deg,rgba(215,178,91,.34),rgba(168,183,177,.08));
+  padding-left:0;
 }
 [data-view="matches"] .match-ledger-row{
   position:relative;
   width:100%;
   min-height:92px;
-  padding:16px 2px 15px 13px;
+  padding:16px 2px 15px;
   border:0;
   border-bottom:1px solid var(--match-rule);
   border-radius:0;
@@ -3996,18 +3977,6 @@ select.moap-native-select{
 [data-view="matches"] .match-ledger-row.is-clickable:focus-visible{outline:1px solid rgba(215,178,91,.5);outline-offset:-1px}
 [data-view="matches"] .match-ledger-row:hover,
 [data-view="matches"] .match-ledger-row:active{transform:none!important}
-[data-view="matches"] .match-timeline-node{
-  position:absolute;
-  left:-26px;
-  top:24px;
-  width:8px;
-  height:8px;
-  border:2px solid var(--surface-0);
-  border-radius:50%;
-  background:rgba(168,183,177,.5);
-  box-shadow:0 0 0 1px rgba(168,183,177,.13);
-}
-[data-view="matches"] .match-ledger-row.is-latest .match-timeline-node{background:var(--gold);box-shadow:0 0 0 1px rgba(215,178,91,.35)}
 [data-view="matches"] .match-ledger-row-head{
   display:grid;
   grid-template-columns:146px minmax(0,1fr) auto;
@@ -4121,11 +4090,9 @@ select.moap-native-select{
   [data-view="matches"] .match-query-bar .moap-select-trigger,
   [data-view="matches"] .match-query-bar .match-player-trigger,
   [data-view="matches"] .match-query-bar input{height:46px;min-height:46px}
-  [data-view="matches"] .match-ledger{padding-left:19px}
-  [data-view="matches"] .match-ledger::before{left:2px}
+  [data-view="matches"] .match-ledger{padding-left:0}
   [data-view="matches"] .match-ledger-row,
-  [data-view="matches"] .match-ledger-row.is-latest{min-height:0;padding:17px 0 17px 8px}
-  [data-view="matches"] .match-timeline-node{left:-20px;top:24px;width:7px;height:7px}
+  [data-view="matches"] .match-ledger-row.is-latest{min-height:0;padding:17px 0}
   [data-view="matches"] .match-ledger-row-head{
     grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"id view" "meta meta";

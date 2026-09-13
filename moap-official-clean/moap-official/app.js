@@ -45,7 +45,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.12-status-intelligence";
+} from "./animations.js?v=4.3.13-match-ledger";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1156,7 +1156,7 @@ function matchResultStripHtml(played,{detail=false}={}){
 }
 function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=matchOrdinal(m.matchId)>=67,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
-  return `<article class="season-log-entry match-ledger-row ${precise?"is-clickable":""} ${isLatest?"is-latest":""}" ${precise?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><span class="match-timeline-node" aria-hidden="true"></span><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">LATEST TRANSMISSION</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${precise?'<span class="match-ledger-view">VIEW MATCH →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
+  return `<article class="season-log-entry match-ledger-row ${precise?"is-clickable":""} ${isLatest?"is-latest":""}" ${precise?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">LATEST TRANSMISSION</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${precise?'<span class="match-ledger-view">VIEW MATCH →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
 }
 function ensureMatchModal(){
   if($("#matchModalBackdrop"))return;

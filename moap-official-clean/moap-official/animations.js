@@ -354,20 +354,16 @@ function animateStatusEntry(root){
   animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.48});
 }
 
-export function animateMatchRows(root,{startIndex=0,includeRail=true,delay=0}={}){
+export function animateMatchRows(root,{startIndex=0,delay=0}={}){
   if(!root?.querySelectorAll)return;
   const gsap=motionEngine();
   const rows=[...root.querySelectorAll(".season-log-entry")].slice(startIndex,startIndex+8);
-  const nodes=rows.map(row=>row.querySelector(".match-timeline-node")).filter(Boolean);
-  if(includeRail)root.classList.remove("motion-rail-reveal");
   if(motionDisabled()){
-    clearExtendedMotionProps([...rows,...nodes]);
+    clearExtendedMotionProps(rows);
     return;
   }
   const mobile=mobileMotion();
-  if(includeRail){void root.offsetWidth;root.classList.add("motion-rail-reveal");}
   gsap.fromTo(rows,{autoAlpha:.7,y:mobile?3:5},{autoAlpha:1,y:0,duration:mobile?.27:.33,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
-  if(nodes.length)gsap.fromTo(nodes,{autoAlpha:.68},{autoAlpha:1,duration:.22,stagger:.04,delay:delay+.06,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility"});
 }
 
 function animateMatchesEntry(root){
@@ -400,7 +396,7 @@ export function transitionMatchContent({target,update,onUpdated,append=false,sta
   }
   if(append){
     update();
-    animateMatchRows(target,{startIndex,includeRail:false});
+    animateMatchRows(target,{startIndex});
     onUpdated?.();
     return;
   }
