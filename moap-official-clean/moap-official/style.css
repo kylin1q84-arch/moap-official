@@ -5887,7 +5887,7 @@ select.moap-native-select{
 [data-view="status"] .status-ranking-row:hover,
 [data-view="status"] .status-ranking-row:active{transform:none!important}
 
-@media(max-width:1080px) and (min-width:761px){
+@media(max-width:1320px) and (min-width:761px){
   [data-view="status"] .status-ranking-guide,
   [data-view="status"] .status-ranking-row,
   [data-view="status"] .status-ranking-row.is-leader{grid-template-columns:58px 190px minmax(270px,1fr) 130px 112px;gap:18px;padding-left:9px}
