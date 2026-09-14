@@ -6281,6 +6281,7 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
 [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters .moap-select-trigger{height:42px;min-height:42px}
 [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table{min-width:680px}
 [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table th,[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table td{padding:9px 7px}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-body>.table-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden}
 [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-summary-cards{display:none}
 
 @media(max-width:980px){

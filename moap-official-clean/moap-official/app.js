@@ -45,7 +45,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.15-season-performance";
+} from "./animations.js?v=4.3.16-season-overflow";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
