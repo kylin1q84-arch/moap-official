@@ -6211,3 +6211,32 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
   body main .view .page-identity .page-identity-title{font-size:27px}
   body main .view .page-identity{gap:8px;margin-bottom:24px;padding-bottom:14px}
 }
+
+/* MOAP 4.0 · Match Detail — precise matchup focus */
+#matchModalBackdrop .match-detail-modal{
+  width:min(1360px,94vw);
+  max-width:1360px;
+}
+#matchModalBackdrop .match-detail-modal.match-detail-four{width:min(1220px,94vw)}
+#matchModalBackdrop .match-detail-modal.match-detail-five{width:min(1360px,94vw)}
+#matchModalBackdrop .match-detail-modal .honor-modal-header{padding-bottom:3px}
+#matchModalBackdrop .match-detail-focus,
+#matchModalBackdrop .match-detail-empty{margin-top:17px}
+#matchModalBackdrop .match-detail-focus h3,
+#matchModalBackdrop .match-detail-empty h3{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+#matchModalBackdrop .match-detail-focus h3 span,
+#matchModalBackdrop .match-detail-empty h3 span{color:var(--muted);font-size:8px;font-weight:720;letter-spacing:.14em}
+#matchModalBackdrop .match-detail-empty{padding-top:15px;border-top:1px solid var(--line2)}
+#matchModalBackdrop .match-detail-empty p{color:var(--muted);font-size:11px}
+
+@media(max-width:760px){
+  #matchModalBackdrop .match-detail-modal,
+  #matchModalBackdrop .match-detail-modal.match-detail-four,
+  #matchModalBackdrop .match-detail-modal.match-detail-five{width:calc(100vw - 16px);max-width:none;padding:17px}
+  #matchModalBackdrop .match-detail-focus,
+  #matchModalBackdrop .match-detail-empty{margin-top:14px}
+  #matchModalBackdrop .match-detail-focus h3,
+  #matchModalBackdrop .match-detail-empty h3{display:block;line-height:1.4}
+  #matchModalBackdrop .match-detail-focus h3 span,
+  #matchModalBackdrop .match-detail-empty h3 span{display:block;margin-bottom:4px}
+}

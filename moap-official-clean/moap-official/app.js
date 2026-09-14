@@ -45,7 +45,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.13-match-ledger";
+} from "./animations.js?v=4.3.14-match-detail";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -1177,9 +1177,15 @@ function singleMatchMatrixHtml(match){
 }
 function openMatchModal(matchId){
   const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
-  ensureMatchModal();const pp=match.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score);
-  const precise=matchOrdinal(match.matchId)>=67?`<div class="honor-modal-section"><h3>本场精准对位矩阵</h3>${singleMatchMatrixHtml(match)}</div>`:"";
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header><div class="honor-modal-section"><h3>本场成绩</h3>${matchResultStripHtml(pp,{detail:true})}</div>${precise}`;
+  ensureMatchModal();
+  const participants=match.results.filter(r=>!r.isAbsent&&r.score!=null).length;
+  const modal=$("#matchModalBackdrop .match-detail-modal");
+  modal?.classList.toggle("match-detail-four",participants===4);
+  modal?.classList.toggle("match-detail-five",participants===5);
+  const precise=matchOrdinal(match.matchId)>=67
+    ?`<div class="honor-modal-section match-detail-focus"><h3><span>PRECISE MATCHUP</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
+    :`<div class="honor-modal-section match-detail-empty"><h3><span>PRECISION DATA</span>本场未启用精准对位记录</h3><p>精准对位数据自 MSL0067 起开始记录。</p></div>`;
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${precise}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
