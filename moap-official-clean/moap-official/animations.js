@@ -274,7 +274,7 @@ function prepareSectionReveals(root,view){
     overview:".overview-editorial-recap,.overview-season-spotlight,.monthly-report-card",
     status:".status-intelligence-stage",
     player:".player-season-data-card",
-    rival:".rival-flow-stage,.rival-pair-lens"
+    rival:".rival-pair-lens,.rival-flow-stage"
   };
   const selector=selectorByView[view];
   if(!selector)return;
@@ -453,7 +453,7 @@ function animateRivalEntry(root){
   const summaryRows=[...root.querySelectorAll("#rivalSummaryTable > .rival-summary-row")];
   const flowStage=root.querySelector(".rival-flow-stage");
   const pairLens=root.querySelector(".rival-pair-lens");
-  const animated=[...sceneHeaderParts(root),...signals,matrixStage,...matrixRows,flowStage,...summaryRows,pairLens].filter(Boolean);
+  const animated=[...sceneHeaderParts(root),...signals,matrixStage,...matrixRows,pairLens,flowStage,...summaryRows].filter(Boolean);
   bindRivalMatrixFocus(root);
   if(motionDisabled()){
     clearMotionProps(animated);
@@ -465,9 +465,9 @@ function animateRivalEntry(root){
   if(signals.length)rivalTimeline.fromTo(signals,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?3:5},{autoAlpha:1,y:0,duration:.28,stagger:mobileMotion()?.02:.035,ease:MOAP_MOTION.ease.enter},.12);
   if(matrixStage)rivalTimeline.fromTo(matrixStage,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobileMotion()?4:7},{autoAlpha:1,y:0,duration:mobileMotion()?.3:.38,ease:MOAP_MOTION.ease.enter},.24);
   if(matrixRows.length)rivalTimeline.fromTo(matrixRows,{autoAlpha:SCENE_ENTRY_ALPHA,x:mobileMotion()?-2:-4},{autoAlpha:1,x:0,duration:mobileMotion()?.22:.27,stagger:mobileMotion()?.02:.03,ease:MOAP_MOTION.ease.enter},.34);
-  if(flowStage)rivalTimeline.fromTo(flowStage,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.44);
-  if(summaryRows.length)rivalTimeline.fromTo(summaryRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.22,stagger:.025,ease:MOAP_MOTION.ease.enter},.5);
-  if(pairLens)rivalTimeline.fromTo(pairLens,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.58);
+  if(pairLens)rivalTimeline.fromTo(pairLens,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.28,ease:MOAP_MOTION.ease.enter},.48);
+  if(flowStage)rivalTimeline.fromTo(flowStage,{autoAlpha:SCENE_ENTRY_ALPHA,y:5},{autoAlpha:1,y:0,duration:.3,ease:MOAP_MOTION.ease.enter},.65);
+  if(summaryRows.length)rivalTimeline.fromTo(summaryRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:3},{autoAlpha:1,y:0,duration:.22,stagger:.025,ease:MOAP_MOTION.ease.enter},.71);
 }
 
 export function transitionRivalContent({root,update,onUpdated}){

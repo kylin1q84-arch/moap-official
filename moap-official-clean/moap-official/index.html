@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.3.17-season-mobile-guard">
+  <link rel="stylesheet" href="/style.css?v=4.3.18-rival-workspace">
 </head>
 <body>
 
@@ -287,21 +287,27 @@
 
         <section class="rival-signal-rail" id="rivalKpis" aria-label="对位追踪信号"></section>
 
-        <section class="rival-matrix-stage">
-          <header class="rival-stage-head">
-            <div>
-              <span class="rival-eyebrow">RELATIONSHIP MATRIX</span>
-              <h3>方向对位矩阵</h3>
-              <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
-            </div>
-            <div class="segmented-control" id="rivalModeToggle" aria-label="对位统计口径">
-              <button type="button" class="active" data-rival-mode="cumulative" aria-pressed="true">累计</button>
-              <button type="button" data-rival-mode="average" aria-pressed="false">场均</button>
-            </div>
-          </header>
-          <div class="rival-direction-note"><span>A → B</span><small>点击有数据的方向格查看双方关系；方向矩阵不要求对称。</small></div>
-          <div class="matrix-wrap rival-matrix-scroll"><table class="matrix" id="netMatrix"></table></div>
-          <p class="rival-mobile-scroll-hint">横向滑动查看完整方向矩阵</p>
+        <section class="rival-relationship-workspace" aria-label="关系对位工作区">
+          <section class="rival-matrix-stage">
+            <header class="rival-stage-head">
+              <div>
+                <span class="rival-eyebrow">RELATIONSHIP MATRIX</span>
+                <h3>方向对位矩阵</h3>
+                <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
+              </div>
+              <div class="segmented-control" id="rivalModeToggle" aria-label="对位统计口径">
+                <button type="button" class="active" data-rival-mode="cumulative" aria-pressed="true">累计</button>
+                <button type="button" data-rival-mode="average" aria-pressed="false">场均</button>
+              </div>
+            </header>
+            <div class="rival-direction-note"><span>A → B</span><small>点击有数据的方向格查看双方关系；方向矩阵不要求对称。</small></div>
+            <div class="matrix-wrap rival-matrix-scroll"><table class="matrix" id="netMatrix"></table></div>
+            <p class="rival-mobile-scroll-hint">横向滑动查看完整方向矩阵</p>
+          </section>
+
+          <section class="rival-pair-lens" id="rivalDetailCard">
+            <div id="rivalDetail" class="rival-lens-empty"><span>SELECT A DIRECTION</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p></div>
+          </section>
         </section>
 
         <section class="rival-flow-stage">
@@ -313,10 +319,6 @@
             </div>
           </header>
           <div class="rival-summary-list" id="rivalSummaryTable" role="table" aria-label="牌手对位流向汇总"></div>
-        </section>
-
-        <section class="rival-pair-lens" id="rivalDetailCard">
-          <div id="rivalDetail" class="rival-lens-empty"><span>SELECT A DIRECTION</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p></div>
         </section>
       </section>
 
@@ -363,6 +365,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.3.17-season-mobile-guard"></script>
+  <script type="module" src="/app.js?v=4.3.18-rival-workspace"></script>
 </body>
 </html>
