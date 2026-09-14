@@ -4760,9 +4760,9 @@ select.moap-native-select{
 [data-view="rival"] .rival-summary-row b{font-size:21px;font-weight:760}
 
 [data-view="rival"] .rival-pair-lens{
-  min-height:104px;
+  min-height:92px;
   margin:0;
-  padding:24px 2px 4px;
+  padding:18px 2px 2px;
   border-top:1px solid var(--rival-rule-strong);
 }
 [data-view="rival"] .rival-lens-empty{padding:8px 0 20px}
@@ -4773,39 +4773,39 @@ select.moap-native-select{
   align-items:flex-end;
   justify-content:space-between;
   gap:20px;
-  padding:0 0 15px;
+  padding:0 0 10px;
   border-bottom:1px solid var(--rival-rule);
 }
-[data-view="rival"] .rival-lens-head h3{margin:7px 0 0;color:var(--text);font-size:clamp(20px,2vw,27px);letter-spacing:-.015em}
+[data-view="rival"] .rival-lens-head h3{margin:5px 0 0;color:var(--text);font-size:clamp(20px,2vw,27px);letter-spacing:-.015em}
 [data-view="rival"] .rival-lens-head>strong{color:var(--gold2);font-size:9px;letter-spacing:.1em}
 [data-view="rival"] .rival-pair-comparison{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   margin-top:4px;
 }
-[data-view="rival"] .rival-pair-direction{min-width:0;padding:16px 24px 16px 0}
-[data-view="rival"] .rival-pair-direction+.rival-pair-direction{padding-right:0;padding-left:24px;border-left:1px solid var(--rival-rule)}
-[data-view="rival"] .rival-pair-direction header{display:grid;grid-template-columns:1fr auto;grid-template-areas:"label count" "name count";gap:5px 12px;align-items:center}
+[data-view="rival"] .rival-pair-direction{min-width:0;padding:11px 20px 11px 0}
+[data-view="rival"] .rival-pair-direction+.rival-pair-direction{padding-right:0;padding-left:20px;border-left:1px solid var(--rival-rule)}
+[data-view="rival"] .rival-pair-direction header{display:grid;grid-template-columns:1fr auto;grid-template-areas:"label count" "name count";gap:3px 10px;align-items:center}
 [data-view="rival"] .rival-pair-direction header span{grid-area:label;color:rgba(215,178,91,.68);font-size:8px;font-weight:760;letter-spacing:.13em}
 [data-view="rival"] .rival-pair-direction.is-reverse header span{color:var(--rival-muted)}
 [data-view="rival"] .rival-pair-direction header strong{grid-area:name;color:var(--rival-soft);font-size:13px}
 [data-view="rival"] .rival-pair-direction header small{grid-area:count;color:var(--rival-muted);font-size:9px}
-[data-view="rival"] .rival-pair-direction dl{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:0;margin:12px 0 0}
-[data-view="rival"] .rival-pair-direction dl>div{padding:0 13px;border-left:1px solid rgba(168,183,177,.08)}
+[data-view="rival"] .rival-pair-direction dl{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:0;margin:10px 0 0}
+[data-view="rival"] .rival-pair-direction dl>div{padding:0 10px;border-left:1px solid rgba(168,183,177,.08)}
 [data-view="rival"] .rival-pair-direction dl>div:first-child{padding-left:0;border-left:0}
 [data-view="rival"] .rival-pair-direction dt{color:var(--rival-muted);font-size:8px}
-[data-view="rival"] .rival-pair-direction dd{margin:6px 0 0;color:var(--rival-soft);font-size:15px;font-weight:740;font-variant-numeric:tabular-nums}
-[data-view="rival"] .rival-pair-direction dl>div:first-child dd{font-size:21px}
-[data-view="rival"] .rival-direction-disclaimer{margin:0;padding:13px 0;border-top:1px solid rgba(168,183,177,.07);color:var(--rival-muted);font-size:9px;line-height:1.55}
+[data-view="rival"] .rival-pair-direction dd{margin:4px 0 0;color:var(--rival-soft);font-size:14px;font-weight:740;font-variant-numeric:tabular-nums}
+[data-view="rival"] .rival-pair-direction dl>div:first-child dd{font-size:19px}
+[data-view="rival"] .rival-direction-disclaimer{margin:0;padding:9px 0;border-top:1px solid rgba(168,183,177,.07);color:var(--rival-muted);font-size:9px;line-height:1.45}
 [data-view="rival"] .rival-history-action{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:18px;
   width:100%;
-  min-height:46px;
+  min-height:38px;
   margin:0;
-  padding:10px 0;
+  padding:8px 0;
   border:0;
   border-top:1px solid var(--rival-rule);
   border-bottom:1px solid var(--rival-rule);
@@ -4914,12 +4914,12 @@ select.moap-native-select{
   [data-view="rival"] .rival-summary-row b::before{content:"净分"}
   [data-view="rival"] .rival-summary-row span{font-size:16px}
   [data-view="rival"] .rival-summary-row b{font-size:19px}
-  [data-view="rival"] .rival-pair-lens{padding-top:21px}
+  [data-view="rival"] .rival-pair-lens{padding-top:14px}
   [data-view="rival"] .rival-lens-head{align-items:flex-start}
   [data-view="rival"] .rival-lens-head h3{font-size:21px}
   [data-view="rival"] .rival-pair-comparison{grid-template-columns:1fr}
-  [data-view="rival"] .rival-pair-direction{padding:18px 0}
-  [data-view="rival"] .rival-pair-direction+.rival-pair-direction{padding:18px 0;border-top:1px solid var(--rival-rule);border-left:0}
+  [data-view="rival"] .rival-pair-direction{padding:13px 0}
+  [data-view="rival"] .rival-pair-direction+.rival-pair-direction{padding:13px 0;border-top:1px solid var(--rival-rule);border-left:0}
   [data-view="rival"] .rival-pair-direction dl{grid-template-columns:1.2fr .8fr .8fr}
   [data-view="rival"] .rival-history-action{align-items:flex-start;flex-direction:column;gap:5px}
   #rivalDetailModalBackdrop .rival-detail-modal{padding:20px}
