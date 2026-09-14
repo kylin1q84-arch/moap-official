@@ -6318,6 +6318,9 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
   [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-desktop{display:none}
   [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-summary-cards{display:grid}
 }
+@media(max-width:340px){
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters{grid-template-columns:1fr;gap:10px}
+}
 
 @media(max-width:760px){
   #matchModalBackdrop .match-detail-modal,
