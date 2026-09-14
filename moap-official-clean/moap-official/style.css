@@ -4762,7 +4762,7 @@ select.moap-native-select{
 [data-view="rival"] .rival-pair-lens{
   min-height:92px;
   margin:0;
-  padding:12px 2px 0;
+  padding:10px 2px 0;
   border-top:1px solid var(--rival-rule-strong);
 }
 [data-view="rival"] .rival-lens-empty{padding:8px 0 20px}
@@ -4773,7 +4773,7 @@ select.moap-native-select{
   align-items:flex-end;
   justify-content:space-between;
   gap:20px;
-  padding:0 0 6px;
+  padding:0 0 5px;
   border-bottom:1px solid var(--rival-rule);
 }
 [data-view="rival"] .rival-lens-head h3{margin:3px 0 0;color:var(--text);font-size:clamp(20px,2vw,27px);letter-spacing:-.015em}
@@ -4796,14 +4796,14 @@ select.moap-native-select{
 [data-view="rival"] .rival-pair-direction dt{color:var(--rival-muted);font-size:8px}
 [data-view="rival"] .rival-pair-direction dd{margin:3px 0 0;color:var(--rival-soft);font-size:13px;font-weight:740;font-variant-numeric:tabular-nums}
 [data-view="rival"] .rival-pair-direction dl>div:first-child dd{font-size:17px}
-[data-view="rival"] .rival-direction-disclaimer{margin:0;padding:6px 0;border-top:1px solid rgba(168,183,177,.07);color:var(--rival-muted);font-size:9px;line-height:1.35}
+[data-view="rival"] .rival-direction-disclaimer{margin:0;padding:5px 0;border-top:1px solid rgba(168,183,177,.07);color:var(--rival-muted);font-size:9px;line-height:1.35}
 [data-view="rival"] .rival-history-action{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:18px;
   width:100%;
-  min-height:34px;
+  min-height:32px;
   margin:0;
   padding:6px 0;
   border:0;
