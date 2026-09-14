@@ -6229,6 +6229,95 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
 #matchModalBackdrop .match-detail-empty{padding-top:15px;border-top:1px solid var(--line2)}
 #matchModalBackdrop .match-detail-empty p{color:var(--muted);font-size:11px}
 
+/* MOAP 4.0 · Season Performance / Player Observatory reorganization */
+[data-view="overview"] .overview-season-spotlight{background:transparent;box-shadow:none}
+[data-view="overview"] .overview-season-spotlight-head{align-items:flex-end;margin-bottom:22px}
+[data-view="overview"] .overview-season-player-filter{width:180px;min-width:180px;margin:0}
+[data-view="overview"] #overviewCurrentSeasonPerformance{min-width:0}
+[data-view="overview"] .overview-season-performance-shell{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.65fr);gap:0 34px;align-items:start}
+[data-view="overview"] .overview-season-performance-shell .season-rating-hero{display:block;min-width:0;padding:0 34px 0 0;border:0;border-right:1px solid var(--overview-rule)}
+[data-view="overview"] .overview-season-performance-shell .season-rating-anchor{min-width:0}
+[data-view="overview"] .overview-season-player-name{display:block;margin-bottom:10px;color:var(--text);font-size:22px;font-weight:750;letter-spacing:-.02em;line-height:1.2}
+[data-view="overview"] .overview-season-performance-shell .season-rating-hero>div:first-child>span:not(.overview-season-player-name){display:block;color:rgba(215,178,91,.72);font-size:8px;letter-spacing:.17em}
+[data-view="overview"] .overview-season-performance-shell .season-rating-hero>div:first-child>strong{display:inline-block;margin-top:9px;color:var(--gold2);font-size:clamp(72px,7vw,94px);font-weight:790;letter-spacing:-.075em;line-height:.82;font-variant-numeric:tabular-nums;text-shadow:0 10px 34px rgba(215,178,91,.08)}
+[data-view="overview"] .overview-season-performance-shell .season-rating-hero>div:first-child>b{display:inline-block;margin-left:16px;padding:0 0 6px;color:#dce6e2;font-size:12px}
+[data-view="overview"] .overview-season-performance-shell .season-compare{min-width:0;margin-top:28px;padding:17px 0 0;border-top:1px solid var(--overview-rule);border-left:0}
+[data-view="overview"] .overview-season-performance-shell .season-compare small{font-size:8px;letter-spacing:.08em}
+[data-view="overview"] .overview-season-performance-shell .season-compare b{font-size:25px;font-variant-numeric:tabular-nums}
+[data-view="overview"] .overview-season-performance-shell .season-compare span{font-size:9px}
+[data-view="overview"] .overview-season-performance-shell .season-dimension-grid{display:grid;grid-template-columns:1fr;gap:0}
+[data-view="overview"] .overview-season-performance-shell .season-dimension{min-width:0;display:grid;grid-template-columns:minmax(130px,.72fr) minmax(160px,1.6fr) 52px;gap:16px;align-items:center;padding:12px 0;border:0;border-bottom:1px solid var(--overview-rule);border-radius:0;background:none;box-shadow:none}
+[data-view="overview"] .overview-season-performance-shell .season-dimension:first-child{border-top:1px solid var(--overview-rule)}
+[data-view="overview"] .overview-season-performance-shell .season-dimension>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:9px;margin:0}
+[data-view="overview"] .overview-season-performance-shell .season-dimension span{color:rgba(220,230,226,.7);font-size:10px}
+[data-view="overview"] .overview-season-performance-shell .season-dimension b{color:var(--gold2);font-size:14px;font-variant-numeric:tabular-nums}
+[data-view="overview"] .overview-season-performance-shell .season-dimension .bar{height:3px;margin:0;border-radius:0;background:rgba(168,183,177,.13)}
+[data-view="overview"] .overview-season-performance-shell .season-dimension .bar>i{border-radius:0}
+[data-view="overview"] .overview-season-performance-shell .season-dimension small{margin:0;color:rgba(168,183,177,.46);font-size:8px;text-align:right}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats,[data-view="overview"] .overview-season-performance-shell .season-performance-copy,[data-view="overview"] .overview-season-performance-shell .season-rating-method{grid-column:1/-1}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:28px;border-top:1px solid var(--overview-rule);border-bottom:1px solid var(--overview-rule)}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats>div{min-width:0;padding:13px 14px;border:0;border-left:1px solid var(--overview-rule);border-radius:0;background:none;text-align:left}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(4n+1){padding-left:0;border-left:0}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(n+5){border-top:1px solid var(--overview-rule)}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats span{font-size:8px;letter-spacing:.04em}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats b{font-size:14px;font-variant-numeric:tabular-nums}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:21px}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div{min-width:0;padding:4px 20px 2px 0;border:0;border-radius:0;background:none}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div+div{padding-left:20px;border-left:1px solid var(--overview-rule)}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy strong{font-size:10px;letter-spacing:.05em}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy p{font-size:10px;line-height:1.75}
+[data-view="overview"] .overview-season-performance-shell .season-rating-method{margin-top:12px;padding-top:12px;border-top:1px solid var(--overview-rule);font-size:8px}
+[data-view="overview"] .season-performance-empty{padding:20px 0 4px;border-bottom:1px solid var(--overview-rule)}
+[data-view="overview"] .season-performance-empty span{display:block;color:var(--text);font-size:20px;font-weight:740}
+[data-view="overview"] .season-performance-empty p{margin-top:10px;color:rgba(168,183,177,.64);font-size:11px}
+
+[data-view="player"] .player-profile-hero{grid-template-columns:minmax(285px,.4fr) minmax(0,.6fr);margin-bottom:56px!important}
+[data-view="player"] .player-profile-hero>.player-season-data-card{min-width:0;margin:0!important;padding:34px 4px 32px 38px;border:0;border-left:1px solid var(--player-rule);border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+[data-view="player"] .player-profile-hero>.player-season-data-card:hover{border-color:var(--player-rule);box-shadow:none;transform:none}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-head{display:grid;grid-template-columns:1fr;align-items:stretch;gap:18px;margin-bottom:22px;padding:0 0 12px;border-bottom:1px solid var(--player-rule)}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;margin:0}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters label{min-width:0;width:100%}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters .moap-select{width:100%;min-width:0;margin-top:6px}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters .moap-select-trigger{height:42px;min-height:42px}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table{min-width:680px}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table th,[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-table td{padding:9px 7px}
+[data-view="player"] .player-profile-hero>.player-season-data-card .player-season-summary-cards{display:none}
+
+@media(max-width:980px){
+  [data-view="player"] .player-profile-hero>.player-season-data-card{border-top:1px solid var(--player-rule);border-left:0}
+}
+@media(max-width:760px){
+  [data-view="overview"] .overview-season-spotlight-head{align-items:stretch;gap:12px}
+  [data-view="overview"] .overview-season-player-filter{width:100%;min-width:0}
+  [data-view="overview"] .overview-season-performance-shell{grid-template-columns:1fr;gap:0}
+  [data-view="overview"] .overview-season-performance-shell .season-rating-hero{padding:0 0 21px;border-right:0;border-bottom:1px solid var(--overview-rule)}
+  [data-view="overview"] .overview-season-player-name{font-size:19px;margin-bottom:8px}
+  [data-view="overview"] .overview-season-performance-shell .season-rating-hero>div:first-child>strong{font-size:64px}
+  [data-view="overview"] .overview-season-performance-shell .season-rating-hero>div:first-child>b{display:block;margin:8px 0 0;padding:0;font-size:10px}
+  [data-view="overview"] .overview-season-performance-shell .season-compare{margin-top:17px;padding:13px 0 0}
+  [data-view="overview"] .overview-season-performance-shell .season-dimension-grid{margin-top:18px}
+  [data-view="overview"] .overview-season-performance-shell .season-dimension{grid-template-columns:92px minmax(0,1fr) 44px;gap:8px;padding:9px 0}
+  [data-view="overview"] .overview-season-performance-shell .season-dimension span{font-size:8px}
+  [data-view="overview"] .overview-season-performance-shell .season-dimension b{font-size:11px}
+  [data-view="overview"] .overview-season-performance-shell .season-dimension small{font-size:7px}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:21px}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div{padding:12px 10px}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(4n+1){padding-left:10px;border-left:1px solid var(--overview-rule)}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(odd){padding-left:0;border-left:0}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(n+3){border-top:1px solid var(--overview-rule)}
+  [data-view="overview"] .overview-season-performance-shell .season-performance-copy{grid-template-columns:1fr;margin-top:17px}
+  [data-view="overview"] .overview-season-performance-shell .season-performance-copy>div{padding:4px 0 13px}
+  [data-view="overview"] .overview-season-performance-shell .season-performance-copy>div+div{padding:13px 0 2px;border-top:1px solid var(--overview-rule);border-left:0}
+  [data-view="overview"] .overview-season-performance-shell .season-rating-method{margin-top:8px}
+  [data-view="player"] .player-profile-hero{grid-template-columns:1fr;margin-bottom:36px!important}
+  [data-view="player"] .player-profile-hero>.player-season-data-card{padding:23px 1px 25px}
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-data-head{gap:18px;margin-bottom:22px;padding-bottom:0;border-bottom:0}
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters{gap:10px}
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-filters .moap-select-trigger{height:44px;min-height:44px}
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-desktop{display:none}
+  [data-view="player"] .player-profile-hero>.player-season-data-card .player-season-summary-cards{display:grid}
+}
+
 @media(max-width:760px){
   #matchModalBackdrop .match-detail-modal,
   #matchModalBackdrop .match-detail-modal.match-detail-four,

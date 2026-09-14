@@ -271,7 +271,7 @@ function prepareSectionReveals(root,view){
   revealObserver=null;
   if(!root?.querySelectorAll)return;
   const selectorByView={
-    overview:".overview-editorial-recap,.monthly-report-card",
+    overview:".overview-editorial-recap,.overview-season-spotlight,.monthly-report-card",
     status:".status-intelligence-stage",
     player:".player-season-data-card",
     rival:".rival-flow-stage,.rival-pair-lens"
@@ -1082,9 +1082,8 @@ function stopPlayerDataExperience(root){
 function playerLayers(root){
   return [
     root?.querySelector?.(".player-observatory-identity-column"),
-    root?.querySelector?.(".current-season-performance-card"),
-    root?.querySelector?.(".player-trend-stage"),
-    root?.querySelector?.(".player-season-data-card")
+    root?.querySelector?.(".player-season-data-card"),
+    root?.querySelector?.(".player-trend-stage")
   ].filter(Boolean);
 }
 

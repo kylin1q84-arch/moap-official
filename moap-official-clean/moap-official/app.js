@@ -45,7 +45,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.14-match-detail";
+} from "./animations.js?v=4.3.15-season-performance";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -637,6 +637,8 @@ function showView(id,{immediate=false,forceRender=false}={}){
     if(forceRender||!renderedViews.has(id)){
       renderViewContent(id);
       renderedViews.add(id);
+    }else if(id==="overview"){
+      renderSeasonSpotlight(currentPlayer);
     }
     syncPremiumDropdowns();
   };
@@ -769,6 +771,7 @@ function renderOverview(){
   const latestDate=String(latest?.date||"—"),dateParts=latestDate.match(/^(\d{4})-(\d{2})-(\d{2})$/),shortDate=dateParts?`${dateParts[2]}.${dateParts[3]}`:latestDate;
   $("#overviewKpis").innerHTML=[["OFFICIAL MATCHES",String(state.matches.length),`${state.matches.length} 场正式记录`],["CURRENT SEASON",currentSeason,"自动识别最新赛季"],["LATEST MATCH",shortDate,latest?.matchId||"等待正式比赛"]].map(x=>`<div class="overview-metric"><span>${x[0]}</span><strong class="kpi-value">${x[1]}</strong><small>${x[2]}</small></div>`).join("");
   renderGoatRows("#goatRanking");
+  renderSeasonSpotlight(currentPlayer);
   $("#latestAiRecap").innerHTML=latestRecapHtml();renderMonthlyReport();
 }
 $("#monthlyReportMonth")?.addEventListener("change",e=>{
@@ -885,7 +888,7 @@ function renderStatus(){
   $("#statusMethodology").innerHTML=`<p>状态指数只衡量最近5场的即时表现与走势，与赛季OVR、生涯OVR、GOAT及官方荣誉互不影响。</p><div class="status-method-list">${weights.map(([label,value])=>`<div class="status-method-row"><span>${label}</span><b>${value}%</b><i aria-hidden="true"><em style="width:${value}%"></em></i></div>`).join("")}</div>`;
 }
 
-document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;$("#playerSelect").value=currentPlayer;showView("player",{forceRender:true});});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-status-player]");if(!b)return;currentPlayer=b.dataset.statusPlayer;syncPlayerSelectors();showView("player",{forceRender:true});});
 
 function formatRecordValue(record,value=record?.value){
   if(value==null||!Number.isFinite(Number(value)))return "—";
@@ -1008,12 +1011,20 @@ function updateMatchPlayerTrigger(){
 function populateSelects(){
   const opts=state.players.map(p=>`<option value="${p.playerId}">${p.name}</option>`).join("");
   $("#playerSelect").innerHTML=opts;
+  $("#overviewSeasonPlayerSelect").innerHTML=opts;
   renderMatchPlayerOptions();
   const seasons=(state.seasons||[]).map(s=>s.id);
   $("#matchSeason").innerHTML='<option value="all">全部赛季</option>'+seasons.map(s=>`<option value="${s}">${s}</option>`).join("");
   $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.status==="active"?"selected":""}>${s.id}${s.status==="active"?"（进行中）":""}</option>`).join("");
   if(!state.players.some(p=>p.playerId===currentPlayer)) currentPlayer=state.players[0]?.playerId||"P001";
   $("#playerSelect").value=currentPlayer;
+  $("#overviewSeasonPlayerSelect").value=currentPlayer;
+  syncPremiumDropdowns();
+}
+
+function syncPlayerSelectors(){
+  $("#playerSelect").value=currentPlayer;
+  $("#overviewSeasonPlayerSelect").value=currentPlayer;
   syncPremiumDropdowns();
 }
 
@@ -1049,16 +1060,22 @@ function drawTrend(pid){
   $("#chartCaption").textContent=`${arr.length}场 · 当前累计 ${fmtScore(arr[arr.length-1].cumulative)}`;
 }
 function seasonGrade(rating){return rating>=92?"S":rating>=86?"A+":rating>=80?"A":rating>=74?"B+":rating>=68?"B":rating>=62?"C+":"C";}
-function renderCurrentSeasonPerformance(pid){
-  const holder=$("#currentSeasonPerformance"),meta=$("#currentSeasonPerformanceMeta");if(!holder)return;
-  const r=state.statusCenter?.rankings?.find(x=>x.playerId===pid),perf=r?.seasonPerformance,career=r?.career||{};
-  if(!perf){holder.innerHTML='<div class="empty">当前赛季暂无有效数据</div>';return;}
-  const season=perf.season||latestActualSeason(),dims=perf.dimensionScores||{},diff=Number(perf.rating||0)-Number(career.overallRating||0);
+function renderSeasonSpotlight(pid){
+  const holder=$("#overviewCurrentSeasonPerformance"),meta=$("#overviewCurrentSeasonPerformanceMeta");if(!holder)return;
+  const player=state.players.find(x=>x.playerId===pid),r=state.statusCenter?.rankings?.find(x=>x.playerId===pid),perf=r?.seasonPerformance,career=r?.career||{};
+  const playerName=player?.name||r?.player||pid||"牌手";
+  const season=perf?.season||latestActualSeason();
+  if(!perf){
+    if(meta)meta.textContent=`${season}独立评分 · 当前赛季暂无有效数据`;
+    holder.innerHTML=`<div class="season-performance-empty"><span id="overviewSeasonPlayerName">${escapeHtml(playerName)}</span><p>当前赛季暂无有效数据</p></div>`;
+    return;
+  }
+  const dims=perf.dimensionScores||{},diff=Number(perf.rating||0)-Number(career.overallRating||0);
   if(meta)meta.textContent=`${season}独立评分 · 只使用${season}比赛数据`;
   const dimList=[["得分表现",dims.scoring,30],["比赛质量",dims.quality,25],["MVP影响力",dims.mvpImpact,20],["爆发能力",dims.bigStage,15],["稳定性",dims.stability,10]];
   const compareText=Math.abs(diff)<2?"接近个人生涯水准":diff>0?`高于生涯OVR ${diff}分`:`低于生涯OVR ${Math.abs(diff)}分`;
   const compareClass=diff>1?"score-pos":diff<-1?"score-neg":"";
-  holder.innerHTML=`<div class="season-performance-shell"><div class="season-rating-hero"><div class="season-rating-anchor"><span>${escapeHtml(season)} SEASON OVR</span><strong>${perf.rating}</strong><b>${seasonGrade(perf.rating)} · 联盟 #${perf.rank}</b></div><div class="season-compare"><small>生涯OVR ${career.overallRating??"—"}</small><b class="${compareClass}">${diff>0?"+":""}${diff}</b><span>${escapeHtml(compareText)}</span></div></div><div class="season-dimension-grid">${dimList.map(([name,value,weight],index)=>`<div class="season-dimension" data-dimension-index="${index}" data-dimension-name="${escapeHtml(name)}"><div><span>${name}</span><b>${Number(value||0).toFixed(1)}</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,Number(value||0)))}%"></i></div><small>权重 ${weight}%</small></div>`).join("")}</div><div class="season-core-stats"><div><span>赛季积分</span><b class="${scoreClass(perf.total)}">${fmtScore(perf.total)}</b></div><div><span>场均</span><b>${fmtAvg(perf.average)}</b></div><div><span>正分率</span><b>${fmtPct(perf.positiveRate)}</b></div><div><span>MVP</span><b>${perf.mvps}次</b></div><div><span>MVP率</span><b>${fmtPct(perf.mvpRate)}</b></div><div><span>爆发率</span><b>${fmtPct(perf.bigStageRate||0)}</b></div><div><span>爆发场次</span><b>${perf.bigStageCount}场</b></div><div><span>最高单场</span><b class="${scoreClass(perf.best)}">${fmtScore(perf.best)}</b></div></div><div class="season-performance-copy"><div><strong>${escapeHtml(r.report?.seasonLabel||perf.ratingLabel)}</strong><p>${escapeHtml(r.report?.seasonSummary||"")}</p></div><div><strong>赛季观察</strong><p>${escapeHtml(r.report?.seasonOutlook||"")}</p></div></div><small class="season-rating-method">${escapeHtml(state.statusCenter?.currentSeasonRating?.methodology||"")}</small></div>`;
+  holder.innerHTML=`<div class="season-performance-shell overview-season-performance-shell"><div class="season-rating-hero"><div class="season-rating-anchor"><span class="overview-season-player-name" id="overviewSeasonPlayerName">${escapeHtml(playerName)}</span><span>${escapeHtml(season)} SEASON OVR</span><strong>${perf.rating}</strong><b>${seasonGrade(perf.rating)} · 联盟 #${perf.rank}</b></div><div class="season-compare"><small>生涯OVR ${career.overallRating??"—"}</small><b class="${compareClass}">${diff>0?"+":""}${diff}</b><span>${escapeHtml(compareText)}</span></div></div><div class="season-dimension-grid">${dimList.map(([name,value,weight],index)=>`<div class="season-dimension" data-dimension-index="${index}" data-dimension-name="${escapeHtml(name)}"><div><span>${name}</span><b>${Number(value||0).toFixed(1)}</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,Number(value||0)))}%"></i></div><small>权重 ${weight}%</small></div>`).join("")}</div><div class="season-core-stats"><div><span>赛季积分</span><b class="${scoreClass(perf.total)}">${fmtScore(perf.total)}</b></div><div><span>场均</span><b>${fmtAvg(perf.average)}</b></div><div><span>正分率</span><b>${fmtPct(perf.positiveRate)}</b></div><div><span>MVP</span><b>${perf.mvps}次</b></div><div><span>MVP率</span><b>${fmtPct(perf.mvpRate)}</b></div><div><span>爆发率</span><b>${fmtPct(perf.bigStageRate||0)}</b></div><div><span>爆发场次</span><b>${perf.bigStageCount}场</b></div><div><span>最高单场</span><b class="${scoreClass(perf.best)}">${fmtScore(perf.best)}</b></div></div><div class="season-performance-copy"><div><strong>${escapeHtml(r.report?.seasonLabel||perf.ratingLabel)}</strong><p>${escapeHtml(r.report?.seasonSummary||"")}</p></div><div><strong>赛季观察</strong><p>${escapeHtml(r.report?.seasonOutlook||"")}</p></div></div><small class="season-rating-method">${escapeHtml(state.statusCenter?.currentSeasonRating?.methodology||"")}</small></div>`;
 }
 
 function playerSeasonDataRow(pid,season,type,metric){
@@ -1120,7 +1137,6 @@ function renderPlayer(){
   const obtainedGroups=groups.filter(group=>group.awards.length>0);
   const summary=$("#profileHonorSummary");if(summary)summary.textContent=`${obtainedGroups.length}类官方荣誉 · 生涯累计${honors.length}次`;
   const list=$("#profileHonorList");if(list)list.innerHTML=groups.map(g=>profileHonorRowHtml(g)).join("");
-  renderCurrentSeasonPerformance(pid);
   renderPlayerSeasonData(pid);
   drawTrend(pid);
 }
@@ -1130,8 +1146,21 @@ $("#playerSelect").addEventListener("change",e=>{
   const nextPlayer=e.target.value,root=$('.view[data-view="player"]');
   transitionPlayerProfile({
     root,
-    update:()=>{currentPlayer=nextPlayer;renderPlayer();},
+    update:()=>{currentPlayer=nextPlayer;syncPlayerSelectors();renderPlayer();renderSeasonSpotlight(currentPlayer);},
     onUpdated:()=>animateNumbers(root)
+  });
+});
+$("#overviewSeasonPlayerSelect")?.addEventListener("change",e=>{
+  const nextPlayer=e.target.value,target=$("#overviewCurrentSeasonPerformance");
+  transitionPlayerData({
+    target,
+    update:()=>{
+      currentPlayer=nextPlayer;
+      syncPlayerSelectors();
+      renderSeasonSpotlight(currentPlayer);
+      if(renderedViews.has("player"))renderPlayer();
+    },
+    onUpdated:()=>animateNumbers(target)
   });
 });
 $("#playerSeasonMatchType")?.addEventListener("change",e=>{
