@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.3.18-rival-workspace">
+  <link rel="stylesheet" href="/style.css?v=4.4.0-player-horizontal">
 </head>
 <body>
 
@@ -155,15 +155,16 @@
           <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">PLAYER OBSERVATORY · MSL</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
           <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
         </div>
-        <div class="card section player-profile-hero player-observatory-stage" style="margin-bottom:16px">
+        <div class="player-profile-stage player-observatory-stage">
           <div class="player-observatory-identity-column">
             <div class="player-head" id="playerHeader"></div>
-            <div class="card section profile-honors-home player-honor-archive player-observatory-panel">
+            <div class="profile-honors-home player-honor-archive player-observatory-panel">
               <div class="section-head profile-honors-head player-observatory-section-head"><div><span>HONOR ARCHIVE</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
               <div class="profile-honor-list" id="profileHonorList"></div>
             </div>
           </div>
-          <div class="card section player-season-data-card player-observatory-panel">
+        </div>
+        <div class="player-season-data-card player-observatory-panel">
             <div class="section-head player-season-data-head player-observatory-section-head">
               <div><span>SEASON DATA</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
               <div class="record-filter-row player-season-filters">
@@ -175,7 +176,6 @@
               <div class="table-scroll player-season-desktop"><table class="player-season-data-table"><thead id="playerSeasonHead"></thead><tbody id="playerSeasonTable"></tbody></table></div>
               <div class="player-season-summary-cards" id="playerSeasonCards" aria-live="polite"></div>
             </div>
-          </div>
         </div>
         <div class="player-trend-stage">
           <div class="card section player-observatory-panel player-career-trajectory">
