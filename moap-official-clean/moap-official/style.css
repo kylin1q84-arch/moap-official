@@ -6400,3 +6400,67 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
   #matchModalBackdrop .match-detail-focus h3 span,
   #matchModalBackdrop .match-detail-empty h3 span{display:block;margin-bottom:4px}
 }
+
+/* MOAP 4.0 · Global Divider Cleanup
+   Keep page identity and continuous-data row rules legible while removing
+   duplicate section and gold boundary lines. Functional controls, matrices,
+   modal frames, and data-cell borders remain untouched. */
+[data-view] .page-identity{border-bottom:1px solid var(--border-soft)}
+
+/* Overview: one primary scene boundary, open sections, and one soft monthly split. */
+[data-view="overview"] .league-command-scene{
+  border-top:0;
+  border-bottom:1px solid var(--overview-rule);
+}
+[data-view="overview"] .overview-metrics-strip,
+[data-view="overview"] #overviewKpis{border-top:0}
+[data-view="overview"] .overview-open-section{border-top:0;padding-top:0}
+[data-view="overview"] .monthly-report-card{
+  border-top:1px solid var(--overview-rule);
+  padding-top:24px;
+}
+[data-view="overview"] .command-goat-standing{border-top-color:var(--overview-rule)}
+
+/* Player: the profile rail owns the Profile → Season boundary. */
+[data-view="player"] .player-profile-stage{
+  border-top:0;
+  border-bottom:1px solid var(--player-rule);
+}
+[data-view="player"] .player-profile-stage .profile-career-status>span+span{border-top:0}
+[data-view="player"] .player-profile-stage .profile-honors-home{border-top:0}
+[data-view="player"] .player-profile-stage .profile-honor-list{border-top:0;border-bottom:0}
+[data-view="player"] .player-profile-stage .profile-honor-row{border-top:0;border-bottom:1px solid var(--player-rule)}
+[data-view="player"] .player-profile-stage .profile-honor-row:last-child{border-bottom:0}
+[data-view="player"] .player-season-data-card{border-bottom-color:var(--player-rule)}
+[data-view="player"] .player-season-data-card .player-season-data-head{border-bottom:0;padding-bottom:0}
+[data-view="player"] .player-season-data-card .table-scroll{border-top:0;border-bottom:0}
+[data-view="player"] .player-career-trajectory{border-top:0}
+[data-view="player"] .player-career-trajectory .player-observatory-section-head{border-bottom:0;padding-bottom:0}
+
+/* Records: section boundary separates the two query scenes; table headers and rows remain. */
+[data-view="records"] .records-table-surface{border-top:0}
+[data-view="records"] .records-ledger-stage{border-top-color:var(--records-rule)}
+
+/* Status: one heading rule per scene; intelligence sub-scenes use spacing. */
+[data-view="status"] .status-stage-head{border-bottom-color:var(--status-rule)}
+[data-view="status"] .status-ranking-row:first-child{border-top:0}
+[data-view="status"] .status-ranking-row.is-leader{border-bottom-color:var(--status-rule)}
+[data-view="status"] .status-intelligence-head{border-bottom-color:var(--status-rule)}
+[data-view="status"] .status-intelligence-observation,
+[data-view="status"] .status-intelligence-method{border-top:0}
+[data-view="status"] .status-intelligence-observation .status-observation-grid,
+[data-view="status"] .status-intelligence-method .status-method-list{border-bottom:0}
+
+/* Matches: the archive remains row-readable, but the latest row is not a gold rule. */
+[data-view="matches"] .match-ledger-row:first-child{border-top-color:var(--match-rule)}
+[data-view="matches"] .match-ledger-row.is-latest{
+  border-top-color:var(--match-rule);
+  border-bottom-color:var(--match-rule);
+}
+
+/* Rival: Matrix → Pair Lens keeps one soft boundary; Pair Lens → Flow uses space. */
+[data-view="rival"] .rival-matrix-stage{border-top:0}
+[data-view="rival"] .rival-pair-lens{border-top:1px solid var(--rival-rule)}
+[data-view="rival"] .rival-summary-list{border-top:0}
+
+/* System and Entry retain audit/input boundaries; only page identity is normalized above. */
