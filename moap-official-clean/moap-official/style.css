@@ -6464,3 +6464,103 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
 [data-view="rival"] .rival-summary-list{border-top:0}
 
 /* System and Entry retain audit/input boundaries; only page identity is normalized above. */
+
+/* MOAP 4.0 · Overview Spotlight + Match Result Transition refinement
+   Keep the two scoped surfaces open and editorial: whitespace, bars, and
+   metadata provide hierarchy while continuous data rows retain their scan
+   affordances. */
+[data-view="overview"] .overview-season-performance-shell .season-rating-hero{
+  background:none;
+  border-radius:0;
+  box-shadow:none;
+}
+[data-view="overview"] .overview-season-performance-shell .season-compare{
+  margin-top:24px;
+  padding-top:0;
+  border-top:0;
+}
+[data-view="overview"] .overview-season-performance-shell .season-dimension-grid{
+  row-gap:10px;
+}
+[data-view="overview"] .overview-season-performance-shell .season-dimension,
+[data-view="overview"] .overview-season-performance-shell .season-dimension:first-child{
+  padding-top:8px;
+  padding-bottom:8px;
+  border-top:0;
+  border-bottom:0;
+}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats{
+  row-gap:18px;
+  border-top:0;
+  border-bottom:0;
+}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats>div{
+  border-left-color:rgba(168,183,177,.07);
+}
+[data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(n+5){border-top:0}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy{
+  grid-template-columns:1fr;
+  gap:0;
+  margin-top:22px;
+}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div{
+  padding:0;
+  border:0;
+  background:none;
+}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div:first-child{
+  margin-bottom:7px;
+}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div:first-child p{display:none}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div:first-child strong{
+  color:var(--gold2);
+  font-size:9px;
+}
+[data-view="overview"] .overview-season-performance-shell .season-performance-copy>div+div{
+  padding-left:0;
+  border-left:0;
+}
+[data-view="overview"] .overview-season-performance-shell .season-rating-method{
+  margin-top:16px;
+  padding-top:0;
+  border-top:0;
+}
+
+/* Matches: Result Meta is the single Query → Results transition rail. */
+[data-view="matches"] .match-query-stage{
+  margin-bottom:34px;
+  padding-bottom:0;
+  border-bottom:0;
+}
+[data-view="matches"] .match-ledger-row:first-child,
+[data-view="matches"] .match-ledger-row.is-latest{
+  border-top:0;
+}
+[data-view="matches"] .match-ledger-row.is-latest{border-top-color:transparent;border-bottom-color:var(--match-rule)}
+
+@media(max-width:760px){
+  [data-view="overview"] .overview-season-performance-shell .season-rating-hero{
+    padding-bottom:0;
+    border-right:0;
+    border-bottom:0;
+  }
+  [data-view="overview"] .overview-season-performance-shell .season-compare{
+    margin-top:17px;
+    padding-top:0;
+  }
+  [data-view="overview"] .overview-season-performance-shell .season-dimension-grid{margin-top:24px;row-gap:8px}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats{
+    row-gap:14px;
+    margin-top:24px;
+  }
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div{
+    padding:10px 10px;
+    border-left-color:rgba(168,183,177,.07);
+  }
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(odd){padding-left:0;border-left:0}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(even){border-left:1px solid rgba(168,183,177,.07)}
+  [data-view="overview"] .overview-season-performance-shell .season-core-stats>div:nth-child(n+3){border-top:0}
+  [data-view="overview"] .overview-season-performance-shell .season-performance-copy{margin-top:20px}
+  [data-view="overview"] .overview-season-performance-shell .season-rating-method{margin-top:14px}
+  [data-view="matches"] .match-query-stage{margin-bottom:34px;padding-bottom:0}
+}
