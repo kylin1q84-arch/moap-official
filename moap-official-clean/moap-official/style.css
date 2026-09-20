@@ -6564,3 +6564,13 @@ body main .view .page-identity .system-shield-icon{width:14px;height:14px}
   [data-view="overview"] .overview-season-performance-shell .season-rating-method{margin-top:14px}
   [data-view="matches"] .match-query-stage{margin-bottom:34px;padding-bottom:0}
 }
+
+/* Keep the narrow-screen document viewport clipped to the active editorial
+   surfaces. The compact mobile navigation remains horizontally scrollable,
+   but its scrollable contents must not widen the page itself at 320px. */
+@media(max-width:340px){
+  html:has(body [data-view="overview"].active),
+  html:has(body [data-view="matches"].active){
+    overflow-x:clip;
+  }
+}
