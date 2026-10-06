@@ -6,6 +6,7 @@ import { buildRecordCenter, buildDataLeaderboard } from "./records-engine.js";
 import { buildGoatSystem } from "./goat-engine.js";
 import { validateMoapData } from "./data-validation.js";
 import { MOAP_CONFIG } from "./config.js";
+import { normalizeOfficialMatchArchive } from "./official-match-normalization.js";
 // Keep semantic icon markup local to the application module so the production
 // deployment remains resilient even when static module assets are edge-cached
 // independently of app.js.
@@ -188,7 +189,7 @@ function normalizeMatchSegments(rows=[],players=[]){
   const playerById=Object.fromEntries((players||[]).map(player=>[player.playerId,player.name]));
   return (rows||[]).reduce((byMatch,row)=>{
     const matchId=String(row?.match_id??row?.matchId??"");
-    if(matchId!=="MSL0074")return byMatch;
+    if(!matchId)return byMatch;
     const key=String(row.segment_key??row.key??"");
     const results=(Array.isArray(row.results)?row.results:[]).map(result=>{
       const playerId=String(result?.player_id??result?.playerId??"");
@@ -206,129 +207,28 @@ function normalizeMatchSegments(rows=[],players=[]){
       key,
       label:String(row.segment_label??row.label??(key==="first_half"?"上半场":key==="second_half"?"下半场":"分段")),
       order:Number(row.segment_order??row.order)||0,
+      sourceMatchId:String(row.sourceMatchId??""),
+      sourceVenue:String(row.sourceVenue??""),
+      sourceRound:row.sourceRound??null,
       results,
       matchups
     });
     return byMatch;
   },{});
 }
-function consolidateMsl0074Runtime(db){
-  const fail=reason=>{
-    console.error("MSL0074 consolidation validation failed",reason);
-    return {db,segments:[],consolidated:false};
-  };
-  try{
-    const matches=Array.isArray(db?.matches)?db.matches:[];
-    const sourceMatches=matches.filter(match=>match?.id==="MSL0074"||match?.id==="MSL0075");
-    const primary=sourceMatches.find(match=>match.id==="MSL0074");
-    const second=sourceMatches.find(match=>match.id==="MSL0075");
-    if(!primary||!second||sourceMatches.filter(match=>match.id==="MSL0074").length!==1||sourceMatches.filter(match=>match.id==="MSL0075").length!==1)return fail("required match IDs must each exist exactly once");
-    const venueIdentity=venue=>String(venue||"").trim().replace(/\s*(?:上半场|下半场)\s*$/u,"").trim();
-    const primaryVenue=venueIdentity(primary.venue),secondVenue=venueIdentity(second.venue);
-    if(primary.match_date!=="2026-10-05"||second.match_date!=="2026-10-05")return fail("both match dates must be 2026-10-05");
-    if(primary.season_id!==second.season_id)return fail("season mismatch");
-    if(primary.match_type!==second.match_type)return fail("match type mismatch");
-    if(!primaryVenue||primaryVenue!==secondVenue||!String(primary.venue||"").trim().endsWith("上半场")||!String(second.venue||"").trim().endsWith("下半场"))return fail("venue mismatch after validating the explicit half labels");
-
-    const allResults=Array.isArray(db.results)?db.results:[];
-    const deepCopyRows=rows=>JSON.parse(JSON.stringify(rows||[]));
-    const firstRows=deepCopyRows(allResults.filter(row=>row?.match_id==="MSL0074"));
-    const secondRows=deepCopyRows(allResults.filter(row=>row?.match_id==="MSL0075"));
-    const makeResultMap=(rows,label)=>{
-      const resultMap=new Map();
-      for(const row of rows){
-        const playerId=String(row?.player_id||"");
-        if(!playerId||resultMap.has(playerId))throw new Error(`${label} result rows must have unique player IDs`);
-        resultMap.set(playerId,row);
-      }
-      if(!resultMap.size)throw new Error(`${label} result rows are missing`);
-      return resultMap;
-    };
-    const firstByPlayer=makeResultMap(firstRows,"MSL0074");
-    const secondByPlayer=makeResultMap(secondRows,"MSL0075");
-    const firstRoster=[...firstByPlayer.keys()].sort(),secondRoster=[...secondByPlayer.keys()].sort();
-    if(firstRoster.length!==secondRoster.length||firstRoster.some((id,index)=>id!==secondRoster[index]))return fail("result rosters differ");
-    for(const playerId of firstRoster){
-      const firstResult=firstByPlayer.get(playerId),secondResult=secondByPlayer.get(playerId);
-      if(!!firstResult.is_absent!==!!secondResult.is_absent)return fail(`absence status differs for ${playerId}`);
-    }
-    const playerRows=Array.isArray(db.players)?db.players:[];
-    const activePlayerIds=new Set(playerRows.filter(player=>player?.active).map(player=>String(player.id)));
-    const firstParticipantIds=firstRows.filter(row=>!row.is_absent&&row.score!=null&&Number.isFinite(Number(row.score))).map(row=>String(row.player_id)).sort();
-    const secondParticipantIds=secondRows.filter(row=>!row.is_absent&&row.score!=null&&Number.isFinite(Number(row.score))).map(row=>String(row.player_id)).sort();
-    if(!firstParticipantIds.length||firstParticipantIds.length!==secondParticipantIds.length||firstParticipantIds.some((id,index)=>id!==secondParticipantIds[index]))return fail("effective participant sets differ");
-    if(firstParticipantIds.some(id=>!activePlayerIds.has(id)))return fail("an effective participant is not an active player");
-    for(const playerId of firstParticipantIds){
-      for(const [label,row] of [["MSL0074",firstByPlayer.get(playerId)],["MSL0075",secondByPlayer.get(playerId)]]){
-        if(row.score==null||!Number.isFinite(Number(row.score)))return fail(`${label} has an invalid score for ${playerId}`);
-      }
-    }
-
-    const firstMatchups=deepCopyRows((Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row?.match_id==="MSL0074"));
-    const secondMatchups=deepCopyRows((Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row?.match_id==="MSL0075"));
-    const buildDirectionalMap=(rows,label,rowsByPlayer)=>{
-      const cells=new Map();
-      for(const row of rows){
-        const from=String(row?.from_player_id||""),to=String(row?.to_player_id||""),points=Number(row?.points),key=`${from}|${to}`;
-        if(!from||!to||from===to||!firstParticipantIds.includes(from)||!firstParticipantIds.includes(to)||!Number.isInteger(points)||cells.has(key))throw new Error(`${label} contains an invalid or duplicate direction cell`);
-        cells.set(key,points);
-      }
-      const expected=firstParticipantIds.length*(firstParticipantIds.length-1);
-      if(cells.size!==expected)throw new Error(`${label} matrix is incomplete (${cells.size}/${expected})`);
-      for(const from of firstParticipantIds){
-        const outgoing=firstParticipantIds.filter(to=>to!==from).reduce((sum,to)=>sum+cells.get(`${from}|${to}`),0);
-        if(outgoing!==Number(rowsByPlayer.get(from)?.score))throw new Error(`${label} outgoing total mismatch for ${from}`);
-      }
-      return cells;
-    };
-    const firstCells=buildDirectionalMap(firstMatchups,"MSL0074",firstByPlayer);
-    const secondCells=buildDirectionalMap(secondMatchups,"MSL0075",secondByPlayer);
-    const finalResults=firstRoster.map(playerId=>{
-      const firstResult=firstByPlayer.get(playerId),secondResult=secondByPlayer.get(playerId),isAbsent=!!firstResult.is_absent;
-      return {...firstResult,id:`MSL0074:runtime:${playerId}`,match_id:"MSL0074",player_id:playerId,
-        score:isAbsent?null:Number(firstResult.score)+Number(secondResult.score),is_absent:isAbsent,is_mvp:false};
-    });
-    const playedResults=finalResults.filter(row=>!row.is_absent&&row.score!=null);
-    const finalTotal=playedResults.reduce((sum,row)=>sum+Number(row.score),0);
-    if(!Number.isFinite(finalTotal)||Math.abs(finalTotal)>1e-9)return fail(`combined scores do not total zero (${finalTotal})`);
-    const highestScore=Math.max(...playedResults.map(row=>Number(row.score)));
-    const mvpRows=playedResults.filter(row=>Number(row.score)===highestScore);
-    if(mvpRows.length!==1)return fail(`combined maximum score is tied (${mvpRows.length} players)`);
-    mvpRows[0].is_mvp=true;
-
-    const finalMatchups=[];
-    for(const from of firstParticipantIds){
-      for(const to of firstParticipantIds){
-        if(to===from)continue;
-        const points=firstCells.get(`${from}|${to}`)+secondCells.get(`${from}|${to}`);
-        finalMatchups.push({id:`MSL0074:runtime:${from}:${to}`,match_id:"MSL0074",from_player_id:from,to_player_id:to,points});
-      }
-    }
-    for(const from of firstParticipantIds){
-      const outgoing=finalMatchups.filter(row=>row.from_player_id===from).reduce((sum,row)=>sum+Number(row.points),0);
-      if(outgoing!==Number(finalResults.find(row=>row.player_id===from)?.score))return fail(`combined matrix outgoing total mismatch for ${from}`);
-    }
-    const firstHalf={match_id:"MSL0074",segment_key:"first_half",segment_label:"上半场",segment_order:1,results:deepCopyRows(firstRows),matchups:deepCopyRows(firstMatchups)};
-    const secondHalf={match_id:"MSL0074",segment_key:"second_half",segment_label:"下半场",segment_order:2,results:deepCopyRows(secondRows),matchups:deepCopyRows(secondMatchups)};
-    const nextMatches=matches.filter(match=>match.id!=="MSL0075").map(match=>match.id==="MSL0074"?{...match,venue:primaryVenue}:match);
-    const nextResults=(Array.isArray(db.results)?db.results:[]).filter(row=>row.match_id!=="MSL0074"&&row.match_id!=="MSL0075").concat(finalResults);
-    const nextMatchups=(Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row.match_id!=="MSL0074"&&row.match_id!=="MSL0075").concat(finalMatchups);
-    return {db:{...db,matches:nextMatches,results:nextResults,matchups:nextMatchups},segments:[firstHalf,secondHalf],consolidated:true};
-  }catch(error){
-    return fail(error?.message||String(error));
-  }
-}
 function competitionRanks(rows,key){
   let last=null,rank=0;return rows.map((x,i)=>{const v=x[key];if(i===0||v!==last)rank=i+1;last=v;return {...x,rank};});
 }
 function buildLiveState(db){
-  const runtimeConsolidation=consolidateMsl0074Runtime(db);
-  db=runtimeConsolidation.db;
+  const normalization=normalizeOfficialMatchArchive(db);
+  normalization.issues.forEach(issue=>console.error("Official match normalization failed",issue));
+  db=normalization.db;
   const players=db.players.map(p=>({playerId:p.id,name:p.name,joinSeason:p.join_season,status:p.active?"Active":"Inactive"}));
   const nameBy=Object.fromEntries(players.map(p=>[p.playerId,p.name]));
   const resultMap={};db.results.forEach(r=>(resultMap[r.match_id]??=[]).push(r));
   const matches=db.matches.slice().sort((a,b)=>String(a.match_date).localeCompare(String(b.match_date))||a.id.localeCompare(b.id)).map(m=>({
-    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:normalizedVenue(m.id,m.venue),isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
+    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:normalizedVenue(m.primarySourceMatchId||m.id,m.venue),isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
+    sourceMatchIds:m.sourceMatchIds||[m.id],primarySourceMatchId:m.primarySourceMatchId||m.id,sourceOrdinalStart:m.sourceOrdinalStart??null,sourceRounds:m.sourceRounds||[m.round],isSplitSession:!!m.isSplitSession,
     results:(resultMap[m.id]||[]).map(r=>({playerId:r.player_id,player:nameBy[r.player_id]||r.player_id,score:r.score==null?null:Number(r.score),isMvp:!!r.is_mvp,isAbsent:!!r.is_absent}))
   }));
   const honorSystem=calculateHonorSystem(players,matches);
@@ -403,7 +303,7 @@ function buildLiveState(db){
     mode:"DIRECTIONAL_CELL_MATRIX"
   };
 
-  const checks=[];
+  const checks=[...normalization.checks];
   const pushCheck=(id,item,found,evidence)=>checks.push({id,item,found,target:"0",result:found===0?"PASS":"FAIL",evidence,details:[]});
   pushCheck("DB001","ResultID 唯一性",db.results.length-new Set(db.results.map(r=>r.id)).size,"match_results.id");
   pushCheck("DB002","Matches 表 MatchID 唯一性",db.matches.length-new Set(db.matches.map(m=>m.id)).size,"matches.id");
@@ -419,7 +319,7 @@ function buildLiveState(db){
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
   const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
-  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(runtimeConsolidation.segments,players),rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
+  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(normalization.segments,players),sourceToOfficialMatchId:normalization.sourceToOfficialMatchId,rawSourceContext:normalization.rawSourceContext,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
 async function fetchTable(table,columns="*"){
@@ -471,7 +371,24 @@ function playerPortraitHtml(player){
   const file=PLAYER_PORTRAITS[player?.playerId]||`${player?.playerId||"player"}.png`;
   return `<div class="player-portrait-shell"><img class="player-portrait-img" src="/assets/players/${escapeHtml(file)}" alt="${escapeHtml(player?.name||"牌手")}头像" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"><div class="player-portrait-placeholder"><span>${escapeHtml(initials(player?.name||"牌"))}</span><small>头像预留</small></div></div>`;
 }
-function matchOrdinal(matchId){return Number(String(matchId||"").replace(/\D/g,""))||0;}
+function hasPreciseMatchup(match){
+  if(!match)return false;
+  const participants=(match.results||[]).filter(row=>!row.isAbsent&&row.score!=null);
+  const ids=participants.map(row=>row.playerId);
+  if(ids.length<2)return false;
+  const active=new Set(ids);
+  const rows=(state.matchups||[]).filter(row=>row.matchId===match.matchId);
+  if(rows.length!==ids.length*(ids.length-1))return false;
+  const cells=new Map();
+  for(const row of rows){
+    const key=`${row.fromPlayerId}|${row.toPlayerId}`;
+    if(!active.has(row.fromPlayerId)||!active.has(row.toPlayerId)||row.fromPlayerId===row.toPlayerId||!Number.isInteger(Number(row.points))||cells.has(key))return false;
+    cells.set(key,Number(row.points));
+  }
+  return participants.every(row=>ids.filter(to=>to!==row.playerId).every(to=>cells.has(`${row.playerId}|${to}`))
+    &&ids.filter(to=>to!==row.playerId).reduce((sum,to)=>sum+cells.get(`${row.playerId}|${to}`),0)===Number(row.score));
+}
+function firstPreciseMatchId(){return (state.matches||[]).find(hasPreciseMatchup)?.matchId||null;}
 function latestActualSeason(){return [...new Set((state.matches||[]).map(m=>m.season).filter(Boolean))].sort((a,b)=>Number(String(a).replace(/\D/g,""))-Number(String(b).replace(/\D/g,""))).at(-1)||"S3";}
 
 
@@ -968,7 +885,7 @@ function buildDetailedLatestRecap(){
   const recordNotes=latestRecordHighlights(latest);
   const matchupRows=(state.matchups||[]).filter(x=>x.matchId===latest.matchId);
   let matchupNote="";
-  if(matchOrdinal(latest.matchId)>=67&&matchupRows.length){
+  if(hasPreciseMatchup(latest)&&matchupRows.length){
     const byId=Object.fromEntries((state.players||[]).map(p=>[p.playerId,p.name]));
     const high=[...matchupRows].sort((a,b)=>Number(b.points)-Number(a.points))[0],low=[...matchupRows].sort((a,b)=>Number(a.points)-Number(b.points))[0];
     const bits=[];
@@ -1320,8 +1237,8 @@ function matchResultStripHtml(played,{detail=false}={}){
   return `<div class="match-result-strip ${detail?"match-detail-result-strip":""}">${played.map((r,index)=>`<span class="match-result-item ${r.isMvp?"is-mvp":""}"><span class="match-result-rank">${String(index+1).padStart(2,"0")}</span><span class="match-result-player">${escapeHtml(r.player)}</span><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?'<small class="match-result-mvp">MVP</small>':'<small class="match-result-mvp" aria-hidden="true"></small>'}</span>`).join("")}</div>`;
 }
 function matchCard(m){
-  const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=matchOrdinal(m.matchId)>=67,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
-  return `<article class="season-log-entry match-ledger-row ${precise?"is-clickable":""} ${isLatest?"is-latest":""}" ${precise?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">LATEST TRANSMISSION</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${precise?'<span class="match-ledger-view">VIEW MATCH →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
+  const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=hasPreciseMatchup(m),hasDetail=precise||!!state.matchSegments?.[m.matchId]?.length,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
+  return `<article class="season-log-entry match-ledger-row ${hasDetail?"is-clickable":""} ${isLatest?"is-latest":""}" ${hasDetail?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}比赛详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">LATEST TRANSMISSION</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${hasDetail?'<span class="match-ledger-view">VIEW MATCH →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
 }
 function ensureMatchModal(){
   if($("#matchModalBackdrop"))return;
@@ -1351,6 +1268,7 @@ function matchSegmentMatrixHtml(segment){
   const scores=Object.fromEntries(participants.map(row=>[row.playerId,Number(row.score)]));
   const cells=new Map((segment.matchups||[]).map(row=>[`${row.fromPlayerId}|${row.toPlayerId}`,Number(row.points)]));
   if(ids.length<2)return '<div class="empty">该分段没有可比较的方向对位。</div>';
+  if(!cells.size)return '<div class="empty">该半场未记录精准对位方向格。</div>';
   let html=`<div class="matrix-wrap match-segment-matrix-scroll"><table class="matrix match-detail-matrix match-segment-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>方向合计</th><th>比赛分</th><th>校验</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cells.has(`${from}|${to}`)?cells.get(`${from}|${to}`):null);
@@ -1377,11 +1295,12 @@ function openMatchModal(matchId){
   const modal=$("#matchModalBackdrop .match-detail-modal");
   modal?.classList.toggle("match-detail-four",participants===4);
   modal?.classList.toggle("match-detail-five",participants===5);
-  const precise=matchOrdinal(match.matchId)>=67
+  const precise=hasPreciseMatchup(match)
     ?`<div class="honor-modal-section match-detail-focus"><h3><span>PRECISE MATCHUP</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
-    :`<div class="honor-modal-section match-detail-empty"><h3><span>PRECISION DATA</span>本场未启用精准对位记录</h3><p>精准对位数据自 MSL0067 起开始记录。</p></div>`;
+    :`<div class="honor-modal-section match-detail-empty"><h3><span>PRECISION DATA</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
   const segments=matchSegmentsHtml(match.matchId);
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${precise}${segments}`;
+  const officialResults=match.isSplitSession?`<div class="honor-modal-section"><h3><span>OFFICIAL RESULT</span>本场正式成绩</h3>${matchResultStripHtml(match.results.filter(row=>!row.isAbsent&&row.score!=null).sort((a,b)=>b.score-a.score),{detail:true})}</div>`:"";
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${officialResults}${precise}${segments}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
@@ -1407,6 +1326,9 @@ function renderMatches(reset=false,{append=false,startIndex=0}={}){
   const list=$("#matchList"),visible=rows.slice(0,matchLimit);
   if(append&&startIndex>0&&list&&!list.querySelector(".empty"))list.insertAdjacentHTML("beforeend",visible.slice(startIndex).map(matchCard).join(""));
   else list.innerHTML=visible.map(matchCard).join("")||'<div class="empty match-ledger-empty"><span>NO MATCHES FOUND</span><p>没有符合当前筛选条件的正式比赛。</p></div>';
+  const precisionStart=firstPreciseMatchId();
+  const precisionNote=$("#matchPrecisionStartNote");
+  if(precisionNote)precisionNote.textContent=precisionStart?`按时间倒序 · 精准对位自 ${precisionStart} 起可查`:"按时间倒序 · 暂无精准对位记录";
   $("#matchTotalCount").textContent=String((state.matches||[]).length);
   $("#matchResultCount").textContent=`${rows.length} ${rows.length===1?"MATCH":"MATCHES"} FOUND`;
   $("#loadMoreBtn").style.display=rows.length>matchLimit?"block":"none";
@@ -1573,10 +1495,10 @@ $("#saveMatchBtn").addEventListener("click",async()=>{
   try{
     const selected=entryData().filter(x=>x.selected),matchup=entryMatchupData(),season=$("#entrySeason").value,date=$("#entryDate").value;
     if(!date) throw new Error("请选择比赛日期");
-    const seasonMatches=state.matches.filter(m=>m.season===season);
-    const nextRound=seasonMatches.length?Math.max(...seasonMatches.map(m=>Number(m.round)))+1:1;
-    const numeric=state.matches.map(m=>Number(String(m.matchId).replace(/\D/g,""))||0);
-    const nextId="MSL"+String(Math.max(...numeric,0)+1).padStart(4,"0");
+    const sourceContext=state.rawSourceContext;
+    if(!sourceContext?.nextSourceMatchId)throw new Error("云端原始比赛编号尚未同步");
+    const nextRound=sourceContext.nextSourceRoundBySeason?.[season]||1;
+    const nextId=sourceContext.nextSourceMatchId;
     const payload={
       id:nextId,season_id:season,round:nextRound,match_date:date,match_type:$("#entryType").value,
       venue:$("#entryVenue").value||"未填写场地",notes:"MOAP云端网页录入 · 精准对位方向矩阵",
@@ -1589,7 +1511,7 @@ $("#saveMatchBtn").addEventListener("click",async()=>{
     const {error}=await sb.rpc("create_match_with_results",{p_payload:payload});
     if(error) throw error;
     await reloadCloudData();
-    clearEntry(); showView("overview"); toast(`${nextId} 已保存，精准对位中心已实时更新`);
+    clearEntry(); showView("overview"); toast(`${state.sourceToOfficialMatchId?.[nextId]||nextId} 已保存，精准对位中心已实时更新`);
   }catch(err){console.error(err);toast("保存失败："+(err.message||String(err)));}
   finally{button.disabled=false;button.querySelector("[data-save-label]")?.replaceChildren(document.createTextNode("保存比赛与精准对位"));}
 });
