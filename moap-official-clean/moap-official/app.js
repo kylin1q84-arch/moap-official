@@ -311,18 +311,17 @@ function buildLiveState(db){
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
   const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
-  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(db.matchSegments||[],players),rivalNet,rivalHistory,rivalSummary,rivalityMeta,version,healthChecks:checks};
+  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(db.matchSegments||[],players),rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
 async function fetchTable(table,columns="*"){
   const {data,error}=await sb.from(table).select(columns);if(error)throw new Error(`${table}: ${error.message}`);return data||[];
 }
 async function reloadCloudData(){
-  const [players,seasons,matches,results,awards,versions,matchupsResponse,segmentsResponse]=await Promise.all([
+  const [players,seasons,matches,results,awards,versions,matchupsResponse]=await Promise.all([
     fetchTable("players"),fetchTable("seasons"),fetchTable("matches"),fetchTable("match_results"),fetchTable("award_results"),
     sb.from("system_versions").select("*").order("release_date",{ascending:false}),
-    sb.from("matchup_transfers").select("*"),
-    sb.from("match_segments").select("*").order("segment_order",{ascending:true})
+    sb.from("matchup_transfers").select("*")
   ]);
   if(versions.error)throw new Error(`system_versions: ${versions.error.message}`);
   let matchups=[];
@@ -332,19 +331,12 @@ async function reloadCloudData(){
     if(!missingTable)throw new Error(`matchup_transfers: ${message}`);
   }else matchups=matchupsResponse.data||[];
 
-  let matchSegments=[];
-  if(segmentsResponse.error){
-    const message=String(segmentsResponse.error.message||"");
-    const missingTable=segmentsResponse.error.code==="42P01"||segmentsResponse.error.code==="PGRST205"||message.includes("Could not find the table")||message.includes("does not exist");
-    if(!missingTable)throw new Error(`match_segments: ${message}`);
-  }else matchSegments=segmentsResponse.data||[];
-
   if(!players.length || !matches.length || !results.length){
     throw new Error("Supabase 未向公开访客返回数据。请确认 anon 读取策略仍然有效。");
   }
 
   currentRole="admin";
-  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups,matchSegments});
+  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups});
   if(appBooted){renderedViews.clear();initNav();populateSelects();initEntry();showView(currentView,{forceRender:true});}
   document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
