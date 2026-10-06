@@ -88,7 +88,7 @@ const VENUE_OVERRIDES = {
   MSL0026: "拾月金秋茶馆（浦南一里店）",
   MSL0069: "七囍茶室（厦门站店）"
 };
-function normalizedVenue(matchId, venue){ return VENUE_OVERRIDES[String(matchId||"")] || venue || ""; }
+function normalizedVenue(matchId, venue, {isOfficialSplitSession=false}={}){ const displayVenue=VENUE_OVERRIDES[String(matchId||"")] || venue || ""; return isOfficialSplitSession ? String(displayVenue).replace(/上半场\s*$/u,"").trimEnd() : displayVenue; }
 
 const HONOR_NAME_OVERRIDES = {};
 function honorCatalogItem(honorId){ return HONOR_CATALOG.find(x => x.honorId === honorId); }
@@ -227,7 +227,7 @@ function buildLiveState(db){
   const nameBy=Object.fromEntries(players.map(p=>[p.playerId,p.name]));
   const resultMap={};db.results.forEach(r=>(resultMap[r.match_id]??=[]).push(r));
   const matches=db.matches.slice().sort((a,b)=>String(a.match_date).localeCompare(String(b.match_date))||a.id.localeCompare(b.id)).map(m=>({
-    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:normalizedVenue(m.primarySourceMatchId||m.id,m.venue),isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
+    matchId:m.id,season:m.season_id,round:m.round,date:m.match_date,matchType:m.match_type,venue:normalizedVenue(m.primarySourceMatchId||m.id,m.venue,{isOfficialSplitSession:!!m.isSplitSession}),isHomeVenue:!!m.is_home_venue,notes:m.notes||"",
     sourceMatchIds:m.sourceMatchIds||[m.id],primarySourceMatchId:m.primarySourceMatchId||m.id,sourceOrdinalStart:m.sourceOrdinalStart??null,sourceRounds:m.sourceRounds||[m.round],isSplitSession:!!m.isSplitSession,
     results:(resultMap[m.id]||[]).map(r=>({playerId:r.player_id,player:nameBy[r.player_id]||r.player_id,score:r.score==null?null:Number(r.score),isMvp:!!r.is_mvp,isAbsent:!!r.is_absent}))
   }));
