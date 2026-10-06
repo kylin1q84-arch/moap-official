@@ -305,8 +305,8 @@ function buildLiveState(db){
 
   const checks=[...normalization.checks];
   const pushCheck=(id,item,found,evidence)=>checks.push({id,item,found,target:"0",result:found===0?"PASS":"FAIL",evidence,details:[]});
-  pushCheck("DB001","ResultID 唯一性",db.results.length-new Set(db.results.map(r=>r.id)).size,"match_results.id");
-  pushCheck("DB002","Matches 表 MatchID 唯一性",db.matches.length-new Set(db.matches.map(m=>m.id)).size,"matches.id");
+  pushCheck("DB001","正式成绩 ResultID 唯一性",db.results.length-new Set(db.results.map(r=>r.id)).size,"official match_results.id");
+  pushCheck("DB002","正式比赛 MatchID 唯一性",db.matches.length-new Set(db.matches.map(m=>m.id)).size,"official matches.id");
   pushCheck("DB003","荣誉记录唯一性",db.awards.length-new Set(db.awards.map(a=>`${a.player_id}|${a.scope}|${a.award_id}`)).size,"award_results");
   pushCheck("DB004","缺失 PlayerID",db.results.filter(r=>!r.player_id||!nameBy[r.player_id]).length,"match_results.player_id");
   pushCheck("DB005","缺失 Season",db.matches.filter(m=>!m.season_id).length,"matches.season_id");
@@ -1808,7 +1808,7 @@ function renderSystem(){
   const healthValue=healthScore===undefined||healthScore===null||healthScore===""?"—":`${present(healthScore)}%`;
   const healthVerified=healthScoreNumber===100;
   const matchesCount=Array.isArray(state.matches)?state.matches.length:0;
-  const resultCount=meta.results===undefined||meta.results===null||meta.results===""?"—":`${present(meta.results)} 条原始成绩`;
+  const resultCount=meta.results===undefined||meta.results===null||meta.results===""?"—":`${present(meta.results)} 条正式成绩`;
   $("#systemHealthValue").textContent=healthValue;
   $("#systemHealthStatus").textContent=healthVerified?"VERIFIED":"CHECK REQUIRED";
   $("#systemHealthValue").className=healthVerified?"is-verified":"is-review";
