@@ -184,6 +184,34 @@ function clearLegacyRivalState(target){
 }
 
 function average(values){return values.length?values.reduce((a,b)=>a+Number(b),0)/values.length:null;}
+function normalizeMatchSegments(rows=[],players=[]){
+  const playerById=Object.fromEntries((players||[]).map(player=>[player.playerId,player.name]));
+  return (rows||[]).reduce((byMatch,row)=>{
+    const matchId=String(row?.match_id||"");
+    if(matchId!=="MSL0074")return byMatch;
+    const key=String(row.segment_key||"");
+    const results=(Array.isArray(row.results)?row.results:[]).map(result=>({
+      playerId:String(result?.player_id||""),
+      player:playerById[String(result?.player_id||"")]||String(result?.player_id||"—"),
+      score:result?.score==null?null:Number(result.score),
+      isAbsent:!!result?.is_absent,
+      isMvp:!!result?.is_mvp
+    }));
+    const matchups=(Array.isArray(row.matchups)?row.matchups:[]).map(item=>({
+      fromPlayerId:String(item?.from_player_id||""),
+      toPlayerId:String(item?.to_player_id||""),
+      points:Number(item?.points)
+    })).filter(item=>item.fromPlayerId&&item.toPlayerId&&Number.isFinite(item.points));
+    (byMatch[matchId]??=[]).push({
+      key,
+      label:String(row.segment_label||(key==="first_half"?"上半场":key==="second_half"?"下半场":"分段")),
+      order:Number(row.segment_order)||0,
+      results,
+      matchups
+    });
+    return byMatch;
+  },{});
+}
 function competitionRanks(rows,key){
   let last=null,rank=0;return rows.map((x,i)=>{const v=x[key];if(i===0||v!==last)rank=i+1;last=v;return {...x,rank};});
 }
@@ -283,17 +311,18 @@ function buildLiveState(db){
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
   const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
-  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
+  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(db.matchSegments||[],players),rivalNet,rivalHistory,rivalSummary,rivalityMeta,version,healthChecks:checks};
 }
 
 async function fetchTable(table,columns="*"){
   const {data,error}=await sb.from(table).select(columns);if(error)throw new Error(`${table}: ${error.message}`);return data||[];
 }
 async function reloadCloudData(){
-  const [players,seasons,matches,results,awards,versions,matchupsResponse]=await Promise.all([
+  const [players,seasons,matches,results,awards,versions,matchupsResponse,segmentsResponse]=await Promise.all([
     fetchTable("players"),fetchTable("seasons"),fetchTable("matches"),fetchTable("match_results"),fetchTable("award_results"),
     sb.from("system_versions").select("*").order("release_date",{ascending:false}),
-    sb.from("matchup_transfers").select("*")
+    sb.from("matchup_transfers").select("*"),
+    sb.from("match_segments").select("*").order("segment_order",{ascending:true})
   ]);
   if(versions.error)throw new Error(`system_versions: ${versions.error.message}`);
   let matchups=[];
@@ -303,12 +332,19 @@ async function reloadCloudData(){
     if(!missingTable)throw new Error(`matchup_transfers: ${message}`);
   }else matchups=matchupsResponse.data||[];
 
+  let matchSegments=[];
+  if(segmentsResponse.error){
+    const message=String(segmentsResponse.error.message||"");
+    const missingTable=segmentsResponse.error.code==="42P01"||segmentsResponse.error.code==="PGRST205"||message.includes("Could not find the table")||message.includes("does not exist");
+    if(!missingTable)throw new Error(`match_segments: ${message}`);
+  }else matchSegments=segmentsResponse.data||[];
+
   if(!players.length || !matches.length || !results.length){
     throw new Error("Supabase 未向公开访客返回数据。请确认 anon 读取策略仍然有效。");
   }
 
   currentRole="admin";
-  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups});
+  state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups,matchSegments});
   if(appBooted){renderedViews.clear();initNav();populateSelects();initEntry();showView(currentView,{forceRender:true});}
   document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
   document.querySelector("#versionBadge").textContent=state.version.version;
@@ -1204,6 +1240,36 @@ function singleMatchMatrixHtml(match){
   });
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
+function matchSegmentResultsHtml(segment){
+  const rows=(segment.results||[]).filter(row=>!row.isAbsent&&row.score!=null);
+  if(!rows.length)return '<p class="match-segment-empty">该分段暂无有效成绩。</p>';
+  return `<div class="match-segment-result-rail" aria-label="${escapeHtml(segment.label)}成绩">${rows.map(row=>`<div class="match-segment-result"><span>${escapeHtml(row.player)}</span><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b></div>`).join("")}</div>`;
+}
+function matchSegmentMatrixHtml(segment){
+  const participants=(segment.results||[]).filter(row=>!row.isAbsent&&row.score!=null),ids=participants.map(row=>row.playerId);
+  const nameBy=Object.fromEntries(participants.map(row=>[row.playerId,row.player]));
+  const scores=Object.fromEntries(participants.map(row=>[row.playerId,Number(row.score)]));
+  const cells=new Map((segment.matchups||[]).map(row=>[`${row.fromPlayerId}|${row.toPlayerId}`,Number(row.points)]));
+  if(ids.length<2)return '<div class="empty">该分段没有可比较的方向对位。</div>';
+  let html=`<div class="matrix-wrap match-segment-matrix-scroll"><table class="matrix match-detail-matrix match-segment-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>方向合计</th><th>比赛分</th><th>校验</th></tr></thead><tbody>`;
+  ids.forEach(from=>{
+    const values=ids.filter(to=>to!==from).map(to=>cells.has(`${from}|${to}`)?cells.get(`${from}|${to}`):null);
+    const complete=values.every(value=>value!==null),total=values.filter(value=>value!==null).reduce((sum,value)=>sum+value,0),score=scores[from],valid=complete&&Number.isFinite(score)&&Math.abs(total-score)<1e-9;
+    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{
+      if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';
+      const key=`${from}|${to}`;
+      if(!cells.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';
+      const value=cells.get(key),kind=value>0?"pos":value<0?"neg":"neutral";
+      return `<td><span class="matrix-cell ${kind}">${fmtScore(value)}</span></td>`;
+    }).join("")}<td class="${scoreClass(total)}">${fmtScore(total)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${valid?"status-pass":"status-fail"}">${valid?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
+  });
+  return html+'</tbody></table></div><small class="match-detail-note">半场方向格独立保留；每名牌手的方向行合计与该半场比赛分逐行核对。</small>';
+}
+function matchSegmentsHtml(matchId){
+  const segments=[...(state.matchSegments?.[matchId]||[])].sort((a,b)=>a.order-b.order);
+  if(!segments.length)return "";
+  return `<section class="honor-modal-section match-segments-section"><h3><span>MATCH SEGMENTS</span>上下半场明细</h3><p class="match-segments-note">以下为本场分段 Evidence，不单独计入官方比赛场次或荣誉统计。</p>${segments.map(segment=>`<article class="match-segment"><header class="match-segment-head"><div><span>${segment.key==="first_half"?"FIRST HALF":segment.key==="second_half"?"SECOND HALF":"MATCH SEGMENT"}</span><h4>${escapeHtml(segment.label)}</h4></div><small>SEGMENT EVIDENCE</small></header>${matchSegmentResultsHtml(segment)}${matchSegmentMatrixHtml(segment)}</article>`).join("")}</section>`;
+}
 function openMatchModal(matchId){
   const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
   ensureMatchModal();
@@ -1214,7 +1280,8 @@ function openMatchModal(matchId){
   const precise=matchOrdinal(match.matchId)>=67
     ?`<div class="honor-modal-section match-detail-focus"><h3><span>PRECISE MATCHUP</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
     :`<div class="honor-modal-section match-detail-empty"><h3><span>PRECISION DATA</span>本场未启用精准对位记录</h3><p>精准对位数据自 MSL0067 起开始记录。</p></div>`;
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${precise}`;
+  const segments=matchSegmentsHtml(match.matchId);
+  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 比赛详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${precise}${segments}`;
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
