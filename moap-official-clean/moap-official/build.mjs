@@ -7,6 +7,7 @@ const outputDir = join(projectRoot, 'dist')
 const sourceFiles = [
   'index.html',
   'app.js',
+  'official-match-normalization.js',
   'animations.js',
   'motion-runtime.js',
   'gsap-index.js',
