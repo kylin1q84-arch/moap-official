@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a17">
   <title>MOAP Official｜麻将数据分析平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.6.5-msl0074-compact-segment-summary">
+  <link rel="stylesheet" href="/style.css?v=4.7.0-chinese-readability">
 </head>
 <body>
 
@@ -21,12 +21,12 @@
     <div class="brand">
       <div>
         <h1>MOAP OFFICIAL</h1>
-        <p>Mahjong Official Analytics Platform · 五人官方数据系统</p>
+        <p>五人麻将官方数据系统 · 实时分析</p>
       </div>
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v2.3.0 Matchup & Honor Detail Upgrade</span>
+      <span class="badge" id="versionBadge">v2.3.0 对位与荣誉详情升级</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button"><svg class="semantic-icon export-icon" data-motion-icon="download" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path data-icon-part="arrow" d="M12 3v11"></path><path data-icon-part="arrow" d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>导出当前数据</span></button>
     </div>
@@ -37,46 +37,46 @@
   <div class="layout">
     <aside class="sidebar">
       <nav id="sidebarNav"></nav>
-      <div class="side-footer"><span><i aria-hidden="true"></i>SUPABASE · LIVE</span><small>MOAP v2.3</small></div>
+      <div class="side-footer"><span><i aria-hidden="true"></i>SUPABASE · 云端数据</span><small>MOAP v2.3</small></div>
     </aside>
 
     <main>
       <section class="view active" data-view="overview">
         <div class="hero overview-masthead page-identity">
           <div class="page-identity-copy">
-            <span class="overview-masthead-kicker page-identity-eyebrow">LEAGUE OVERVIEW / <b id="overviewSeasonCode">SEASON —</b></span>
+            <span class="overview-masthead-kicker page-identity-eyebrow">联赛总览 / <b id="overviewSeasonCode">赛季 —</b></span>
             <h2 class="page-identity-title">联赛总览</h2>
             <p class="page-identity-description">官方赛事数据实时更新</p>
           </div>
-          <span class="overview-goat-signal page-identity-meta">CURRENT GOAT <b id="goatName">—</b></span>
+          <span class="overview-goat-signal page-identity-meta">当前 GOAT <b id="goatName">—</b></span>
         </div>
-        <section class="league-command-scene command-goat-spotlight" aria-label="League Command Scene">
+        <section class="league-command-scene command-goat-spotlight" aria-label="联赛总览数据概览">
           <div class="league-command-grid">
             <section class="command-goat-zone">
-              <div class="command-zone-head"><span>01 / LEAGUE AUTHORITY</span><small>历史地位综合模型</small></div>
+              <div class="command-zone-head"><span>01 / 联赛权威</span><small>历史地位综合模型</small></div>
               <div id="overviewGoatHero"></div>
             </section>
             <aside class="command-goat-standing command-standing-zone">
-              <div class="command-zone-head"><span>02 / GOAT STANDING</span><small>当前官方历史排名</small></div>
+              <div class="command-zone-head"><span>02 / GOAT 排名</span><small>当前官方历史排名</small></div>
               <div id="goatRanking"></div>
             </aside>
           </div>
           <div class="overview-metrics-strip" id="overviewKpis"></div>
         </section>
         <section class="overview-open-section overview-editorial-recap">
-          <header class="overview-section-head"><div><span>EDITORIAL DATA BRIEF</span><h3>最新比赛 · MSL赛后简报</h3></div><small>自动读取最新正式比赛与纪录动态</small></header>
+          <header class="overview-section-head"><div><span>赛后数据简报</span><h3>最新比赛 · MSL赛后简报</h3></div><small>自动读取最新正式比赛与纪录动态</small></header>
           <div id="latestAiRecap"></div>
         </section>
         <section class="overview-open-section overview-season-spotlight" aria-labelledby="overviewSeasonSpotlightTitle">
           <header class="overview-section-head overview-season-spotlight-head">
-            <div><span>CURRENT SEASON SPOTLIGHT</span><h3 id="overviewSeasonSpotlightTitle">当前赛季焦点</h3><small id="overviewCurrentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div>
+            <div><span>赛季观察</span><h3 id="overviewSeasonSpotlightTitle">当前赛季焦点</h3><small id="overviewCurrentSeasonPerformanceMeta">只统计当前赛季，不计历史赛季</small></div>
             <label class="inline-filter overview-season-player-filter">牌手<select id="overviewSeasonPlayerSelect"></select></label>
           </header>
           <div id="overviewCurrentSeasonPerformance"></div>
         </section>
         <section class="overview-open-section monthly-report-card">
           <header class="overview-section-head monthly-report-head">
-            <div><span>MONTHLY INTELLIGENCE</span><h3>月度报告</h3><small>比赛表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入官方荣誉</small></div>
+            <div><span>月度观察</span><h3>月度报告</h3><small>比赛表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入官方荣誉</small></div>
             <label class="inline-filter">月份<select id="monthlyReportMonth"></select></label>
           </header>
           <div id="monthlyReport"></div>
@@ -85,13 +85,13 @@
 
       <section class="view" data-view="records">
         <header class="records-workbench-masthead page-identity">
-          <div class="page-identity-copy"><span class="records-kicker page-identity-eyebrow">RECORDS WORKBENCH / OFFICIAL DATA</span><h2 class="page-identity-title">记录中心</h2><p class="page-identity-description">查询综合排名、单场纪录与连续纪录</p></div>
-          <div class="records-official-mark page-identity-meta" aria-label="MSL官方纪录册"><span>RECORD BOOK</span><strong>OFFICIAL</strong></div>
+          <div class="page-identity-copy"><span class="records-kicker page-identity-eyebrow">纪录工作台 / 官方数据</span><h2 class="page-identity-title">记录中心</h2><p class="page-identity-description">查询综合排名、单场纪录与连续纪录</p></div>
+          <div class="records-official-mark page-identity-meta" aria-label="MSL官方纪录册"><span>MSL 纪录册</span><strong>官方</strong></div>
         </header>
 
         <section class="records-query-stage records-data-stage record-data-leaderboard" aria-labelledby="dataQueryTitle">
           <header class="records-query-head record-data-head">
-            <div><span class="records-kicker">DATA QUERY</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、比赛类型和数据类型查询</small></div>
+            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、比赛类型和数据类型查询</small></div>
             <div class="records-filter-bar record-filter-row record-query-toolbar records-data-filters">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>比赛类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
@@ -104,14 +104,14 @@
 
         <section class="records-query-stage records-ledger-stage record-center-card" aria-labelledby="recordQueryTitle">
           <header class="records-query-head record-toolbar">
-            <div class="record-query-copy"><span class="records-kicker">RECORD QUERY</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与证据链</small><small class="records-method-note" id="recordMethodNote"></small></div>
+            <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
             <div class="record-filter-cluster">
               <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
                 <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
                 <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
                 <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               </div>
-              <div class="records-result-count" id="recordResultCount" aria-live="polite"><span>RESULT</span><strong>— RECORDS</strong><small>— 项记录</small></div>
+              <div class="records-result-count" id="recordResultCount" aria-live="polite"><span>查询结果</span><strong>— 项纪录</strong></div>
             </div>
           </header>
           <div class="records-table-surface records-desktop-ledger table-scroll record-table-scroll">
@@ -126,25 +126,25 @@
 
       <section class="view" data-view="status">
         <header class="status-live-masthead page-identity">
-          <div class="page-identity-copy"><span class="status-live-kicker page-identity-eyebrow">LIVE PERFORMANCE / RECENT 5</span><h2 class="page-identity-title">状态中心</h2><p class="page-identity-description">聚焦最近5场表现、走势与即时变化</p></div>
-          <div class="status-current-leader page-identity-meta"><span>CURRENT LEADER</span><strong id="statusCurrentLeader">—</strong><small id="statusCurrentLeaderIndex">LIVE INDEX —</small></div>
+          <div class="page-identity-copy"><span class="status-live-kicker page-identity-eyebrow">近期表现 / 近5场</span><h2 class="page-identity-title">状态中心</h2><p class="page-identity-description">聚焦最近5场表现、走势与即时变化</p></div>
+          <div class="status-current-leader page-identity-meta"><span>当前领先者</span><strong id="statusCurrentLeader">—</strong><small id="statusCurrentLeaderIndex">状态指数 —</small></div>
         </header>
         <section class="status-ranking-stage" aria-labelledby="statusRankingTitle">
-          <header class="status-stage-head"><div><span>STATE RANKING</span><h3 id="statusRankingTitle">MSL状态实力榜</h3></div></header>
+          <header class="status-stage-head"><div><span>状态排名</span><h3 id="statusRankingTitle">MSL状态实力榜</h3></div></header>
           <div class="power-list" id="powerRanking"></div>
         </section>
         <section class="status-intelligence-stage" aria-labelledby="statusIntelligenceTitle">
-          <header class="status-intelligence-head"><div><span>STATE INTELLIGENCE</span><h3 id="statusIntelligenceTitle">状态情报</h3></div><small>最近5场 · 状态证据与指数依据</small></header>
+          <header class="status-intelligence-head"><div><span>状态情报</span><h3 id="statusIntelligenceTitle">状态情报</h3></div><small>最近5场 · 状态依据与指数依据</small></header>
           <div class="status-intelligence-signal status-signal-stage" aria-labelledby="statusSignalTitle">
-            <header class="status-intelligence-subhead"><div><span>LIVE SIGNAL</span><small id="statusSignalTitle">即时信号</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>即时信号</span><small id="statusSignalTitle">即时信号</small></div></header>
             <div class="status-signal-rail" id="statusKpis"></div>
           </div>
           <div class="status-intelligence-observation status-observation-stage" aria-labelledby="statusObservationTitle">
-            <header class="status-intelligence-subhead"><div><span>STATUS OBSERVATION</span><small id="statusObservationTitle">状态观察</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>状态观察</span><small id="statusObservationTitle">状态观察</small></div></header>
             <div class="storyline-grid status-observation-grid" id="statusStorylines"></div>
           </div>
           <div class="status-intelligence-method status-method-stage" aria-labelledby="statusMethodTitle">
-            <header class="status-intelligence-subhead"><div><span>STATUS INDEX METHOD</span><small id="statusMethodTitle">状态指数依据</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>指数依据</span><small id="statusMethodTitle">状态指数依据</small></div></header>
             <div class="analysis-method" id="statusMethodology"></div>
           </div>
         </section>
@@ -152,21 +152,21 @@
 
       <section class="view" data-view="player">
         <div class="hero player-observatory-masthead page-identity">
-          <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">PLAYER OBSERVATORY · MSL</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
+          <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MSL</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
           <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="player-profile-stage player-observatory-stage">
           <div class="player-observatory-identity-column">
             <div class="player-head" id="playerHeader"></div>
             <div class="profile-honors-home player-honor-archive player-observatory-panel">
-              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>HONOR ARCHIVE</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
+              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>荣誉档案</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
               <div class="profile-honor-list" id="profileHonorList"></div>
             </div>
           </div>
         </div>
         <div class="player-season-data-card player-observatory-panel">
             <div class="section-head player-season-data-head player-observatory-section-head">
-              <div><span>SEASON DATA</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
+              <div><span>赛季数据</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
               <div class="record-filter-row player-season-filters">
                 <label>比赛类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
                 <label>数据类型<select id="playerSeasonMetric"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
@@ -179,7 +179,7 @@
         </div>
         <div class="player-trend-stage">
           <div class="card section player-observatory-panel player-career-trajectory">
-            <div class="section-head player-observatory-section-head"><div><span>CAREER TRAJECTORY</span><h3>生涯积分曲线</h3></div><small id="chartCaption"></small></div>
+            <div class="section-head player-observatory-section-head"><div><span>生涯轨迹</span><h3>生涯积分曲线</h3></div><small id="chartCaption"></small></div>
             <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
           </div>
         </div>
@@ -187,11 +187,11 @@
 
       <section class="view" data-view="matches">
         <header class="match-ledger-masthead page-identity">
-          <div class="page-identity-copy"><span class="match-ledger-kicker page-identity-eyebrow">MATCH ARCHIVE / OFFICIAL LOG</span><h2 class="page-identity-title">比赛中心</h2><p class="page-identity-description">正式比赛档案与逐场结果</p></div>
-          <div class="match-ledger-total page-identity-meta"><span>TOTAL MATCHES</span><strong id="matchTotalCount">—</strong><small>OFFICIAL RECORDS</small></div>
+          <div class="page-identity-copy"><span class="match-ledger-kicker page-identity-eyebrow">比赛档案 / 正式记录</span><h2 class="page-identity-title">比赛中心</h2><p class="page-identity-description">正式比赛档案与逐场结果</p></div>
+          <div class="match-ledger-total page-identity-meta"><span>正式比赛</span><strong id="matchTotalCount">—</strong><small>正式档案</small></div>
         </header>
         <section class="match-query-stage" aria-labelledby="matchQueryTitle">
-          <header class="match-ledger-section-head"><div><span>QUERY BAR</span><h3 id="matchQueryTitle">比赛档案查询</h3></div><strong id="matchResultCount">— MATCHES FOUND</strong></header>
+          <header class="match-ledger-section-head"><div><span>档案查询</span><h3 id="matchQueryTitle">比赛档案查询</h3></div><strong id="matchResultCount">找到 — 场比赛</strong></header>
           <div class="form-row match-query-bar">
             <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
@@ -202,20 +202,20 @@
         <section class="match-ledger-stage">
           <div class="match-ledger-meta match-ledger-result-meta"><small id="matchPrecisionStartNote">按时间倒序 · 精准对位起始场同步中</small></div>
           <div class="season-match-log match-ledger" id="matchList"></div>
-          <div class="match-load-action"><button class="btn load-more" id="loadMoreBtn" type="button">LOAD MORE MATCHES · 加载更多比赛</button></div>
+          <div class="match-load-action"><button class="btn load-more" id="loadMoreBtn" type="button">加载更多比赛</button></div>
         </section>
       </section>
 
       <section class="view" data-view="entry">
         <header class="entry-console-masthead page-identity">
           <div>
-            <span class="entry-console-kicker page-identity-eyebrow">ENTRY CONSOLE / OFFICIAL INPUT</span>
+            <span class="entry-console-kicker page-identity-eyebrow">比赛录入 / 正式数据</span>
             <h2 class="page-identity-title">录入比赛</h2>
             <p class="page-identity-description">正式比赛数据录入与方向对位校验</p>
           </div>
           <div class="entry-connection-status page-identity-meta" aria-live="polite">
             <span>SUPABASE</span>
-            <strong id="entryConnectionStatus">BASELINE</strong>
+            <strong id="entryConnectionStatus">基线数据</strong>
             <small id="entryConnectionNote">等待云端同步</small>
           </div>
         </header>
@@ -223,7 +223,7 @@
         <div class="entry-workspace">
           <div class="entry-input-column">
             <section class="entry-step entry-step-metadata" aria-labelledby="entryMetadataTitle">
-              <div class="entry-step-label"><span>STEP 01</span><small>比赛信息</small></div>
+              <div class="entry-step-label"><span>步骤 01</span><small>比赛信息</small></div>
               <div class="entry-section-head"><div><h3 id="entryMetadataTitle">比赛信息</h3><small>确认赛季、日期、类型与场地</small></div></div>
               <div class="entry-fields">
                 <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
@@ -233,7 +233,7 @@
               </div>
             </section>
             <section class="entry-step entry-step-players" aria-labelledby="entryPlayersTitle">
-              <div class="entry-step-label"><span>STEP 02</span><small>牌手与比赛分</small></div>
+              <div class="entry-step-label"><span>步骤 02</span><small>牌手与比赛分</small></div>
               <div class="entry-section-head"><div><h3 id="entryPlayersTitle">牌手与比赛分</h3><small>选择参赛牌手并填写本场总分</small></div></div>
               <div class="entry-score-sheet-head" aria-hidden="true"><span>参赛牌手</span><span>比赛分</span></div>
               <div id="entryPlayers"></div>
@@ -243,7 +243,7 @@
           <aside class="entry-control-column">
             <section id="entryValidation" class="validation entry-validation-console" aria-live="polite">请选择参赛牌手并填写分数。</section>
             <section class="entry-rules" aria-labelledby="entryRulesTitle">
-              <div class="entry-section-head"><div><span class="entry-console-kicker">ENTRY RULES</span><h3 id="entryRulesTitle">录入规则</h3><small>保存前实时检查，规则语义保持不变</small></div></div>
+              <div class="entry-section-head"><div><span class="entry-console-kicker">录入规则</span><h3 id="entryRulesTitle">录入规则</h3><small>保存前实时检查，规则语义保持不变</small></div></div>
               <div class="entry-rule-list">
                 <div class="entry-rule"><b>01</b><div><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div></div>
                 <div class="entry-rule"><b>02</b><div><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div></div>
@@ -254,7 +254,7 @@
             </section>
           </aside>
           <section class="entry-matrix-stage" aria-labelledby="entryMatrixTitle">
-            <div class="entry-step-label"><span>STEP 03</span><small>精准对位矩阵</small></div>
+            <div class="entry-step-label"><span>步骤 03</span><small>精准对位矩阵</small></div>
             <div class="entry-section-head"><div><h3 id="entryMatrixTitle">本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；两个方向分别统计，不互为相反数。正数=吃分，负数=被吃分，0也需要明确填写。</small></div><span class="chip gold">新制必填</span></div>
             <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
             <div id="matchupValidation" class="validation entry-matrix-check" aria-live="polite">每个方向格都要独立填写，且每名牌手的对位行合计必须对应比赛总分。</div>
@@ -262,7 +262,7 @@
         </div>
 
         <footer class="entry-commit-bar">
-          <div class="entry-commit-status"><span>VALIDATION STATUS</span><strong id="entryCommitStatus"><span class="entry-check-icon" data-entry-check-icon hidden><svg class="semantic-icon" data-motion-icon="check-circle" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12 2.6 2.6L16.5 9"></path></svg></span><span data-entry-status-label>CHECK REQUIRED</span></strong></div>
+          <div class="entry-commit-status"><span>校验状态</span><strong id="entryCommitStatus"><span class="entry-check-icon" data-entry-check-icon hidden><svg class="semantic-icon" data-motion-icon="check-circle" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12 2.6 2.6L16.5 9"></path></svg></span><span data-entry-status-label>需要检查</span></strong></div>
           <div class="entry-actions">
             <button class="btn primary" id="saveMatchBtn" type="button"><svg class="semantic-icon save-icon" data-motion-icon="save" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h8V4M8 20v-6h8v6"></path></svg><span data-save-label>保存比赛与精准对位</span></button>
             <button class="btn" id="clearEntryBtn" type="button">清空</button>
@@ -274,12 +274,12 @@
       <section class="view" data-view="rival">
         <header class="rival-intelligence-masthead page-identity">
           <div class="page-identity-copy">
-            <span class="rival-eyebrow page-identity-eyebrow">RIVAL INTELLIGENCE / DIRECTIONAL MATRIX</span>
+            <span class="rival-eyebrow page-identity-eyebrow">对位分析 / 方向矩阵</span>
             <h2 class="page-identity-title">对位中心</h2>
             <p class="page-identity-description">逐场记录牌手之间的方向性吃分关系</p>
           </div>
           <div class="rival-tracked-signal page-identity-meta" aria-label="已追踪比赛">
-            <span>TRACKED MATCHES</span>
+            <span>已记录比赛</span>
             <strong id="rivalTrackedMatches">0</strong>
             <small>精准对位明细</small>
           </div>
@@ -291,7 +291,7 @@
           <section class="rival-matrix-stage">
             <header class="rival-stage-head">
               <div>
-                <span class="rival-eyebrow">RELATIONSHIP MATRIX</span>
+                <span class="rival-eyebrow">对位关系矩阵</span>
                 <h3>方向对位矩阵</h3>
                 <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
               </div>
@@ -306,14 +306,14 @@
           </section>
 
           <section class="rival-pair-lens" id="rivalDetailCard">
-            <div id="rivalDetail" class="rival-lens-empty"><span>SELECT A DIRECTION</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p></div>
+            <div id="rivalDetail" class="rival-lens-empty"><span>选择对位方向</span><p>选择矩阵中的一个方向，查看双方累计或场均关系。</p></div>
           </section>
         </section>
 
         <section class="rival-flow-stage">
           <header class="rival-stage-head">
             <div>
-              <span class="rival-eyebrow">PLAYER FLOW SUMMARY</span>
+              <span class="rival-eyebrow">对位流向汇总</span>
               <h3>牌手流向汇总</h3>
               <p>同一统计口径下的吃分、被吃分与净积分</p>
             </div>
@@ -325,12 +325,12 @@
       <section class="view" data-view="system">
         <header class="system-audit-masthead page-identity">
           <div class="system-audit-masthead-copy page-identity-copy">
-            <span class="system-eyebrow page-identity-eyebrow">SYSTEM AUDIT / DATA INTEGRITY</span>
+            <span class="system-eyebrow page-identity-eyebrow">系统审计 / 数据完整性</span>
             <h2 class="page-identity-title">系统审计</h2>
             <p class="page-identity-description">正式数据完整性、认证状态与版本信息</p>
           </div>
           <aside class="system-health-anchor page-identity-meta" aria-label="系统健康度">
-            <span class="system-health-label"><svg class="semantic-icon system-shield-icon" data-motion-icon="shield" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z"></path><path d="m9 12 2 2 4-4"></path></svg><span>SYSTEM HEALTH</span></span>
+            <span class="system-health-label"><svg class="semantic-icon system-shield-icon" data-motion-icon="shield" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z"></path><path d="m9 12 2 2 4-4"></path></svg><span>系统健康度</span></span>
             <strong id="systemHealthValue">—</strong>
             <small id="systemHealthStatus">—</small>
           </aside>
@@ -338,15 +338,15 @@
 
         <section class="system-signal-stage" aria-labelledby="systemSignalTitle">
           <header class="system-section-head">
-            <div><span>INTEGRITY SIGNAL</span><h3 id="systemSignalTitle">系统完整性信号</h3></div>
-            <small>CURRENT DATASET</small>
+            <div><span>完整性信号</span><h3 id="systemSignalTitle">系统完整性信号</h3></div>
+            <small>当前数据集</small>
           </header>
           <div class="system-signal-rail" id="systemKpis"></div>
         </section>
 
         <section class="system-audit-stage" aria-labelledby="systemAuditTitle">
           <header class="system-section-head system-audit-head">
-            <div><span>AUDIT CHECKS</span><h3 id="systemAuditTitle">数据完整性检查</h3></div>
+            <div><span>审计检查</span><h3 id="systemAuditTitle">数据完整性检查</h3></div>
             <strong class="system-audit-pass-count" id="systemAuditPassCount">—</strong>
           </header>
           <div class="system-audit-list" id="healthList"></div>
@@ -354,7 +354,7 @@
 
         <section class="system-release-stage" aria-labelledby="systemReleaseTitle">
           <header class="system-section-head">
-            <div><span>RELEASE MANIFEST</span><h3 id="systemReleaseTitle">版本与发布清单</h3></div>
+            <div><span>发布清单</span><h3 id="systemReleaseTitle">版本与发布清单</h3></div>
           </header>
           <dl class="system-manifest" id="versionInfo"></dl>
         </section>
@@ -365,6 +365,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.6.8-official-venue"></script>
+  <script type="module" src="/app.js?v=4.7.0-chinese-readability"></script>
 </body>
 </html>
