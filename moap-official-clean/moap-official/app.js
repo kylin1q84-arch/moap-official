@@ -187,35 +187,143 @@ function average(values){return values.length?values.reduce((a,b)=>a+Number(b),0
 function normalizeMatchSegments(rows=[],players=[]){
   const playerById=Object.fromEntries((players||[]).map(player=>[player.playerId,player.name]));
   return (rows||[]).reduce((byMatch,row)=>{
-    const matchId=String(row?.match_id||"");
+    const matchId=String(row?.match_id??row?.matchId??"");
     if(matchId!=="MSL0074")return byMatch;
-    const key=String(row.segment_key||"");
-    const results=(Array.isArray(row.results)?row.results:[]).map(result=>({
-      playerId:String(result?.player_id||""),
-      player:playerById[String(result?.player_id||"")]||String(result?.player_id||"—"),
-      score:result?.score==null?null:Number(result.score),
-      isAbsent:!!result?.is_absent,
-      isMvp:!!result?.is_mvp
-    }));
+    const key=String(row.segment_key??row.key??"");
+    const results=(Array.isArray(row.results)?row.results:[]).map(result=>{
+      const playerId=String(result?.player_id??result?.playerId??"");
+      const score=result?.score==null?null:Number(result.score);
+      return {...result,playerId,player:playerById[playerId]||String(result?.player||playerId||"—"),score,
+        isAbsent:!!(result?.is_absent??result?.isAbsent),isMvp:!!(result?.is_mvp??result?.isMvp)};
+    });
     const matchups=(Array.isArray(row.matchups)?row.matchups:[]).map(item=>({
-      fromPlayerId:String(item?.from_player_id||""),
-      toPlayerId:String(item?.to_player_id||""),
+      ...item,
+      fromPlayerId:String(item?.from_player_id??item?.fromPlayerId??""),
+      toPlayerId:String(item?.to_player_id??item?.toPlayerId??""),
       points:Number(item?.points)
     })).filter(item=>item.fromPlayerId&&item.toPlayerId&&Number.isFinite(item.points));
     (byMatch[matchId]??=[]).push({
       key,
-      label:String(row.segment_label||(key==="first_half"?"上半场":key==="second_half"?"下半场":"分段")),
-      order:Number(row.segment_order)||0,
+      label:String(row.segment_label??row.label??(key==="first_half"?"上半场":key==="second_half"?"下半场":"分段")),
+      order:Number(row.segment_order??row.order)||0,
       results,
       matchups
     });
     return byMatch;
   },{});
 }
+function consolidateMsl0074Runtime(db){
+  const fail=reason=>{
+    console.error("MSL0074 consolidation validation failed",reason);
+    return {db,segments:[],consolidated:false};
+  };
+  try{
+    const matches=Array.isArray(db?.matches)?db.matches:[];
+    const sourceMatches=matches.filter(match=>match?.id==="MSL0074"||match?.id==="MSL0075");
+    const primary=sourceMatches.find(match=>match.id==="MSL0074");
+    const second=sourceMatches.find(match=>match.id==="MSL0075");
+    if(!primary||!second||sourceMatches.filter(match=>match.id==="MSL0074").length!==1||sourceMatches.filter(match=>match.id==="MSL0075").length!==1)return fail("required match IDs must each exist exactly once");
+    const venueIdentity=venue=>String(venue||"").trim().replace(/\s*(?:上半场|下半场)\s*$/u,"").trim();
+    const primaryVenue=venueIdentity(primary.venue),secondVenue=venueIdentity(second.venue);
+    if(primary.match_date!=="2026-10-05"||second.match_date!=="2026-10-05")return fail("both match dates must be 2026-10-05");
+    if(primary.season_id!==second.season_id)return fail("season mismatch");
+    if(primary.match_type!==second.match_type)return fail("match type mismatch");
+    if(!primaryVenue||primaryVenue!==secondVenue||!String(primary.venue||"").trim().endsWith("上半场")||!String(second.venue||"").trim().endsWith("下半场"))return fail("venue mismatch after validating the explicit half labels");
+
+    const allResults=Array.isArray(db.results)?db.results:[];
+    const deepCopyRows=rows=>JSON.parse(JSON.stringify(rows||[]));
+    const firstRows=deepCopyRows(allResults.filter(row=>row?.match_id==="MSL0074"));
+    const secondRows=deepCopyRows(allResults.filter(row=>row?.match_id==="MSL0075"));
+    const makeResultMap=(rows,label)=>{
+      const resultMap=new Map();
+      for(const row of rows){
+        const playerId=String(row?.player_id||"");
+        if(!playerId||resultMap.has(playerId))throw new Error(`${label} result rows must have unique player IDs`);
+        resultMap.set(playerId,row);
+      }
+      if(!resultMap.size)throw new Error(`${label} result rows are missing`);
+      return resultMap;
+    };
+    const firstByPlayer=makeResultMap(firstRows,"MSL0074");
+    const secondByPlayer=makeResultMap(secondRows,"MSL0075");
+    const firstRoster=[...firstByPlayer.keys()].sort(),secondRoster=[...secondByPlayer.keys()].sort();
+    if(firstRoster.length!==secondRoster.length||firstRoster.some((id,index)=>id!==secondRoster[index]))return fail("result rosters differ");
+    for(const playerId of firstRoster){
+      const firstResult=firstByPlayer.get(playerId),secondResult=secondByPlayer.get(playerId);
+      if(!!firstResult.is_absent!==!!secondResult.is_absent)return fail(`absence status differs for ${playerId}`);
+    }
+    const playerRows=Array.isArray(db.players)?db.players:[];
+    const activePlayerIds=new Set(playerRows.filter(player=>player?.active).map(player=>String(player.id)));
+    const firstParticipantIds=firstRows.filter(row=>!row.is_absent&&row.score!=null&&Number.isFinite(Number(row.score))).map(row=>String(row.player_id)).sort();
+    const secondParticipantIds=secondRows.filter(row=>!row.is_absent&&row.score!=null&&Number.isFinite(Number(row.score))).map(row=>String(row.player_id)).sort();
+    if(!firstParticipantIds.length||firstParticipantIds.length!==secondParticipantIds.length||firstParticipantIds.some((id,index)=>id!==secondParticipantIds[index]))return fail("effective participant sets differ");
+    if(firstParticipantIds.some(id=>!activePlayerIds.has(id)))return fail("an effective participant is not an active player");
+    for(const playerId of firstParticipantIds){
+      for(const [label,row] of [["MSL0074",firstByPlayer.get(playerId)],["MSL0075",secondByPlayer.get(playerId)]]){
+        if(row.score==null||!Number.isFinite(Number(row.score)))return fail(`${label} has an invalid score for ${playerId}`);
+      }
+    }
+
+    const firstMatchups=deepCopyRows((Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row?.match_id==="MSL0074"));
+    const secondMatchups=deepCopyRows((Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row?.match_id==="MSL0075"));
+    const buildDirectionalMap=(rows,label,rowsByPlayer)=>{
+      const cells=new Map();
+      for(const row of rows){
+        const from=String(row?.from_player_id||""),to=String(row?.to_player_id||""),points=Number(row?.points),key=`${from}|${to}`;
+        if(!from||!to||from===to||!firstParticipantIds.includes(from)||!firstParticipantIds.includes(to)||!Number.isInteger(points)||cells.has(key))throw new Error(`${label} contains an invalid or duplicate direction cell`);
+        cells.set(key,points);
+      }
+      const expected=firstParticipantIds.length*(firstParticipantIds.length-1);
+      if(cells.size!==expected)throw new Error(`${label} matrix is incomplete (${cells.size}/${expected})`);
+      for(const from of firstParticipantIds){
+        const outgoing=firstParticipantIds.filter(to=>to!==from).reduce((sum,to)=>sum+cells.get(`${from}|${to}`),0);
+        if(outgoing!==Number(rowsByPlayer.get(from)?.score))throw new Error(`${label} outgoing total mismatch for ${from}`);
+      }
+      return cells;
+    };
+    const firstCells=buildDirectionalMap(firstMatchups,"MSL0074",firstByPlayer);
+    const secondCells=buildDirectionalMap(secondMatchups,"MSL0075",secondByPlayer);
+    const finalResults=firstRoster.map(playerId=>{
+      const firstResult=firstByPlayer.get(playerId),secondResult=secondByPlayer.get(playerId),isAbsent=!!firstResult.is_absent;
+      return {...firstResult,id:`MSL0074:runtime:${playerId}`,match_id:"MSL0074",player_id:playerId,
+        score:isAbsent?null:Number(firstResult.score)+Number(secondResult.score),is_absent:isAbsent,is_mvp:false};
+    });
+    const playedResults=finalResults.filter(row=>!row.is_absent&&row.score!=null);
+    const finalTotal=playedResults.reduce((sum,row)=>sum+Number(row.score),0);
+    if(!Number.isFinite(finalTotal)||Math.abs(finalTotal)>1e-9)return fail(`combined scores do not total zero (${finalTotal})`);
+    const highestScore=Math.max(...playedResults.map(row=>Number(row.score)));
+    const mvpRows=playedResults.filter(row=>Number(row.score)===highestScore);
+    if(mvpRows.length!==1)return fail(`combined maximum score is tied (${mvpRows.length} players)`);
+    mvpRows[0].is_mvp=true;
+
+    const finalMatchups=[];
+    for(const from of firstParticipantIds){
+      for(const to of firstParticipantIds){
+        if(to===from)continue;
+        const points=firstCells.get(`${from}|${to}`)+secondCells.get(`${from}|${to}`);
+        finalMatchups.push({id:`MSL0074:runtime:${from}:${to}`,match_id:"MSL0074",from_player_id:from,to_player_id:to,points});
+      }
+    }
+    for(const from of firstParticipantIds){
+      const outgoing=finalMatchups.filter(row=>row.from_player_id===from).reduce((sum,row)=>sum+Number(row.points),0);
+      if(outgoing!==Number(finalResults.find(row=>row.player_id===from)?.score))return fail(`combined matrix outgoing total mismatch for ${from}`);
+    }
+    const firstHalf={match_id:"MSL0074",segment_key:"first_half",segment_label:"上半场",segment_order:1,results:deepCopyRows(firstRows),matchups:deepCopyRows(firstMatchups)};
+    const secondHalf={match_id:"MSL0074",segment_key:"second_half",segment_label:"下半场",segment_order:2,results:deepCopyRows(secondRows),matchups:deepCopyRows(secondMatchups)};
+    const nextMatches=matches.filter(match=>match.id!=="MSL0075").map(match=>match.id==="MSL0074"?{...match,venue:primaryVenue}:match);
+    const nextResults=(Array.isArray(db.results)?db.results:[]).filter(row=>row.match_id!=="MSL0074"&&row.match_id!=="MSL0075").concat(finalResults);
+    const nextMatchups=(Array.isArray(db.matchups)?db.matchups:[]).filter(row=>row.match_id!=="MSL0074"&&row.match_id!=="MSL0075").concat(finalMatchups);
+    return {db:{...db,matches:nextMatches,results:nextResults,matchups:nextMatchups},segments:[firstHalf,secondHalf],consolidated:true};
+  }catch(error){
+    return fail(error?.message||String(error));
+  }
+}
 function competitionRanks(rows,key){
   let last=null,rank=0;return rows.map((x,i)=>{const v=x[key];if(i===0||v!==last)rank=i+1;last=v;return {...x,rank};});
 }
 function buildLiveState(db){
+  const runtimeConsolidation=consolidateMsl0074Runtime(db);
+  db=runtimeConsolidation.db;
   const players=db.players.map(p=>({playerId:p.id,name:p.name,joinSeason:p.join_season,status:p.active?"Active":"Inactive"}));
   const nameBy=Object.fromEntries(players.map(p=>[p.playerId,p.name]));
   const resultMap={};db.results.forEach(r=>(resultMap[r.match_id]??=[]).push(r));
@@ -311,7 +419,7 @@ function buildLiveState(db){
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
   const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"Official Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"比赛中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新比赛月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次官方荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMslStatusCenter(players,matches,honors);
-  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(db.matchSegments||[],players),rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
+  return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(runtimeConsolidation.segments,players),rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
 async function fetchTable(table,columns="*"){
