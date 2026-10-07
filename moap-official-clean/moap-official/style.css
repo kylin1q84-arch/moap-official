@@ -5077,7 +5077,19 @@ select.moap-native-select{
 [data-view="records"] .record-query-copy .records-method-note:empty{display:none}
 [data-view="records"] .records-desktop-ledger{border-top-color:var(--records-rule)}
 [data-view="records"] .record-center-card .record-table th:nth-child(1),
-[data-view="records"] .record-center-card .record-table td:nth-child(1){width:auto;min-width:280px;text-align:left}
+[data-view="records"] .record-center-card .record-table td:nth-child(1){
+  width:36%;
+  min-width:300px;
+  padding-left:24px;
+  padding-right:14px;
+  text-align:left;
+}
+[data-view="records"] .record-center-card .record-table td:first-child strong,
+[data-view="records"] .record-center-card .record-table td:first-child small{
+  margin-left:0;
+  margin-right:0;
+  text-align:left;
+}
 [data-view="records"] .record-center-card .record-table th:nth-child(2),
 [data-view="records"] .record-center-card .record-table td:nth-child(2){min-width:150px;text-align:left}
 [data-view="records"] .record-center-card .record-table th:nth-child(3),
@@ -5211,7 +5223,7 @@ select.moap-native-select{
     text-align:left;
     transform:none!important;
   }
-  [data-view="records"] .records-mobile-record-title{grid-area:title;min-width:0}
+  [data-view="records"] .records-mobile-record-title{grid-area:title;min-width:0;text-align:left}
   [data-view="records"] .records-mobile-record-title strong{display:block;font-size:14px;line-height:1.4}
   [data-view="records"] .records-mobile-record-title small{display:block;margin-top:5px;color:var(--records-muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
   [data-view="records"] .records-mobile-record-value{grid-area:value;align-self:start;font-size:22px;font-weight:790;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
