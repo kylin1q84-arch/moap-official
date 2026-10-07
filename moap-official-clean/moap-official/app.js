@@ -1241,12 +1241,34 @@ function matchCard(m){
   const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=hasPreciseMatchup(m),hasDetail=precise||!!state.matchSegments?.[m.matchId]?.length,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
   return `<article class="season-log-entry match-ledger-row ${hasDetail?"is-clickable":""} ${isLatest?"is-latest":""}" ${hasDetail?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}牌局详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">最新牌局</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${hasDetail?'<span class="match-ledger-view">查看牌局 →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
 }
+let matchDetailSegmentMatchId=null;
+let matchDetailSegmentView="full";
+const MATCH_DETAIL_SEGMENT_TABS=[["full","全场"],["first_half","上半场"],["second_half","下半场"]];
 function ensureMatchModal(){
   if($("#matchModalBackdrop"))return;
   document.body.insertAdjacentHTML("beforeend",`<div class="honor-modal-backdrop" id="matchModalBackdrop" hidden><section class="honor-modal match-detail-modal" role="dialog" aria-modal="true" aria-labelledby="matchModalTitle"><button type="button" class="honor-modal-close" id="matchModalClose" aria-label="关闭">×</button><div id="matchModalBody"></div></section></div>`);
   $("#matchModalBackdrop").addEventListener("mousedown",e=>{if(e.target.id==="matchModalBackdrop")closeMatchModal();});$("#matchModalClose").addEventListener("click",closeMatchModal);
+  $("#matchModalBody").addEventListener("click",e=>{
+    const tab=e.target.closest("[data-match-detail-view]");
+    if(tab)setMatchDetailSegmentView(tab.dataset.matchDetailView);
+  });
+  $("#matchModalBody").addEventListener("keydown",e=>{
+    const tab=e.target.closest("[data-match-detail-view]");
+    if(!tab||!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;
+    e.preventDefault();
+    const current=MATCH_DETAIL_SEGMENT_TABS.findIndex(([key])=>key===tab.dataset.matchDetailView);
+    const next=e.key==="Home"?0:e.key==="End"?MATCH_DETAIL_SEGMENT_TABS.length-1:
+      (current+(e.key==="ArrowRight"?1:-1)+MATCH_DETAIL_SEGMENT_TABS.length)%MATCH_DETAIL_SEGMENT_TABS.length;
+    setMatchDetailSegmentView(MATCH_DETAIL_SEGMENT_TABS[next][0]);
+    $("#matchModalBody [data-match-detail-view][aria-selected='true']")?.focus();
+  });
 }
-function closeMatchModal(){const m=$("#matchModalBackdrop");if(m){m.hidden=true;document.body.classList.remove("modal-open");}}
+function closeMatchModal(){
+  const m=$("#matchModalBackdrop");
+  if(m){m.hidden=true;document.body.classList.remove("modal-open");}
+  matchDetailSegmentMatchId=null;
+  matchDetailSegmentView="full";
+}
 function singleMatchMatrixHtml(match){
   const participants=match.results.filter(r=>!r.isAbsent&&r.score!=null),ids=participants.map(r=>r.playerId),nameBy=Object.fromEntries(participants.map(r=>[r.playerId,r.player]));
   const rows=(state.matchups||[]).filter(x=>x.matchId===match.matchId),cell=new Map(rows.map(x=>[`${x.fromPlayerId}|${x.toPlayerId}`,Number(x.points)]));
@@ -1258,18 +1280,13 @@ function singleMatchMatrixHtml(match){
   });
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
-function matchSegmentResultsHtml(segment){
-  const rows=(segment.results||[]).filter(row=>!row.isAbsent&&row.score!=null);
-  if(!rows.length)return '<p class="match-segment-empty">该分段暂无有效成绩。</p>';
-  return `<div class="match-segment-result-rail" aria-label="${escapeHtml(segment.label)}成绩">${rows.map(row=>`<div class="match-segment-result"><span>${escapeHtml(row.player)}</span><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b></div>`).join("")}</div>`;
-}
 function matchSegmentMatrixHtml(segment){
   const participants=(segment.results||[]).filter(row=>!row.isAbsent&&row.score!=null),ids=participants.map(row=>row.playerId);
   const nameBy=Object.fromEntries(participants.map(row=>[row.playerId,row.player]));
   const scores=Object.fromEntries(participants.map(row=>[row.playerId,Number(row.score)]));
   const cells=new Map((segment.matchups||[]).map(row=>[`${row.fromPlayerId}|${row.toPlayerId}`,Number(row.points)]));
   if(ids.length<2)return '<div class="empty">该分段没有可比较的方向对位。</div>';
-  if(!cells.size)return '<div class="empty">该半场未记录精准对位方向格。</div>';
+  if(!cells.size)return '<div class="match-detail-segment-empty">本段未记录精准对位数据</div>';
   let html=`<div class="matrix-wrap match-segment-matrix-scroll"><table class="matrix match-detail-matrix match-segment-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>方向合计</th><th>本场得分</th><th>校验</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cells.has(`${from}|${to}`)?cells.get(`${from}|${to}`):null);
@@ -1284,10 +1301,35 @@ function matchSegmentMatrixHtml(segment){
   });
   return html+'</tbody></table></div><small class="match-detail-note">半场方向格独立保留；每名牌手的方向行合计与该半场得分逐行核对。</small>';
 }
-function matchSegmentsHtml(matchId){
-  const segments=[...(state.matchSegments?.[matchId]||[])].sort((a,b)=>a.order-b.order);
-  if(!segments.length)return "";
-  return `<section class="honor-modal-section match-segments-section"><h3><span>分段记录</span>上下半场明细</h3><p class="match-segments-note">以下为本场分段证据，不单独计入牌局场次或荣誉统计。</p>${segments.map(segment=>`<article class="match-segment"><header class="match-segment-head"><div><span>${segment.key==="first_half"?"上半场":segment.key==="second_half"?"下半场":"本场得分段"}</span><h4>${escapeHtml(segment.label)}</h4></div><small>分段证据</small></header>${matchSegmentResultsHtml(segment)}${matchSegmentMatrixHtml(segment)}</article>`).join("")}</section>`;
+function splitSessionResultsHtml(rows){
+  const played=(rows||[]).filter(row=>!row.isAbsent&&row.score!=null);
+  if(!played.length)return '<p class="match-detail-segment-empty">本段暂无有效成绩。</p>';
+  return `<div class="match-detail-split-results">${played.map(row=>`<div class="match-detail-score-unit"><span class="match-detail-score-player">${escapeHtml(row.player)}</span><span class="match-detail-score-value"><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b>${row.isMvp?'<small>MVP</small>':""}</span></div>`).join("")}</div>`;
+}
+function splitSessionPanelHtml(match,view){
+  const segment=view==="full"?null:(state.matchSegments?.[match.matchId]||[]).find(item=>item.key===view);
+  const rows=view==="full"
+    ?match.results.filter(row=>!row.isAbsent&&row.score!=null).sort((a,b)=>b.score-a.score)
+    :segment?.results||[];
+  const matrix=view==="full"
+    ?(hasPreciseMatchup(match)?singleMatchMatrixHtml(match):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>')
+    :(segment?matchSegmentMatrixHtml(segment):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>');
+  return `${splitSessionResultsHtml(rows)}<div class="match-detail-split-matrix"><small>精准对位</small>${matrix}</div>`;
+}
+function setMatchDetailSegmentView(view){
+  if(!MATCH_DETAIL_SEGMENT_TABS.some(([key])=>key===view)||!matchDetailSegmentMatchId)return;
+  const match=(state.matches||[]).find(item=>item.matchId===matchDetailSegmentMatchId);
+  const panel=$("#matchDetailSegmentPanel");
+  if(!match||!panel)return;
+  if(matchDetailSegmentView===view&&panel.childElementCount)return;
+  matchDetailSegmentView=view;
+  $("#matchModalBody").querySelectorAll("[data-match-detail-view]").forEach(tab=>{
+    const selected=tab.dataset.matchDetailView===view;
+    tab.setAttribute("aria-selected",String(selected));
+    tab.tabIndex=selected?0:-1;
+  });
+  panel.setAttribute("aria-labelledby",`matchDetailTab-${view}`);
+  panel.innerHTML=splitSessionPanelHtml(match,view);
 }
 function openMatchModal(matchId){
   const match=(state.matches||[]).find(m=>m.matchId===matchId);if(!match)return;
@@ -1296,12 +1338,19 @@ function openMatchModal(matchId){
   const modal=$("#matchModalBackdrop .match-detail-modal");
   modal?.classList.toggle("match-detail-four",participants===4);
   modal?.classList.toggle("match-detail-five",participants===5);
-  const precise=hasPreciseMatchup(match)
-    ?`<div class="honor-modal-section match-detail-focus"><h3><span>精准对位</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
-    :`<div class="honor-modal-section match-detail-empty"><h3><span>精准对位数据</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
-  const segments=matchSegmentsHtml(match.matchId);
-  const officialResults=match.isSplitSession?`<div class="honor-modal-section"><h3><span>牌局成绩</span>本场成绩</h3>${matchResultStripHtml(match.results.filter(row=>!row.isAbsent&&row.score!=null).sort((a,b)=>b.score-a.score),{detail:true})}</div>`:"";
-  $("#matchModalBody").innerHTML=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 牌局详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>${officialResults}${precise}${segments}`;
+  const header=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 牌局详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>`;
+  matchDetailSegmentMatchId=match.isSplitSession?match.matchId:null;
+  matchDetailSegmentView="full";
+  if(match.isSplitSession){
+    const tabs=`<div class="match-detail-segment-tabs" role="tablist" aria-label="牌局数据视图">${MATCH_DETAIL_SEGMENT_TABS.map(([key,label])=>`<button type="button" id="matchDetailTab-${key}" role="tab" data-match-detail-view="${key}" aria-selected="${key==="full"}" aria-controls="matchDetailSegmentPanel" tabindex="${key==="full"?"0":"-1"}">${label}</button>`).join("")}</div>`;
+    $("#matchModalBody").innerHTML=`${header}${tabs}<div id="matchDetailSegmentPanel" class="match-detail-segment-panel" role="tabpanel" aria-labelledby="matchDetailTab-full" tabindex="0"></div>`;
+    setMatchDetailSegmentView("full");
+  }else{
+    const precise=hasPreciseMatchup(match)
+      ?`<div class="honor-modal-section match-detail-focus"><h3><span>精准对位</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
+      :`<div class="honor-modal-section match-detail-empty"><h3><span>精准对位数据</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
+    $("#matchModalBody").innerHTML=`${header}${precise}`;
+  }
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
 }
 
