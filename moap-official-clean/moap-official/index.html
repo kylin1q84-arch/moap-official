@@ -7,7 +7,7 @@
   <title>MOAP｜五人麻将数据系统</title>
   <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.7.3-split-session-tabs">
+  <link rel="stylesheet" href="/style.css?v=4.7.4-global-detail-polish">
 </head>
 <body>
 
@@ -27,7 +27,6 @@
     </div>
     <div class="top-actions">
       <span class="badge"><span class="dot"></span><span id="healthBadge">系统健康 100%</span></span>
-      <span class="badge" id="versionBadge">v2.3.0 对位与荣誉详情升级</span>
       <span class="badge" id="accountBadge">公开直达模式 · 可录入</span>
       <button class="btn" id="exportBtn" type="button"><svg class="semantic-icon export-icon" data-motion-icon="download" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path data-icon-part="arrow" d="M12 3v11"></path><path data-icon-part="arrow" d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg><span>导出当前数据</span></button>
     </div>
@@ -49,7 +48,7 @@
             <h2 class="page-identity-title">数据总览</h2>
             <p class="page-identity-description">牌局数据实时更新</p>
           </div>
-          <span class="overview-goat-signal page-identity-meta">当前 GOAT <b id="goatName">—</b></span>
+          <div class="overview-season-progress page-identity-meta"><span>当前赛季</span><strong id="overviewSeasonProgress">—</strong></div>
         </div>
         <section class="league-command-scene command-goat-spotlight" aria-label="数据总览概览">
           <div class="league-command-grid">
@@ -108,7 +107,7 @@
             <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MSL历史纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
             <div class="record-filter-cluster">
               <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
-                <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
+                <label>纪录类型<select id="recordSectionFilter"><option value="single" selected>单场纪录</option><option value="continuous">连续纪录</option></select></label>
                 <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
                 <label>牌局类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               </div>
@@ -117,7 +116,7 @@
           </header>
           <div class="records-table-surface records-desktop-ledger table-scroll record-table-scroll">
             <table class="record-table">
-              <thead id="recordTableHead"><tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr></thead>
+              <thead id="recordTableHead"><tr><th>纪录名称</th><th>保持者</th><th>纪录</th><th>创造时间</th><th></th></tr></thead>
               <tbody id="recordTableBody"></tbody>
             </table>
           </div>
@@ -135,17 +134,17 @@
           <div class="power-list" id="powerRanking"></div>
         </section>
         <section class="status-intelligence-stage" aria-labelledby="statusIntelligenceTitle">
-          <header class="status-intelligence-head"><div><span>状态情报</span><h3 id="statusIntelligenceTitle">状态情报</h3></div><small>最近5场 · 状态依据与指数依据</small></header>
+          <header class="status-intelligence-head"><div><span>综合观察</span><h3 id="statusIntelligenceTitle">状态情报</h3></div><small>最近5场 · 状态依据与指数依据</small></header>
           <div class="status-intelligence-signal status-signal-stage" aria-labelledby="statusSignalTitle">
-            <header class="status-intelligence-subhead"><div><span>即时信号</span><small id="statusSignalTitle">即时信号</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>信号</span><small id="statusSignalTitle">即时信号</small></div></header>
             <div class="status-signal-rail" id="statusKpis"></div>
           </div>
           <div class="status-intelligence-observation status-observation-stage" aria-labelledby="statusObservationTitle">
-            <header class="status-intelligence-subhead"><div><span>状态观察</span><small id="statusObservationTitle">状态观察</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>观察</span><small id="statusObservationTitle">状态观察</small></div></header>
             <div class="storyline-grid status-observation-grid" id="statusStorylines"></div>
           </div>
           <div class="status-intelligence-method status-method-stage" aria-labelledby="statusMethodTitle">
-            <header class="status-intelligence-subhead"><div><span>指数依据</span><small id="statusMethodTitle">状态指数依据</small></div></header>
+            <header class="status-intelligence-subhead"><div><span>方法</span><small id="statusMethodTitle">状态指数依据</small></div></header>
             <div class="analysis-method" id="statusMethodology"></div>
           </div>
         </section>
@@ -160,7 +159,7 @@
           <div class="player-observatory-identity-column">
             <div class="player-head" id="playerHeader"></div>
             <div class="profile-honors-home player-honor-archive player-observatory-panel">
-              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>荣誉档案</span><h3>荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
+              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>荣誉</span><h3>荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
               <div class="profile-honor-list" id="profileHonorList"></div>
             </div>
           </div>
@@ -192,7 +191,7 @@
           <div class="match-ledger-total page-identity-meta"><span>累计牌局</span><strong id="matchTotalCount">—</strong><small>历史档案</small></div>
         </header>
         <section class="match-query-stage" aria-labelledby="matchQueryTitle">
-          <header class="match-ledger-section-head"><div><span>档案查询</span><h3 id="matchQueryTitle">牌局档案查询</h3></div><strong id="matchResultCount">找到 — 场牌局</strong></header>
+          <header class="match-ledger-section-head"><div><span>筛选</span><h3 id="matchQueryTitle">牌局档案查询</h3></div><strong id="matchResultCount">找到 — 场牌局</strong></header>
           <div class="form-row match-query-bar">
             <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
@@ -224,7 +223,7 @@
         <div class="entry-workspace">
           <div class="entry-input-column">
             <section class="entry-step entry-step-metadata" aria-labelledby="entryMetadataTitle">
-              <div class="entry-step-label"><span>步骤 01</span><small>牌局信息</small></div>
+              <div class="entry-step-label"><span>步骤 01</span><small>基础信息</small></div>
               <div class="entry-section-head"><div><h3 id="entryMetadataTitle">牌局信息</h3><small>确认赛季、日期、类型与场地</small></div></div>
               <div class="entry-fields">
                 <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
@@ -234,7 +233,7 @@
               </div>
             </section>
             <section class="entry-step entry-step-players" aria-labelledby="entryPlayersTitle">
-              <div class="entry-step-label"><span>步骤 02</span><small>牌手与得分</small></div>
+              <div class="entry-step-label"><span>步骤 02</span><small>成绩录入</small></div>
               <div class="entry-section-head"><div><h3 id="entryPlayersTitle">牌手与得分</h3><small>选择参赛牌手并填写本场总分</small></div></div>
               <div class="entry-score-sheet-head" aria-hidden="true"><span>参赛牌手</span><span>本场得分</span></div>
               <div id="entryPlayers"></div>
@@ -244,7 +243,7 @@
           <aside class="entry-control-column">
             <section id="entryValidation" class="validation entry-validation-console" aria-live="polite">请选择参赛牌手并填写分数。</section>
             <section class="entry-rules" aria-labelledby="entryRulesTitle">
-              <div class="entry-section-head"><div><span class="entry-console-kicker">录入规则</span><h3 id="entryRulesTitle">录入规则</h3><small>保存前实时检查，规则语义保持不变</small></div></div>
+              <div class="entry-section-head"><div><span class="entry-console-kicker">操作说明</span><h3 id="entryRulesTitle">录入规则</h3><small>保存前实时检查，规则语义保持不变</small></div></div>
               <div class="entry-rule-list">
                 <div class="entry-rule"><b>01</b><div><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div></div>
                 <div class="entry-rule"><b>02</b><div><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div></div>
@@ -255,7 +254,7 @@
             </section>
           </aside>
           <section class="entry-matrix-stage" aria-labelledby="entryMatrixTitle">
-            <div class="entry-step-label"><span>步骤 03</span><small>精准对位矩阵</small></div>
+            <div class="entry-step-label"><span>步骤 03</span><small>对位录入</small></div>
             <div class="entry-section-head"><div><h3 id="entryMatrixTitle">本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；两个方向分别统计，不互为相反数。正数=吃分，负数=被吃分，0也需要明确填写。</small></div><span class="chip gold">新制必填</span></div>
             <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
             <div id="matchupValidation" class="validation entry-matrix-check" aria-live="polite">每个方向格都要独立填写，且每名牌手的对位行合计必须对应本场得分。</div>
@@ -292,7 +291,7 @@
           <section class="rival-matrix-stage">
             <header class="rival-stage-head">
               <div>
-                <span class="rival-eyebrow">对位关系矩阵</span>
+                <span class="rival-eyebrow">关系视图</span>
                 <h3>方向对位矩阵</h3>
                 <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
               </div>
@@ -314,7 +313,7 @@
         <section class="rival-flow-stage">
           <header class="rival-stage-head">
             <div>
-              <span class="rival-eyebrow">对位流向汇总</span>
+              <span class="rival-eyebrow">汇总视图</span>
               <h3>牌手流向汇总</h3>
               <p>同一统计口径下的吃分、被吃分与净积分</p>
             </div>
@@ -339,7 +338,7 @@
 
         <section class="system-signal-stage" aria-labelledby="systemSignalTitle">
           <header class="system-section-head">
-            <div><span>完整性信号</span><h3 id="systemSignalTitle">系统完整性信号</h3></div>
+            <div><span>概览</span><h3 id="systemSignalTitle">系统完整性信号</h3></div>
             <small>当前数据集</small>
           </header>
           <div class="system-signal-rail" id="systemKpis"></div>
@@ -347,7 +346,7 @@
 
         <section class="system-audit-stage" aria-labelledby="systemAuditTitle">
           <header class="system-section-head system-audit-head">
-            <div><span>审计检查</span><h3 id="systemAuditTitle">数据完整性检查</h3></div>
+            <div><span>校验</span><h3 id="systemAuditTitle">数据完整性检查</h3></div>
             <strong class="system-audit-pass-count" id="systemAuditPassCount">—</strong>
           </header>
           <div class="system-audit-list" id="healthList"></div>
@@ -355,7 +354,7 @@
 
         <section class="system-release-stage" aria-labelledby="systemReleaseTitle">
           <header class="system-section-head">
-            <div><span>发布清单</span><h3 id="systemReleaseTitle">版本与发布清单</h3></div>
+            <div><span>版本</span><h3 id="systemReleaseTitle">版本与发布清单</h3></div>
           </header>
           <dl class="system-manifest" id="versionInfo"></dl>
         </section>
@@ -366,6 +365,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.7.3-split-session-tabs"></script>
+  <script type="module" src="/app.js?v=4.7.4-global-detail-polish"></script>
 </body>
 </html>

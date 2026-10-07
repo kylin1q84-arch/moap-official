@@ -347,7 +347,6 @@ async function reloadCloudData(){
   state=buildLiveState({players,seasons,matches,results,awards,versions:versions.data||[],matchups});
   if(appBooted){renderedViews.clear();initNav();populateSelects();initEntry();showView(currentView,{forceRender:true});}
   document.querySelector("#healthBadge").textContent=`云端健康 ${state.meta.healthScore}%`;
-  document.querySelector("#versionBadge").textContent=versionDisplayText(state.version.version);
   const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
   if(entryStatus)entryStatus.textContent="已连接";
   if(entryNote)entryNote.textContent="Supabase 已连接";
@@ -358,7 +357,6 @@ const $$ = s => [...document.querySelectorAll(s)];
 const fmtScore = n => (n > 0 ? "+" : "") + Number(n).toFixed(Number.isInteger(Number(n)) ? 0 : 2);
 const fmtAvg = n => n == null ? "—" : Number(n).toFixed(2);
 const fmtPct = n => n == null ? "—" : (Number(n)*100).toFixed(2)+"%";
-const versionDisplayText = value => value==="v2.3.0 Matchup & Honor Detail Upgrade"?"v2.3.0 对位与荣誉详情升级":value;
 const scoreClass = n => Number(n) >= 0 ? "score-pos" : "score-neg";
 const initials = name => name.slice(-2);
 const escapeHtml = str => String(str ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -815,9 +813,10 @@ function renderMonthlyReport(){
   holder.innerHTML=`<div class="monthly-hero"><div><span>${escapeHtml(monthLabel(monthlyReportMonth))}</span><h4>${bestTitle} · ${escapeHtml(best?.player||"—")}</h4><p>月度综合评分 ${best?.monthlyScore??"—"} · 仅用于月报，不计入荣誉</p></div><b>${best?.monthlyScore??"—"}</b></div><div class="monthly-kpis"><div><span>本月牌局</span><b>${matches.length}场</b></div><div><span>最高单场</span><b class="${scoreClass(topSingle?.score)}">${escapeHtml(topSingle?.player||"—")} ${fmtScore(topSingle?.score)}</b></div><div><span>最低单场</span><b class="${scoreClass(lowSingle?.score)}">${escapeHtml(lowSingle?.player||"—")} ${fmtScore(lowSingle?.score)}</b></div><div><span>最大领先分差</span><b>${escapeHtml(maxLead?.player||"—")} ${maxLead?`${Number(maxLead.dominance)>=0?"+":""}${Number(maxLead.dominance).toFixed(1)}`:"—"}</b></div></div><div class="monthly-section"><h4>本月积分及赛季排名变化</h4><div class="table-scroll"><table><thead><tr><th>月排名</th><th>牌手</th><th>场次</th><th>本月积分</th><th>本月场均</th><th>${escapeHtml(season)}排名变化</th></tr></thead><tbody>${standingRows}</tbody></table></div></div><div class="monthly-grid"><article><h4>MVP情况</h4><p>${escapeHtml(mvpText)}</p></article><article><h4>正分情况</h4><p>${escapeHtml(positiveText)}</p></article><article><h4>爆发情况</h4><p>${escapeHtml(explosionText)}</p></article><article><h4>独赢</h4><p>${escapeHtml(soloText)}</p></article></div><div class="monthly-section"><h4>本月最佳连续表现</h4><p>${escapeHtml(stageText)}</p></div><div class="monthly-section"><h4>本月新创造 / 打破的纪录</h4>${recordEvents.length?`<div class="monthly-record-list">${recordEvents.map(e=>`<span><b>${escapeHtml(e.type)}</b> · ${escapeHtml(e.players)} · ${escapeHtml(e.name)} ${escapeHtml(e.value)} <small>${escapeHtml(e.date)} · ${escapeHtml(e.matchId)}</small></span>`).join("")}</div>`:'<p class="muted">本月没有新增、打破或追平当前有效纪录。</p>'}</div><small class="monthly-method">月最佳牌手评分：本月总积分30% + 本月场均积分15% + 本月MVP表现20% + 本月正分表现20% + 本月爆发表现10% + 本月独赢表现5%。</small>`;
 }
 function renderOverview(){
-  const goat=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank)[0]||{},latest=(state.matches||[]).at(-1);$("#goatName").textContent=goat.player||"—";
+  const goat=[...(state.goat||[])].sort((a,b)=>a.rank-b.rank)[0]||{},latest=(state.matches||[]).at(-1);
   const currentSeason=latestActualSeason(),seasonNumber=String(currentSeason||"").match(/\d+/)?.[0];
   if($("#overviewSeasonCode"))$("#overviewSeasonCode").textContent=seasonNumber?`${currentSeason}赛季`:`${currentSeason||"—"}赛季`;
+  if($("#overviewSeasonProgress"))$("#overviewSeasonProgress").textContent=latest?`${latest.season} · 第${latest.round}局`:"等待牌局";
   const goatChange=Number(goat.indexChange||0),goatMovement=Number(goat.movement||0);
   const compositionNames={honors:"荣誉",career:"生涯",records:"纪录",longevity:"稳定性"};
   const composition=Object.entries(goat.breakdown||{}).map(([key,item])=>{const score=Number(item?.score||0),max=Number(item?.max||0),level=max?Math.max(0,Math.min(100,score/max*100)):0;return `<div class="command-composition-segment"><div><span>${escapeHtml(compositionNames[key]||String(key).toUpperCase())}</span><small>${escapeHtml(item?.label||key)}</small></div><b>${score.toFixed(1)}<small> / ${max.toFixed(0)}</small></b><div class="command-composition-meter" aria-label="${escapeHtml(item?.label||key)} ${score.toFixed(1)} / ${max.toFixed(0)}"><i style="width:${level.toFixed(2)}%"></i></div></div>`;}).join("");
@@ -949,7 +948,7 @@ function formatRecordValue(record,value=record?.value){
   const number=Number(value),unit=record?.unit||"";const prefix=record?.forcePlus&&number>0?"+":"";
   if(unit==="分/场")return `${prefix}${number.toFixed(2)} 分/场`;if(unit==="%")return `${(number*100).toFixed(2)}%`;return `${prefix}${number.toFixed(Number.isInteger(number)?0:2)}${unit?` ${unit}`:""}`;
 }
-function recordHolderText(record){return record?.holderNames?.length?record.holderNames.join(" / "):"暂无记录";}
+function recordHolderText(record){return record?.holderNames?.length?record.holderNames.join(" / "):"暂无纪录";}
 function recordCurrentHolders(record){return (record?.ranking||[]).filter(row=>row.rank===1);}
 function recordFirstHolder(record){return [...recordCurrentHolders(record)].sort((a,b)=>String(a.createdAt||"9999").localeCompare(String(b.createdAt||"9999"))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
 function recordLatestCoHolder(record,first){return [...recordCurrentHolders(record)].filter(row=>!first||row.playerId!==first.playerId).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))||String(a.playerId).localeCompare(String(b.playerId)))[0]||null;}
@@ -990,7 +989,7 @@ function renderDataLeaderboard(){
   const mobile=$("#dataLeaderboardMobile");if(mobile)mobile.innerHTML=dataLeaderboardMobileHtml(rows);
 }
 function recordLedgerMobileHtml(records){
-  if(!records.length)return '<div class="records-mobile-empty empty">暂无记录。</div>';
+  if(!records.length)return '<div class="records-mobile-empty empty">暂无纪录。</div>';
   return records.map(record=>`<button type="button" class="records-mobile-record" data-record-id="${escapeHtml(record.id)}" aria-label="查看${escapeHtml(record.name)}纪录"><span class="records-mobile-record-title"><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(recordHolderText(record))}</small></span><b class="records-mobile-record-value ${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b><time>${escapeHtml(record.createdAt||"—")}</time><span class="records-mobile-record-action">查看纪录 →</span><small class="records-mobile-record-rule">${escapeHtml(record.rule)}</small></button>`).join("");
 }
 function renderRecords({includeLeaderboard=true}={}){
@@ -1001,9 +1000,9 @@ function renderRecords({includeLeaderboard=true}={}){
   const records=center.views?.[recordSeason]?.[recordType]?.[recordSection]||[];
   const resultCount=$("#recordResultCount"),methodNote=$("#recordMethodNote");
   if(resultCount)resultCount.innerHTML=`<span>查询结果</span><strong>${records.length} 项纪录</strong>`;
-  if(methodNote)methodNote.textContent=center.methodology||"";
-  $("#recordTableHead").innerHTML='<tr><th>记录名称</th><th>保持者</th><th>记录</th><th>创造时间</th><th></th></tr>';
-  $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看纪录 →</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无记录。</td></tr>';
+  if(methodNote)methodNote.textContent=String(center.methodology||"").replaceAll("单场记录","单场纪录").replaceAll("连续记录","连续纪录").replaceAll("连续参赛记录","连续参赛纪录");
+  $("#recordTableHead").innerHTML='<tr><th>纪录名称</th><th>保持者</th><th>纪录</th><th>创造时间</th><th></th></tr>';
+  $("#recordTableBody").innerHTML=records.map(record=>`<tr class="record-row" data-record-id="${escapeHtml(record.id)}"><td><strong>${escapeHtml(record.name)}</strong><small>${escapeHtml(record.rule)}</small></td><td>${escapeHtml(recordHolderText(record))}</td><td><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue||formatRecordValue(record))}</b></td><td>${escapeHtml(record.createdAt||"—")}</td><td><button type="button" class="record-detail-btn" data-record-id="${escapeHtml(record.id)}">查看纪录 →</button></td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无纪录。</td></tr>';
   const mobile=$("#recordLedgerMobile");if(mobile)mobile.innerHTML=recordLedgerMobileHtml(records);
   if(includeLeaderboard)renderDataLeaderboard();
 }
@@ -1020,7 +1019,7 @@ function openRecordModal(recordId){
   const holders=recordCurrentHolders(record),first=recordFirstHolder(record),latest=recordLatestCoHolder(record,first);const typeName=recordType==="all"?"全部牌局":recordType==="four"?"四人局":"五人局",seasonName=recordSeason==="all"?"全部赛季":recordSeason,recentTie=latest?`${latest.player} · ${latest.createdAt}`:"暂无后来追平";
   const infoGrid=`<div><span>保持者</span><b>${escapeHtml(recordHolderText(record))}</b></div><div class="is-current-record"><span>当前纪录</span><b class="${record.value!=null&&Number(record.value)<0?"score-neg":"score-pos"}">${escapeHtml(record.displayValue)}</b></div><div><span>首次创造</span><b>${escapeHtml(first?`${first.player} · ${first.createdAt}`:"—")}</b></div><div><span>最近追平</span><b>${escapeHtml(recentTie)}</b></div>`;
   const evidence=(record.evidence||[]).length?record.evidence:holders.flatMap(item=>item.evidence||[]);
-  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><span class="record-dossier-kicker">MSL 纪录</span><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场记录":"连续记录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></header><section class="record-modal-section record-dossier-info"><span class="record-dossier-label">纪录信息</span><h3>纪录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><span class="record-dossier-label">历史排名</span><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><span class="record-dossier-label">纪录依据</span><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">纪录由MOAP牌局数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;
+  $("#recordModalBody").innerHTML=`<header class="record-modal-header"><span class="record-dossier-kicker">MSL 纪录</span><p>${escapeHtml(seasonName)} · ${escapeHtml(typeName)} · ${recordSection==="single"?"单场纪录":"连续纪录"}</p><h2 id="recordModalTitle">${escapeHtml(record.name)}</h2><strong>${escapeHtml(recordHolderText(record))} · ${escapeHtml(record.displayValue)}</strong></header><section class="record-modal-section record-dossier-info"><span class="record-dossier-label">证据概览</span><h3>纪录信息</h3><p>${escapeHtml(record.rule)}</p><div class="record-info-grid">${infoGrid}</div></section><section class="record-modal-section"><span class="record-dossier-label">排名</span><h3>历史排名 · 前5名</h3><div class="record-ranking-list">${ranking}</div></section><section class="record-modal-section"><span class="record-dossier-label">纪录依据</span><h3>纪录过程</h3><div class="record-evidence-list">${renderRecordEvidence(evidence)}</div></section><footer class="record-modal-footer">纪录由MOAP牌局数据实时计算 · 并列第5名完整保留 · 允许并列保持</footer>`;
   const modal=$("#recordModalBackdrop");modal.hidden=false;document.body.classList.add("modal-open");animateRecordDetails(modal,{open:true});animateNumbers(modal);
 }
 function refreshRecordResults(updateState){
@@ -1269,14 +1268,19 @@ function closeMatchModal(){
   matchDetailSegmentMatchId=null;
   matchDetailSegmentView="full";
 }
+function matchDetailVerifiedScoreHtml(score,complete,matched,comparison){
+  const label=matched?"✓":complete?"异常":"未完整";
+  const detail=matched?`${comparison}与本场得分一致`:complete?`${comparison}与本场得分不一致`:"方向格尚未完整记录";
+  return `<span class="match-detail-verified-score">${fmtScore(score)}<small class="${matched?"status-pass":complete?"status-fail":"is-incomplete"}" title="${detail}" aria-label="${detail}">${label}</small></span>`;
+}
 function singleMatchMatrixHtml(match){
   const participants=match.results.filter(r=>!r.isAbsent&&r.score!=null),ids=participants.map(r=>r.playerId),nameBy=Object.fromEntries(participants.map(r=>[r.playerId,r.player]));
   const rows=(state.matchups||[]).filter(x=>x.matchId===match.matchId),cell=new Map(rows.map(x=>[`${x.fromPlayerId}|${x.toPlayerId}`,Number(x.points)]));
   if(!rows.length)return '<div class="empty">精准对位尚未录入。</div>';
-  let html=`<div class="matrix-wrap"><table class="matrix match-detail-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>吃分</th><th>被吃分</th><th>净积分</th><th>本场得分</th><th>校验</th></tr></thead><tbody>`;
+  let html=`<div class="matrix-wrap"><table class="matrix match-detail-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>吃分</th><th>被吃分</th><th>净积分</th><th>本场得分</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cell.has(`${from}|${to}`)?cell.get(`${from}|${to}`):null),complete=values.every(v=>v!==null),eat=values.filter(v=>v>0).reduce((a,b)=>a+b,0),eaten=values.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0),net=values.filter(v=>v!==null).reduce((a,b)=>a+b,0),score=Number(participants.find(r=>r.playerId===from)?.score||0),ok=complete&&Math.abs(net-score)<1e-9;
-    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${ok?"status-pass":"status-fail"}">${ok?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
+    html+=`<tr><td><div class="player-cell matchup-player-cell">${matchupPlayerNameHtml(nameBy[from])}</div></td>${ids.map(to=>{if(to===from)return '<td><span class="matrix-cell neutral diagonal" aria-label="不可比较">—</span></td>';const key=`${from}|${to}`;if(!cell.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';const v=cell.get(key),cls=v>0?"pos":v<0?"neg":"neutral";return `<td><span class="matrix-cell ${cls}">${fmtScore(v)}</span></td>`}).join("")}<td class="score-pos">${fmtScore(eat)}</td><td class="score-neg">${eaten?`-${eaten}`:"0"}</td><td class="${scoreClass(net)}">${fmtScore(net)}</td><td class="${scoreClass(score)}">${matchDetailVerifiedScoreHtml(score,complete,ok,"净积分")}</td></tr>`;
   });
   return html+'</tbody></table></div><small class="match-detail-note">方向格独立统计：A→B 与 B→A 不互相反推；吃分、被吃分与净积分均按本场原始方向格汇总。</small>';
 }
@@ -1287,7 +1291,7 @@ function matchSegmentMatrixHtml(segment){
   const cells=new Map((segment.matchups||[]).map(row=>[`${row.fromPlayerId}|${row.toPlayerId}`,Number(row.points)]));
   if(ids.length<2)return '<div class="empty">该分段没有可比较的方向对位。</div>';
   if(!cells.size)return '<div class="match-detail-segment-empty">本段未记录精准对位数据</div>';
-  let html=`<div class="matrix-wrap match-segment-matrix-scroll"><table class="matrix match-detail-matrix match-segment-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>方向合计</th><th>本场得分</th><th>校验</th></tr></thead><tbody>`;
+  let html=`<div class="matrix-wrap match-segment-matrix-scroll"><table class="matrix match-detail-matrix match-segment-matrix"><thead><tr><th>攻击方 ↓</th>${ids.map(id=>`<th>${escapeHtml(nameBy[id])}</th>`).join("")}<th>方向合计</th><th>本场得分</th></tr></thead><tbody>`;
   ids.forEach(from=>{
     const values=ids.filter(to=>to!==from).map(to=>cells.has(`${from}|${to}`)?cells.get(`${from}|${to}`):null);
     const complete=values.every(value=>value!==null),total=values.filter(value=>value!==null).reduce((sum,value)=>sum+value,0),score=scores[from],valid=complete&&Number.isFinite(score)&&Math.abs(total-score)<1e-9;
@@ -1297,14 +1301,14 @@ function matchSegmentMatrixHtml(segment){
       if(!cells.has(key))return '<td><span class="matrix-cell neutral empty" aria-label="暂无对位数据">—</span></td>';
       const value=cells.get(key),kind=value>0?"pos":value<0?"neg":"neutral";
       return `<td><span class="matrix-cell ${kind}">${fmtScore(value)}</span></td>`;
-    }).join("")}<td class="${scoreClass(total)}">${fmtScore(total)}</td><td class="${scoreClass(score)}">${fmtScore(score)}</td><td><span class="${valid?"status-pass":"status-fail"}">${valid?"一致":complete?"不一致":"未完整"}</span></td></tr>`;
+    }).join("")}<td class="${scoreClass(total)}">${fmtScore(total)}</td><td class="${scoreClass(score)}">${matchDetailVerifiedScoreHtml(score,complete,valid,"方向合计")}</td></tr>`;
   });
   return html+'</tbody></table></div><small class="match-detail-note">半场方向格独立保留；每名牌手的方向行合计与该半场得分逐行核对。</small>';
 }
-function splitSessionResultsHtml(rows){
+function splitSessionResultsHtml(rows,{showMvp=true}={}){
   const played=(rows||[]).filter(row=>!row.isAbsent&&row.score!=null);
   if(!played.length)return '<p class="match-detail-segment-empty">本段暂无有效成绩。</p>';
-  return `<div class="match-detail-split-results">${played.map(row=>`<div class="match-detail-score-unit"><span class="match-detail-score-player">${escapeHtml(row.player)}</span><span class="match-detail-score-value"><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b>${row.isMvp?'<small>MVP</small>':""}</span></div>`).join("")}</div>`;
+  return `<div class="match-detail-split-results">${played.map(row=>`<div class="match-detail-score-unit"><span class="match-detail-score-player">${escapeHtml(row.player)}</span><span class="match-detail-score-value"><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b>${showMvp&&row.isMvp?'<small>MVP</small>':""}</span></div>`).join("")}</div>`;
 }
 function splitSessionPanelHtml(match,view){
   const segment=view==="full"?null:(state.matchSegments?.[match.matchId]||[]).find(item=>item.key===view);
@@ -1314,7 +1318,7 @@ function splitSessionPanelHtml(match,view){
   const matrix=view==="full"
     ?(hasPreciseMatchup(match)?singleMatchMatrixHtml(match):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>')
     :(segment?matchSegmentMatrixHtml(segment):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>');
-  return `${splitSessionResultsHtml(rows)}<div class="match-detail-split-matrix"><small>精准对位</small>${matrix}</div>`;
+  return `${splitSessionResultsHtml(rows,{showMvp:view==="full"})}<div class="match-detail-split-matrix"><small>精准对位</small>${matrix}</div>`;
 }
 function setMatchDetailSegmentView(view){
   if(!MATCH_DETAIL_SEGMENT_TABS.some(([key])=>key===view)||!matchDetailSegmentMatchId)return;
@@ -1347,8 +1351,8 @@ function openMatchModal(matchId){
     setMatchDetailSegmentView("full");
   }else{
     const precise=hasPreciseMatchup(match)
-      ?`<div class="honor-modal-section match-detail-focus"><h3><span>精准对位</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
-      :`<div class="honor-modal-section match-detail-empty"><h3><span>精准对位数据</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
+      ?`<div class="honor-modal-section match-detail-focus"><h3><span>方向数据</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
+      :`<div class="honor-modal-section match-detail-empty"><h3><span>可用性</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
     $("#matchModalBody").innerHTML=`${header}${precise}`;
   }
   $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
@@ -1528,7 +1532,8 @@ function validateEntry(){
     commitStatus.className=ok?"is-ready":"is-check";
   }
   $("#matchupValidation").className="validation entry-matrix-check "+(matchupOk?"ok":"bad");
-  $("#matchupValidation").innerHTML=`<div class="entry-matrix-check-head"><div><span>矩阵校验</span><strong>方向格</strong></div><b class="${matchup.complete?"status-pass":"status-fail"}">${matchup.complete?"已完整":"未完整"}</b></div><div class="entry-matrix-check-note">${matchup.complete?"所有方向格均已填写":"每个参赛牌手之间的两个方向格都要分别填写（0也要填）"}</div><div class="entry-matrix-check-rows">${comparisons.map(x=>`<div class="entry-matrix-check-row"><strong>${escapeHtml(x.player)}</strong><span>${fmtScore(x.rowTotal)} / ${x.selected?(x.raw===""?"未填":fmtScore(x.score)):"缺席"}</span><b class="${x.ok?"is-pass":"is-pending"}">${x.ok?"通过":"待检查"}</b></div>`).join("")}</div>`;
+  const matrixMessage=!matchup.complete?"还有方向格未填写":!matchup.valid?"方向格须填写整数":comparisons.some(x=>x.selected&&x.raw==="")?"请填写牌手得分以核对方向行和":matchupOk?"矩阵校验通过":"部分方向行合计与牌局得分不一致";
+  $("#matchupValidation").innerHTML=`<span class="entry-matrix-check-label">矩阵校验</span><strong class="${matchupOk?"status-pass":"status-fail"}">${matrixMessage}</strong>`;
   animateEntryValidation({
     summary:el,
     detail:$("#matchupValidation"),
@@ -1935,7 +1940,6 @@ function boot(){
   initImmersiveBackground();
   initAnimationSystem();
   initNav(); populateSelects(); initEntry(); initPremiumDropdownSystem();
-  $("#versionBadge").textContent=versionDisplayText(state.version.version);
   showView("overview",{immediate:true});appBooted=true;
 }
 
