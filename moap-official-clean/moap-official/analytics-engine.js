@@ -405,7 +405,7 @@ export function buildCurrentSeasonRatings(players, matches) {
   return {
     season: latestSeason,
     rows,
-    methodology: "当前赛季OVR只使用当前赛季比赛：得分表现30%（总积分15%+场均15%）＋比赛质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋爆发能力15%（爆发率、爆发场次、爆发场均）＋稳定性10%（波动、连续正分、极端负分）。爆发统一定义为单场积分≥50；各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
+    methodology: "当前赛季OVR只使用当前赛季牌局：得分表现30%（总积分15%+场均15%）＋牌局质量25%（正分率15%+正分场次均分10%）＋MVP影响力20%（MVP次数、MVP率、MVP场次积分）＋爆发能力15%（爆发率、爆发场次、爆发场均）＋稳定性10%（波动、连续正分、极端负分）。爆发统一定义为单场积分≥50；各项仅在当前赛季参赛牌手之间标准化，最终换算为50–99分。"
   };
 }
 
@@ -508,15 +508,15 @@ function metricEvidenceFor(honorId, row, item) {
   if (honorId === "H001") {
     if (label.includes("累计总积分")) return withTag(all,"逐场积分累计");
     if (label.includes("场均积分")) return withTag(all,`${formatMetric(row.total,"分")} ÷ ${formatMetric(row.games,"场")}`);
-    if (label.includes("MVP场次积分")) return withTag(mvp,"正式MVP场次积分累计");
+    if (label.includes("MVP场次积分")) return withTag(mvp,"MVP场次积分累计");
     if (label.includes("正分场次积分")) return withTag(positive,"正分场次积分累计");
     if (label.includes("爆发场次积分")) return withTag(explosion,"单场积分≥50的爆发场次积分累计");
   }
   if (honorId === "H003") {
     if (label.includes("MVP率")) return withTag(all,`${formatMetric(row.mvps,"次")} ÷ ${formatMetric(row.games,"场")}`);
-    return mvp.map(entry => ({ ...entry, processTag:`正式MVP · ${entry.starText}` }));
+    return mvp.map(entry => ({ ...entry, processTag:`MVP · ${entry.starText}` }));
   }
-  return withTag(all,"原始比赛明细");
+  return withTag(all,"牌局明细");
 }
 function rankingDetailFor(result, row) {
   const primaryKey=result.criteria?.[0]?.key;
@@ -755,34 +755,34 @@ function archetypes(rows){
 }
 function seasonAssessment(r){
   const s=r.season||{}, perf=r.seasonPerformance||{};
-  if(!s.games)return {label:'赛季样本不足',summary:`${r.player}在当前赛季暂无有效参赛记录。`,outlook:'需要更多正式比赛后才能形成完整的赛季定位。'};
+  if(!s.games)return {label:'赛季样本不足',summary:`${r.player}在当前赛季暂无有效参赛记录。`,outlook:'需要更多牌局后才能形成完整的赛季定位。'};
   let label=perf.ratingLabel||'中游竞争者';
   if(perf.rank===1)label=`${perf.ratingLabel||'高水平赛季'} · 赛季综合第1`;
   else if(perf.rank===2)label=`${perf.ratingLabel||'高水平赛季'} · 争冠集团`;
   const dims=perf.dimensionScores||{};
-  const weak=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
-  const strong=Object.entries({得分表现:dims.scoring,比赛质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
-  const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，联盟第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP；爆发${s.explosionCount}场，爆发率${(s.explosionRate*100).toFixed(1)}%。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
-  const outlook=weak?`当前最需要提升的是${weak[0]}（${Number(weak[1]).toFixed(1)}）；赛季OVR只跟随${s.id}数据变化，不受历史赛季成绩影响。`:'继续积累当前赛季正式比赛样本。';
+  const weak=Object.entries({得分表现:dims.scoring,牌局质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>a[1]-b[1])[0];
+  const strong=Object.entries({得分表现:dims.scoring,牌局质量:dims.quality,MVP影响力:dims.mvpImpact,爆发能力:dims.bigStage,稳定性:dims.stability}).filter(([,v])=>Number.isFinite(Number(v))).sort((a,b)=>b[1]-a[1])[0];
+  const summary=`${s.id}已出战${s.games}场，当前赛季OVR ${perf.rating??'—'}，历史第${perf.rank||'—'}。累计${s.total>=0?'+':''}${s.total}分，场均${s.average.toFixed(2)}分，正分率${(s.positiveRate*100).toFixed(1)}%，取得${s.mvps}次MVP；爆发${s.explosionCount}场，爆发率${(s.explosionRate*100).toFixed(1)}%。${strong?`五维中${strong[0]}最突出（${Number(strong[1]).toFixed(1)}）。`:''}`;
+  const outlook=weak?`当前最需要提升的是${weak[0]}（${Number(weak[1]).toFixed(1)}）；赛季OVR只跟随${s.id}数据变化，不受历史赛季成绩影响。`:'继续积累当前赛季牌局样本。';
   return {label,summary,outlook};
 }
 function careerAssessment(r){
   const c=r.career||{};
-  if(!c.games)return {label:'生涯样本不足',summary:`${r.player}暂无足够的历季正式比赛数据。`,evaluation:'需要更多赛季数据后才能形成长期定位。',outlook:'当前以积累有效比赛样本为主。',strengths:[],risks:[]};
+  if(!c.games)return {label:'生涯样本不足',summary:`${r.player}暂无足够的历季牌局数据。`,evaluation:'需要更多赛季数据后才能形成长期定位。',outlook:'当前以积累有效牌局样本为主。',strengths:[],risks:[]};
   const strengths=[],risks=[];
   if(c.totalRank<=2)strengths.push(`S1–S3累计积分排名第${c.totalRank}`);
   if(c.averageRank<=2)strengths.push(`生涯场均排名第${c.averageRank}`);
   if(c.positiveRank<=2)strengths.push(`生涯正分率排名第${c.positiveRank}`);
   if(c.mvpRank<=2)strengths.push(`MVP效率排名第${c.mvpRank}`);
-  if(c.honorRank<=2&&c.officialHonorCount>0)strengths.push(`官方荣誉排名第${c.honorRank}`);
+  if(c.honorRank<=2&&c.officialHonorCount>0)strengths.push(`荣誉排名第${c.honorRank}`);
   if(c.total<0)risks.push('历季累计积分仍为负，长期稳定输出不足');
   if(c.positiveRate<.5)risks.push(`生涯正分率${(c.positiveRate*100).toFixed(1)}%，低于五成`);
-  if(c.volatility>=35)risks.push(`生涯波动指数${c.volatility.toFixed(1)}，比赛上下限差距较大`);
+  if(c.volatility>=35)risks.push(`生涯波动指数${c.volatility.toFixed(1)}，牌局上下限差距较大`);
   if(!risks.length)risks.push('长期数据结构较均衡，主要观察能否继续抬高个人峰值');
   const best=c.bestSeason;
-  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、${c.explosionCount}场爆发，获得${c.officialHonorCount}次官方荣誉（总冠军${c.titles}次、年度MVP${c.mvAwards}次）。`;
-  const evaluation=`${r.player}的MSL生涯定位为“${c.ratingLabel}”，综合评分${c.overallRating}，联盟排名第${c.overallRank}。${c.trend}${best?`，其中${best.season}以${best.rating}分成为目前评分最高的单赛季。`:''}${strengths.length?`长期优势主要体现在${strengths.slice(0,3).join('、')}。`:''}`;
-  const outlook=c.overallRank<=2?'已经进入联盟长期核心层，后续重点是把高水平赛季转化为更多总冠军与年度最有价值牌手荣誉。':c.total>=0?'具备进入长期核心层的基础，提升MVP效率与高分场次将明显拉高综合评分。':'目前仍处于生涯追赶阶段，优先目标是改善累计积分、正分率与赛季稳定性。';
+  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、${c.explosionCount}场爆发，获得${c.officialHonorCount}次荣誉（总冠军${c.titles}次、年度MVP${c.mvAwards}次）。`;
+  const evaluation=`${r.player}的MSL生涯定位为“${c.ratingLabel}”，综合评分${c.overallRating}，历史排名第${c.overallRank}。${c.trend}${best?`，其中${best.season}以${best.rating}分成为目前评分最高的单赛季。`:''}${strengths.length?`长期优势主要体现在${strengths.slice(0,3).join('、')}。`:''}`;
+  const outlook=c.overallRank<=2?'已经进入历史长期核心层，后续重点是把高水平赛季转化为更多总冠军与年度最有价值牌手荣誉。':c.total>=0?'具备进入长期核心层的基础，提升MVP效率与高分场次将明显拉高综合评分。':'目前仍处于生涯追赶阶段，优先目标是改善累计积分、正分率与赛季稳定性。';
   return {label:c.ratingLabel,summary,evaluation,outlook,strengths,risks};
 }
 function reportFor(r,all){
@@ -799,7 +799,7 @@ function reportFor(r,all){
   if(r.weightedScore<r.seasonAverage)risks.push(`近期加权表现低于赛季场均${r.seasonAverage.toFixed(1)}`);
   if(!risks.length)risks.push('当前没有明显数据预警，重点观察状态延续性');
   const direction=r.movement>0?`实力榜上升${r.movement}位`:r.movement<0?`实力榜下降${Math.abs(r.movement)}位`:'实力榜位置保持不变';
-  const summary=`${r.player}目前位列MSL实力榜第${r.rank}，状态指数${r.powerIndex}。${direction}。最近5场累计${r.recentTotal>=0?'+':''}${r.recentTotal}，${latest?`最新一场${latest.score>=0?'+':''}${latest.score}${latest.isMvp?'并获得MVP':''}`:'近期暂无有效比赛'}。`;
+  const summary=`${r.player}目前位列MSL实力榜第${r.rank}，状态指数${r.powerIndex}。${direction}。最近5场累计${r.recentTotal>=0?'+':''}${r.recentTotal}，${latest?`最新一场${latest.score>=0?'+':''}${latest.score}${latest.isMvp?'并获得MVP':''}`:'近期暂无有效牌局'}。`;
   const next=latest?.isMvp?'下一场重点观察能否延续MVP级输出，并在精准对位中建立稳定吃分对象。':r.powerIndex<45?'下一场重点是止住负分趋势，提高整场稳定性。':'下一场重点观察正分延续性与关键局爆发。';
   const seasonView=seasonAssessment(r),careerView=careerAssessment(r);
   return {trendKey,headline,summary,strengths:strengths.length?strengths:['近期表现接近个人常态，暂无特别突出的单项'],risks,next,seasonLabel:seasonView.label,seasonSummary:seasonView.summary,seasonOutlook:seasonView.outlook,careerLabel:careerView.label,careerSummary:careerView.summary,careerEvaluation:careerView.evaluation,careerOutlook:careerView.outlook,careerStrengths:careerView.strengths,careerRisks:careerView.risks};
@@ -814,5 +814,5 @@ export function buildMslStatusCenter(players,matches,honors={}){
   const latest=sortedMatches(matches).at(-1);let gameRecap=null;
   if(latest){const pp=played(latest).sort((a,b)=>num(b.score)-num(a.score)),top=pp[0],second=pp[1],bottom=pp.at(-1);gameRecap={title:`${top?.player||'本场赢家'}领跑最新一轮，${bottom?.player||'末位牌手'}承压`,meta:`${latest.season} 第${latest.round}局 · ${latest.date} · ${latest.venue||'未填写场地'}`,body:`${top?.player||'—'}以${top?`${num(top.score)>=0?'+':''}${num(top.score)}`:'—'}取得全场最高分${top?.isMvp?'并拿下MVP':''}，领先第二名${top&&second?num(top.score)-num(second.score):0}分；全场最大分差${top&&bottom?num(top.score)-num(bottom.score):0}分。`,scores:pp.map(x=>({player:x.player,score:num(x.score),isMvp:!!x.isMvp}))};}
   const storylines=[`🔥 当前最火热：${hottest.player}，状态指数${hottest.powerIndex}。`,`🧊 当前最低迷：${coldest.player}，状态指数${coldest.powerIndex}。`,`🏅 生涯综合评分最高：${overall.player}，OVR ${overall.career.overallRating}。`,`📈 行情上升最快：${riser.player}，${riser.movement>0?`实力榜上升${riser.movement}位`:`指数变化${riser.indexChange>=0?'+':''}${riser.indexChange}`}。`,`🌊 近期波动最大：${volatile.player}，波动指数${volatile.recentStd.toFixed(1)}。`];
-  return {rankings:rows,storylines,gameRecap,currentSeasonRating:seasonRatingSystem,methodology:`状态指数：最近5场加权净分35% + 正分率20% + MVP15% + 近期爆发表现10%（爆发率70% + 爆发场均30%）+ 走势10% + 相对当前赛季表现10%。${seasonRatingSystem.methodology} 生涯综合评分（OVR）：S1至当前全部赛季累计积分30% + 生涯场均20% + 生涯正分率15% + MVP率20% + 官方荣誉15%。近期、赛季、生涯三套评价互相独立，均不改变官方积分和荣誉。`};
+  return {rankings:rows,storylines,gameRecap,currentSeasonRating:seasonRatingSystem,methodology:`状态指数：最近5场加权净分35% + 正分率20% + MVP15% + 近期爆发表现10%（爆发率70% + 爆发场均30%）+ 走势10% + 相对当前赛季表现10%。${seasonRatingSystem.methodology} 生涯综合评分（OVR）：S1至当前全部赛季累计积分30% + 生涯场均20% + 生涯正分率15% + MVP率20% + 荣誉15%。近期、赛季、生涯三套评价互相独立，均不改变积分和荣誉。`};
 }

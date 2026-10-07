@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071a17">
-  <title>MOAP Official｜麻将数据分析平台</title>
+  <title>MOAP｜五人麻将数据系统</title>
+  <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/style.css?v=4.7.0-chinese-readability">
 </head>
@@ -20,8 +21,8 @@
   <header class="topbar">
     <div class="brand">
       <div>
-        <h1>MOAP OFFICIAL</h1>
-        <p>五人麻将官方数据系统 · 实时分析</p>
+        <h1>MOAP</h1>
+        <p>五人麻将数据系统 · 实时分析</p>
       </div>
     </div>
     <div class="top-actions">
@@ -44,27 +45,27 @@
       <section class="view active" data-view="overview">
         <div class="hero overview-masthead page-identity">
           <div class="page-identity-copy">
-            <span class="overview-masthead-kicker page-identity-eyebrow">联赛总览 / <b id="overviewSeasonCode">赛季 —</b></span>
-            <h2 class="page-identity-title">联赛总览</h2>
-            <p class="page-identity-description">官方赛事数据实时更新</p>
+            <span class="overview-masthead-kicker page-identity-eyebrow">数据总览 / <b id="overviewSeasonCode">赛季 —</b></span>
+            <h2 class="page-identity-title">数据总览</h2>
+            <p class="page-identity-description">牌局数据实时更新</p>
           </div>
           <span class="overview-goat-signal page-identity-meta">当前 GOAT <b id="goatName">—</b></span>
         </div>
-        <section class="league-command-scene command-goat-spotlight" aria-label="联赛总览数据概览">
+        <section class="league-command-scene command-goat-spotlight" aria-label="数据总览概览">
           <div class="league-command-grid">
             <section class="command-goat-zone">
-              <div class="command-zone-head"><span>01 / 联赛权威</span><small>历史地位综合模型</small></div>
+              <div class="command-zone-head"><span>01 / 核心概览</span><small>历史地位综合模型</small></div>
               <div id="overviewGoatHero"></div>
             </section>
             <aside class="command-goat-standing command-standing-zone">
-              <div class="command-zone-head"><span>02 / GOAT 排名</span><small>当前官方历史排名</small></div>
+              <div class="command-zone-head"><span>02 / GOAT 排名</span><small>当前历史排名</small></div>
               <div id="goatRanking"></div>
             </aside>
           </div>
           <div class="overview-metrics-strip" id="overviewKpis"></div>
         </section>
         <section class="overview-open-section overview-editorial-recap">
-          <header class="overview-section-head"><div><span>赛后数据简报</span><h3>最新比赛 · MSL赛后简报</h3></div><small>自动读取最新正式比赛与纪录动态</small></header>
+          <header class="overview-section-head"><div><span>牌局数据简报</span><h3>最新牌局 · MSL赛后简报</h3></div><small>自动读取最新牌局与纪录动态</small></header>
           <div id="latestAiRecap"></div>
         </section>
         <section class="overview-open-section overview-season-spotlight" aria-labelledby="overviewSeasonSpotlightTitle">
@@ -76,7 +77,7 @@
         </section>
         <section class="overview-open-section monthly-report-card">
           <header class="overview-section-head monthly-report-head">
-            <div><span>月度观察</span><h3>月度报告</h3><small>比赛表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入官方荣誉</small></div>
+            <div><span>月度观察</span><h3>月度报告</h3><small>牌局表现、排名变化、爆发与纪录动态 · 月最佳牌手不计入荣誉</small></div>
             <label class="inline-filter">月份<select id="monthlyReportMonth"></select></label>
           </header>
           <div id="monthlyReport"></div>
@@ -85,16 +86,16 @@
 
       <section class="view" data-view="records">
         <header class="records-workbench-masthead page-identity">
-          <div class="page-identity-copy"><span class="records-kicker page-identity-eyebrow">纪录工作台 / 官方数据</span><h2 class="page-identity-title">记录中心</h2><p class="page-identity-description">查询综合排名、单场纪录与连续纪录</p></div>
-          <div class="records-official-mark page-identity-meta" aria-label="MSL官方纪录册"><span>MSL 纪录册</span><strong>官方</strong></div>
+          <div class="page-identity-copy"><span class="records-kicker page-identity-eyebrow">纪录工作台 / 历史数据</span><h2 class="page-identity-title">记录中心</h2><p class="page-identity-description">查询综合排名、单场纪录与连续纪录</p></div>
+          <div class="records-official-mark page-identity-meta" aria-label="MSL历史纪录册"><span>MSL 纪录册</span><strong>历史</strong></div>
         </header>
 
         <section class="records-query-stage records-data-stage record-data-leaderboard" aria-labelledby="dataQueryTitle">
           <header class="records-query-head record-data-head">
-            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、比赛类型和数据类型查询</small></div>
+            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、牌局类型和数据类型查询</small></div>
             <div class="records-filter-bar record-filter-row record-query-toolbar records-data-filters">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-              <label>比赛类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+              <label>牌局类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               <label>数据类型<select id="dataMetricFilter"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
             </div>
           </header>
@@ -104,12 +105,12 @@
 
         <section class="records-query-stage records-ledger-stage record-center-card" aria-labelledby="recordQueryTitle">
           <header class="records-query-head record-toolbar">
-            <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MSL官方纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
+            <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MSL历史纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
             <div class="record-filter-cluster">
               <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
                 <label>记录类型<select id="recordSectionFilter"><option value="single" selected>单场记录</option><option value="continuous">连续记录</option></select></label>
                 <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
-                <label>比赛类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+                <label>牌局类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
               </div>
               <div class="records-result-count" id="recordResultCount" aria-live="polite"><span>查询结果</span><strong>— 项纪录</strong></div>
             </div>
@@ -159,16 +160,16 @@
           <div class="player-observatory-identity-column">
             <div class="player-head" id="playerHeader"></div>
             <div class="profile-honors-home player-honor-archive player-observatory-panel">
-              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>荣誉档案</span><h3>官方荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
+              <div class="section-head profile-honors-head player-observatory-section-head"><div><span>荣誉档案</span><h3>荣誉档案</h3></div><small id="profileHonorSummary"></small></div>
               <div class="profile-honor-list" id="profileHonorList"></div>
             </div>
           </div>
         </div>
         <div class="player-season-data-card player-observatory-panel">
             <div class="section-head player-season-data-head player-observatory-section-head">
-              <div><span>赛季数据</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持比赛类型与数据类型筛选</small></div>
+              <div><span>赛季数据</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持牌局类型与数据类型筛选</small></div>
               <div class="record-filter-row player-season-filters">
-                <label>比赛类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+                <label>牌局类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
                 <label>数据类型<select id="playerSeasonMetric"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
               </div>
             </div>
@@ -187,31 +188,31 @@
 
       <section class="view" data-view="matches">
         <header class="match-ledger-masthead page-identity">
-          <div class="page-identity-copy"><span class="match-ledger-kicker page-identity-eyebrow">比赛档案 / 正式记录</span><h2 class="page-identity-title">比赛中心</h2><p class="page-identity-description">正式比赛档案与逐场结果</p></div>
-          <div class="match-ledger-total page-identity-meta"><span>正式比赛</span><strong id="matchTotalCount">—</strong><small>正式档案</small></div>
+          <div class="page-identity-copy"><span class="match-ledger-kicker page-identity-eyebrow">牌局档案 / 历史记录</span><h2 class="page-identity-title">牌局中心</h2><p class="page-identity-description">逐场牌局与历史结果</p></div>
+          <div class="match-ledger-total page-identity-meta"><span>累计牌局</span><strong id="matchTotalCount">—</strong><small>历史档案</small></div>
         </header>
         <section class="match-query-stage" aria-labelledby="matchQueryTitle">
-          <header class="match-ledger-section-head"><div><span>档案查询</span><h3 id="matchQueryTitle">比赛档案查询</h3></div><strong id="matchResultCount">找到 — 场比赛</strong></header>
+          <header class="match-ledger-section-head"><div><span>档案查询</span><h3 id="matchQueryTitle">牌局档案查询</h3></div><strong id="matchResultCount">找到 — 场牌局</strong></header>
           <div class="form-row match-query-bar">
             <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
-            <label class="match-filter-type">比赛类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
-            <label class="match-filter-query">关键词<input id="matchQuery" placeholder="比赛编号 / 场地 / 日期"></label>
+            <label class="match-filter-type">牌局类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
+            <label class="match-filter-query">关键词<input id="matchQuery" placeholder="牌局编号 / 场地 / 日期"></label>
           </div>
         </section>
         <section class="match-ledger-stage">
           <div class="match-ledger-meta match-ledger-result-meta"><small id="matchPrecisionStartNote">按时间倒序 · 精准对位起始场同步中</small></div>
           <div class="season-match-log match-ledger" id="matchList"></div>
-          <div class="match-load-action"><button class="btn load-more" id="loadMoreBtn" type="button">加载更多比赛</button></div>
+          <div class="match-load-action"><button class="btn load-more" id="loadMoreBtn" type="button">加载更多牌局</button></div>
         </section>
       </section>
 
       <section class="view" data-view="entry">
         <header class="entry-console-masthead page-identity">
           <div>
-            <span class="entry-console-kicker page-identity-eyebrow">比赛录入 / 正式数据</span>
-            <h2 class="page-identity-title">录入比赛</h2>
-            <p class="page-identity-description">正式比赛数据录入与方向对位校验</p>
+            <span class="entry-console-kicker page-identity-eyebrow">牌局录入 / 数据校验</span>
+            <h2 class="page-identity-title">录入牌局</h2>
+            <p class="page-identity-description">创建新的牌局记录并校验方向对位</p>
           </div>
           <div class="entry-connection-status page-identity-meta" aria-live="polite">
             <span>SUPABASE</span>
@@ -223,19 +224,19 @@
         <div class="entry-workspace">
           <div class="entry-input-column">
             <section class="entry-step entry-step-metadata" aria-labelledby="entryMetadataTitle">
-              <div class="entry-step-label"><span>步骤 01</span><small>比赛信息</small></div>
-              <div class="entry-section-head"><div><h3 id="entryMetadataTitle">比赛信息</h3><small>确认赛季、日期、类型与场地</small></div></div>
+              <div class="entry-step-label"><span>步骤 01</span><small>牌局信息</small></div>
+              <div class="entry-section-head"><div><h3 id="entryMetadataTitle">牌局信息</h3><small>确认赛季、日期、类型与场地</small></div></div>
               <div class="entry-fields">
                 <label>赛季<select id="entrySeason"><option>S3</option><option>S4</option></select></label>
-                <label>比赛日期<input type="date" id="entryDate"></label>
-                <label>比赛类型<select id="entryType"><option>五人局</option><option>四人局</option></select></label>
+                <label>牌局日期<input type="date" id="entryDate"></label>
+                <label>牌局类型<select id="entryType"><option>五人局</option><option>四人局</option></select></label>
                 <label>场地<input id="entryVenue" placeholder="例如：棋牌室"></label>
               </div>
             </section>
             <section class="entry-step entry-step-players" aria-labelledby="entryPlayersTitle">
-              <div class="entry-step-label"><span>步骤 02</span><small>牌手与比赛分</small></div>
-              <div class="entry-section-head"><div><h3 id="entryPlayersTitle">牌手与比赛分</h3><small>选择参赛牌手并填写本场总分</small></div></div>
-              <div class="entry-score-sheet-head" aria-hidden="true"><span>参赛牌手</span><span>比赛分</span></div>
+              <div class="entry-step-label"><span>步骤 02</span><small>牌手与得分</small></div>
+              <div class="entry-section-head"><div><h3 id="entryPlayersTitle">牌手与得分</h3><small>选择参赛牌手并填写本场总分</small></div></div>
+              <div class="entry-score-sheet-head" aria-hidden="true"><span>参赛牌手</span><span>本场得分</span></div>
               <div id="entryPlayers"></div>
             </section>
           </div>
@@ -247,7 +248,7 @@
               <div class="entry-rule-list">
                 <div class="entry-rule"><b>01</b><div><strong>自动校验</strong><small>四人局必须4人参赛，五人局必须5人参赛；所有参赛积分合计必须为0。</small></div></div>
                 <div class="entry-rule"><b>02</b><div><strong>自动MVP</strong><small>最高分牌手自动标记MVP；若并列最高，则共同MVP。</small></div></div>
-                <div class="entry-rule"><b>03</b><div><strong>精准对位</strong><small>每个方向格独立填写：A→B 与 B→A 不互相反推。正数代表吃分，负数代表被吃分，0也必须明确填写；每名牌手的整行合计必须等于本场比赛分。</small></div></div>
+                <div class="entry-rule"><b>03</b><div><strong>精准对位</strong><small>每个方向格独立填写：A→B 与 B→A 不互相反推。正数代表吃分，负数代表被吃分，0也必须明确填写；每名牌手的整行合计必须等于本场得分。</small></div></div>
                 <div class="entry-rule"><b>04</b><div><strong>即时更新</strong><small>保存成功后，总积分、场均、正分率、MVP和新制对位中心立即重算。</small></div></div>
                 <div class="entry-rule"><b>05</b><div><strong>公开模式</strong><small>无需邮箱密码。任何拿到网址的人都可以查看和录入，请避免误操作。</small></div></div>
               </div>
@@ -257,14 +258,14 @@
             <div class="entry-step-label"><span>步骤 03</span><small>精准对位矩阵</small></div>
             <div class="entry-section-head"><div><h3 id="entryMatrixTitle">本场精准对位矩阵</h3><small>攻击方（吃分）为行，承受方（被吃分）为列；两个方向分别统计，不互为相反数。正数=吃分，负数=被吃分，0也需要明确填写。</small></div><span class="chip gold">新制必填</span></div>
             <div class="matrix-wrap"><table class="matrix entry-matchup-matrix" id="entryMatchupMatrix"></table></div>
-            <div id="matchupValidation" class="validation entry-matrix-check" aria-live="polite">每个方向格都要独立填写，且每名牌手的对位行合计必须对应比赛总分。</div>
+            <div id="matchupValidation" class="validation entry-matrix-check" aria-live="polite">每个方向格都要独立填写，且每名牌手的对位行合计必须对应本场得分。</div>
           </section>
         </div>
 
         <footer class="entry-commit-bar">
           <div class="entry-commit-status"><span>校验状态</span><strong id="entryCommitStatus"><span class="entry-check-icon" data-entry-check-icon hidden><svg class="semantic-icon" data-motion-icon="check-circle" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12 2.6 2.6L16.5 9"></path></svg></span><span data-entry-status-label>需要检查</span></strong></div>
           <div class="entry-actions">
-            <button class="btn primary" id="saveMatchBtn" type="button"><svg class="semantic-icon save-icon" data-motion-icon="save" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h8V4M8 20v-6h8v6"></path></svg><span data-save-label>保存比赛与精准对位</span></button>
+            <button class="btn primary" id="saveMatchBtn" type="button"><svg class="semantic-icon save-icon" data-motion-icon="save" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h8V4M8 20v-6h8v6"></path></svg><span data-save-label>保存牌局与精准对位</span></button>
             <button class="btn" id="clearEntryBtn" type="button">清空</button>
             <button class="btn utility" id="resetDemoBtn" type="button">重新同步云端</button>
           </div>
@@ -278,8 +279,8 @@
             <h2 class="page-identity-title">对位中心</h2>
             <p class="page-identity-description">逐场记录牌手之间的方向性吃分关系</p>
           </div>
-          <div class="rival-tracked-signal page-identity-meta" aria-label="已追踪比赛">
-            <span>已记录比赛</span>
+          <div class="rival-tracked-signal page-identity-meta" aria-label="已追踪牌局">
+            <span>已记录牌局</span>
             <strong id="rivalTrackedMatches">0</strong>
             <small>精准对位明细</small>
           </div>
@@ -327,7 +328,7 @@
           <div class="system-audit-masthead-copy page-identity-copy">
             <span class="system-eyebrow page-identity-eyebrow">系统审计 / 数据完整性</span>
             <h2 class="page-identity-title">系统审计</h2>
-            <p class="page-identity-description">正式数据完整性、认证状态与版本信息</p>
+            <p class="page-identity-description">数据完整性、同步状态与版本信息</p>
           </div>
           <aside class="system-health-anchor page-identity-meta" aria-label="系统健康度">
             <span class="system-health-label"><svg class="semantic-icon system-shield-icon" data-motion-icon="shield" viewBox="0 0 24 24" aria-hidden="true" focusable="false" pointer-events="none"><path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z"></path><path d="m9 12 2 2 4-4"></path></svg><span>系统健康度</span></span>
@@ -365,6 +366,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.7.0-chinese-readability"></script>
+  <script type="module" src="/app.js?v=4.7.1-moap-identity"></script>
 </body>
 </html>

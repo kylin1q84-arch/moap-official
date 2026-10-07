@@ -177,7 +177,7 @@ function recordMetrics(players, recordCenter) {
 }
 
 function componentLabel(key) {
-  return ({ honors: "官方荣誉", career: "生涯表现", records: "历史纪录", longevity: "持续性与适应性" })[key] || key;
+  return ({ honors: "荣誉", career: "生涯表现", records: "历史纪录", longevity: "持续性与适应性" })[key] || key;
 }
 
 function goatLabel(row) {
@@ -199,13 +199,13 @@ function buildEvaluation(row, allRows) {
   const strengths = components.slice(0, 2).map(([key, item]) => `${componentLabel(key)} ${item.score.toFixed(1)}/${item.max}`);
   const weakness = components.at(-1);
   const facts = [
-    `官方荣誉${row.officialHonorCount}次（总冠军${row.titles}次、年度MVP${row.mvAwards}次），联盟第${honorRank}`,
-    `S1至今累计${row.careerRaw.total >= 0 ? "+" : ""}${row.careerRaw.total}分，联盟第${totalRank}`,
+    `荣誉${row.officialHonorCount}次（总冠军${row.titles}次、年度MVP${row.mvAwards}次），历史第${honorRank}`,
+    `S1至今累计${row.careerRaw.total >= 0 ? "+" : ""}${row.careerRaw.total}分，历史第${totalRank}`,
     `保持${row.recordRaw.recordCount}项GOAT有效纪录，加权纪录值${row.recordRaw.recordValue.toFixed(2)}`,
     `覆盖${row.careerRaw.activeSeasons}/${row.careerRaw.eligibleSeasons}个可参赛赛季，参赛率${row.careerRaw.participationRate.toFixed(1)}%`
   ];
   const summary = `${row.player}当前GOAT指数${row.goatIndex.toFixed(1)}，排名第${row.rank}，历史定位为“${goatLabel(row)}”。主要支撑来自${strengths.join("与")}。`;
-  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续增加总冠军或年度最有价值牌手荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累正式比赛数据。";
+  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续增加总冠军或年度最有价值牌手荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累牌局数据。";
   return { label: goatLabel(row), summary, outlook, strengths, facts };
 }
 
@@ -238,7 +238,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
     const recordsScore = nRecord(row) * .15;
     const longevityScore = row.careerRaw.seasonCoverage * .04 + row.careerRaw.seasonCompetitiveness * .05 + row.careerRaw.participationRate * .03 + row.careerRaw.adaptability * .03;
     const breakdown = {
-      honors: { label: "官方荣誉", score: Number(honorsScore.toFixed(2)), max: 40 },
+      honors: { label: "荣誉", score: Number(honorsScore.toFixed(2)), max: 40 },
       career: { label: "生涯表现", score: Number(careerScore.toFixed(2)), max: 30 },
       records: { label: "历史纪录", score: Number(recordsScore.toFixed(2)), max: 15 },
       longevity: { label: "持续性与适应性", score: Number(longevityScore.toFixed(2)), max: 15 }
@@ -275,7 +275,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
 
   return {
     rows,
-    methodology: "GOAT指数满分100：官方荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。生涯表现30分由累计积分11分、场均积分7分、正分率5分、MVP率7分构成；官方荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
+    methodology: "GOAT指数满分100：荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。生涯表现30分由累计积分11分、场均积分7分、正分率5分、MVP率7分构成；荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
   };
 }
 

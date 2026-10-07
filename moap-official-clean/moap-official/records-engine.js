@@ -206,8 +206,8 @@ function singleRecords(players, matches) {
   return [
     makeRecord({ id:"HIST_SINGLE_HIGH", section:"single", name:"单场最高积分", rule:"所选范围内实际参赛牌手的最高单场积分。", unit:"分", candidates:candidates(() => true) }),
     makeRecord({ id:"HIST_SINGLE_LOW", section:"single", name:"单场最低积分", rule:"所选范围内实际参赛牌手的最低单场积分。", unit:"分", direction:"asc", candidates:candidates(() => true) }),
-    makeRecord({ id:"HIST_MVP_HIGH", section:"single", name:"单场MVP最高积分", rule:"获得MVP的比赛中，MVP牌手的最高单场积分。", unit:"分", candidates:candidates(item => item.isMvp) }),
-    makeRecord({ id:"HIST_MVP_LOW", section:"single", name:"单场MVP最低积分", rule:"获得MVP的比赛中，MVP牌手的最低单场积分。", unit:"分", direction:"asc", candidates:candidates(item => item.isMvp) }),
+    makeRecord({ id:"HIST_MVP_HIGH", section:"single", name:"单场MVP最高积分", rule:"获得MVP的牌局中，MVP牌手的最高单场积分。", unit:"分", candidates:candidates(item => item.isMvp) }),
+    makeRecord({ id:"HIST_MVP_LOW", section:"single", name:"单场MVP最低积分", rule:"获得MVP的牌局中，MVP牌手的最低单场积分。", unit:"分", direction:"asc", candidates:candidates(item => item.isMvp) }),
     makeRecord({ id:"HIST_SOLO_HIGH", section:"single", name:"单场独赢最高积分", rule:"独赢场次中的最高积分；独赢要求本人积分≥0且其他实际参赛牌手均＜0。", unit:"分", candidates:candidates(item => item.isSoloWin) }),
     makeRecord({ id:"HIST_SOLO_LOW", section:"single", name:"单场独赢最低积分", rule:"独赢场次中的最低积分。", unit:"分", direction:"asc", candidates:candidates(item => item.isSoloWin) }),
     makeRecord({ id:"HIST_MAX_LEAD", section:"single", name:"单场最大领先分差", rule:"单场本人积分－同场其他实际参赛牌手平均积分，取最高值。", unit:"分", forcePlus:true, candidates:dominance })
@@ -241,7 +241,7 @@ function continuousRecords(players, matches) {
     makeRecord({ id:"HIST_SOLO_STAGE_POINTS", section:"continuous", name:"最长连续独赢阶段积分", rule:"所有连续独赢阶段中累计积分最高的一段。", unit:"分", candidates:pointCandidates("solo") }),
     makeRecord({ id:"HIST_BIG_STAGE_STREAK", section:"continuous", name:"最长连续爆发场次", rule:"按个人实际参赛序列统计单场积分≥50的最长连续场次；缺席不增加也不中断。", unit:"场", candidates:lengthCandidates("explosion") }),
     makeRecord({ id:"HIST_BIG_STAGE_POINTS", section:"continuous", name:"最长连续爆发阶段积分", rule:"所有连续爆发阶段中累计积分最高的一段；爆发定义为单场积分≥50。", unit:"分", candidates:pointCandidates("explosion") }),
-    makeRecord({ id:"HIST_PARTICIPATION_STREAK", section:"continuous", name:"最长连续参赛场次", rule:"连续出席正式比赛的最长场次；缺席会中断。", unit:"场", candidates:lengthCandidates("participation") })
+    makeRecord({ id:"HIST_PARTICIPATION_STREAK", section:"continuous", name:"最长连续参赛场次", rule:"连续出席牌局的最长场次；缺席会中断。", unit:"场", candidates:lengthCandidates("participation") })
   ];
 }
 
@@ -393,6 +393,6 @@ export function buildRecordCenter(players, matches) {
     generatedAt: new Date().toISOString(),
     seasons: availableSeasons,
     views,
-    methodology: "记录中心由正式比赛数据实时重算。单场记录只比较单场表现；连续记录按所选赛季与比赛类型内的个人实际参赛序列计算，缺席在表现连续记录中不增加也不中断，在连续参赛记录中会中断。爆发定义为单场积分≥50。记录允许并列保持。"
+    methodology: "记录中心由牌局数据实时重算。单场记录只比较单场表现；连续记录按所选赛季与牌局类型内的个人实际参赛序列计算，缺席在表现连续记录中不增加也不中断，在连续参赛记录中会中断。爆发定义为单场积分≥50。记录允许并列保持。"
   };
 }
