@@ -806,17 +806,6 @@ body{
   padding:9px 10px;
   color:var(--text);
 }
-.profile-honor-row>strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.profile-honor-row>b{font-size:11px;color:var(--gold2)}
-.profile-honor-row>small{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
-@media(min-width:621px){
-  .profile-honor-row{grid-template-columns:230px 52px 230px;justify-content:start}
-  .profile-honor-row>strong,.profile-honor-row>b,.profile-honor-row>small{text-align:left}
-}
-@media(max-width:620px){
-  .profile-honor-row{grid-template-columns:minmax(0,1fr) auto}
-  .profile-honor-row>small{grid-column:1/-1;text-align:left}
-}
 
 /* v2.3.1 hotfix · match player multi-select checkbox layout */
 .match-player-options{
@@ -3303,10 +3292,6 @@ select.moap-native-select{
   background:var(--gold);
   transform:translateY(-50%);
 }
-[data-view="player"] .profile-honor-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left}
-[data-view="player"] .profile-honor-copy>strong{font-size:13px;letter-spacing:.015em}
-[data-view="player"] .profile-honor-copy>small{color:var(--player-muted);font-size:12px}
-[data-view="player"] .profile-honor-row>b{font-size:15px;font-variant-numeric:tabular-nums}
 [data-view="player"] .profile-honor-row.is-unearned{opacity:.42;border-color:var(--player-rule);background:transparent}
 [data-view="player"] .profile-honor-row.is-unearned::before{background:rgba(168,183,177,.34)}
 [data-view="player"] .profile-honor-clickable:hover,
@@ -3412,8 +3397,6 @@ select.moap-native-select{
   [data-view="player"] .player-observatory-panel{padding-top:18px}
   [data-view="player"] .player-career-trajectory .trend-wrap{height:250px}
   [data-view="player"] .profile-honor-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;min-height:62px;padding:14px 2px 14px 17px}
-  [data-view="player"] .profile-honor-copy>strong{font-size:12px}
-  [data-view="player"] .profile-honor-row>b{font-size:13px}
   [data-view="player"] .player-season-summary-cards{display:grid;gap:0;border:0}
   [data-view="player"] .player-season-summary-card,
   [data-view="player"] .player-season-summary-card.is-total{
@@ -6723,4 +6706,146 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
     font-size:12px;
     line-height:1.5;
   }
+}
+
+/* Final interface hierarchy: one full-width honor archive beneath the core profile. */
+[data-view="player"] .player-profile-stage{margin-bottom:42px;padding-bottom:18px}
+[data-view="player"] .player-profile-stage .player-observatory-identity-column{
+  display:block;
+  padding:18px 0 0;
+}
+[data-view="player"] .player-profile-stage #playerHeader{
+  width:100%;
+  padding:0 2px;
+}
+[data-view="player"] .player-profile-stage .profile-name-block{
+  grid-template-columns:minmax(260px,1.1fr) minmax(240px,.9fr);
+  max-width:920px;
+}
+[data-view="player"] .player-profile-stage .profile-name-block h3{font-size:clamp(42px,3.4vw,46px)}
+[data-view="player"] .player-profile-stage .profile-career-ovr b{font-size:clamp(48px,4vw,56px)}
+[data-view="player"] .player-profile-stage .profile-goat-status b{
+  padding-left:0;
+  font-size:clamp(22px,1.9vw,26px);
+  letter-spacing:-.025em;
+  line-height:1.05;
+}
+[data-view="player"] .player-profile-stage .profile-goat-status b::before{display:none}
+[data-view="player"] .player-profile-stage .profile-observer-meta small{font-size:12px}
+[data-view="player"] .player-profile-stage .profile-observer-meta b{font-size:14px}
+[data-view="player"] .player-profile-stage .profile-honors-home{
+  width:100%;
+  margin:16px 0 0!important;
+  padding:0;
+  border:0;
+}
+[data-view="player"] .player-profile-stage .profile-honors-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:4px;
+  padding:0;
+}
+[data-view="player"] .player-profile-stage .profile-honors-head h3{font-size:17px}
+[data-view="player"] .player-profile-stage .profile-honors-head>small{
+  max-width:none;
+  font-size:12px;
+  text-align:right;
+}
+[data-view="player"] .player-profile-stage .profile-honor-list{
+  width:100%;
+  min-height:48px;
+  border:0;
+}
+[data-view="player"] .player-profile-stage .profile-honor-row{
+  display:grid;
+  grid-template-columns:minmax(280px,320px) minmax(0,1fr);
+  align-items:center;
+  gap:0;
+  width:100%;
+  max-width:920px;
+  min-height:46px;
+  padding:8px 2px;
+  text-align:left;
+}
+[data-view="player"] .player-profile-stage .profile-honor-row::before{display:none}
+[data-view="player"] .profile-honor-name{display:inline-flex;align-items:baseline;gap:8px;min-width:0}
+[data-view="player"] .profile-honor-name strong{font-size:16px;font-weight:700}
+[data-view="player"] .profile-honor-name b{color:var(--gold2);font-size:15px;font-variant-numeric:tabular-nums}
+[data-view="player"] .profile-honor-seasons{
+  display:block;
+  min-width:0;
+  padding-left:24px;
+  border-left:1px solid var(--player-rule);
+  color:var(--player-muted);
+  font-size:13px;
+  text-align:left;
+}
+[data-view="player"] .profile-honor-empty{
+  margin:0;
+  padding:13px 2px;
+  color:var(--player-muted);
+  font-size:13px;
+}
+
+/* The rules are reference material; validation and the commit bar stay exposed. */
+[data-view="entry"] .entry-rules{display:block;margin-top:24px}
+[data-view="entry"] .entry-rules>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:6px 0;
+  color:var(--entry-soft);
+  font-size:13px;
+  font-weight:680;
+  cursor:pointer;
+  list-style:none;
+}
+[data-view="entry"] .entry-rules>summary::-webkit-details-marker{display:none}
+[data-view="entry"] .entry-rules>summary::after{
+  content:"";
+  width:7px;
+  height:7px;
+  flex:none;
+  border-right:1px solid var(--entry-muted);
+  border-bottom:1px solid var(--entry-muted);
+  transform:rotate(45deg);
+}
+[data-view="entry"] .entry-rules[open]>summary::after{transform:rotate(225deg)}
+[data-view="entry"] .entry-rules>summary:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px}
+[data-view="entry"] .entry-rules .entry-rule-list{margin-top:10px}
+
+#exportBtn{
+  border-color:rgba(168,183,177,.08);
+  background:rgba(6,20,17,.16);
+  color:var(--muted);
+  font-size:13px;
+}
+#exportBtn:hover{border-color:var(--border-soft);background:rgba(6,20,17,.34);color:var(--text)}
+
+@media(max-width:980px){
+  [data-view="player"] .player-profile-stage .profile-name-block{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  }
+}
+@media(max-width:760px){
+  [data-view="player"] .player-profile-stage{margin-bottom:36px!important;padding-bottom:16px}
+  [data-view="player"] .player-profile-stage .player-observatory-identity-column{padding-top:18px}
+  [data-view="player"] .player-profile-stage .profile-name-block{display:block}
+  [data-view="player"] .player-profile-stage .profile-name-block h3{font-size:40px}
+  [data-view="player"] .player-profile-stage .profile-career-ovr b{font-size:48px}
+  [data-view="player"] .player-profile-stage .profile-goat-status b{font-size:22px}
+  [data-view="player"] .player-profile-stage .profile-honors-home{margin-top:18px!important;padding:0;border:0}
+  [data-view="player"] .player-profile-stage .profile-honors-head{align-items:flex-start}
+  [data-view="player"] .player-profile-stage .profile-honors-head>small{max-width:54%;line-height:1.45}
+  [data-view="player"] .player-profile-stage .profile-honor-row{
+    grid-template-columns:minmax(0,1fr);
+    gap:3px;
+    min-height:56px;
+    padding:9px 2px;
+  }
+  [data-view="player"] .profile-honor-name strong{font-size:15px}
+  [data-view="player"] .profile-honor-seasons{padding-left:0;border-left:0;font-size:12px}
 }
