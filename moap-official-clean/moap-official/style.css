@@ -3884,7 +3884,7 @@ select.moap-native-select{
 
 [data-view="matches"] .match-query-bar{
   display:grid;
-  grid-template-columns:minmax(140px,.62fr) minmax(210px,.9fr) minmax(140px,.62fr) minmax(230px,1.2fr);
+  grid-template-columns:minmax(125px,.65fr) minmax(180px,.9fr) minmax(125px,.65fr) minmax(125px,.65fr) minmax(220px,1.2fr);
   gap:13px;
   align-items:end;
   margin:0;
@@ -3901,6 +3901,13 @@ select.moap-native-select{
 [data-view="matches"] .match-query-bar .match-player-trigger,
 [data-view="matches"] .match-query-bar input{height:46px;min-height:46px}
 [data-view="matches"] .match-query-bar input{border-color:rgba(168,183,177,.13);background:rgba(4,16,13,.34)}
+[data-view="matches"] .match-format-label,
+#matchModalBackdrop .match-format-label{color:var(--gold2);font-weight:650;opacity:.78}
+
+@media(min-width:761px) and (max-width:1280px){
+  [data-view="matches"] .match-query-bar{grid-template-columns:repeat(3,minmax(0,1fr))}
+  [data-view="matches"] .match-filter-query{grid-column:span 2}
+}
 
 [data-view="matches"] .match-ledger{
   position:relative;
@@ -4028,13 +4035,14 @@ select.moap-native-select{
   [data-view="matches"] .match-ledger-section-head>strong,
   [data-view="matches"] .match-ledger-section-head>small{max-width:128px;font-size:11px;line-height:1.45}
   [data-view="matches"] .match-query-bar{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    grid-template-areas:"season type" "player player" "query query";
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"season" "player" "type" "format" "query";
     gap:12px;
     padding:0 1px;
   }
   [data-view="matches"] .match-filter-season{grid-area:season}
   [data-view="matches"] .match-filter-type{grid-area:type}
+  [data-view="matches"] .match-filter-format{grid-area:format}
   [data-view="matches"] .match-player-filter{grid-area:player}
   [data-view="matches"] .match-filter-query{grid-area:query}
   [data-view="matches"] .match-query-bar .moap-select-trigger,
@@ -4078,7 +4086,7 @@ select.moap-native-select{
 @media(max-width:340px){
   [data-view="matches"] .match-query-bar{
     grid-template-columns:1fr;
-    grid-template-areas:"season" "type" "player" "query";
+    grid-template-areas:"season" "player" "type" "format" "query";
     gap:10px;
   }
   [data-view="matches"] .match-ledger-section-head>small{max-width:100px}

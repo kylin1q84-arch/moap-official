@@ -7,7 +7,7 @@
   <title>MOAP｜五人麻将数据系统</title>
   <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.7.6-interface-hierarchy-polish">
+  <link rel="stylesheet" href="/style.css?v=4.7.7-match-format">
 </head>
 <body>
 
@@ -196,6 +196,7 @@
             <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
             <label class="match-filter-type">牌局类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
+            <label class="match-filter-format">赛制<select id="matchFormat"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">双段长局</option></select></label>
             <label class="match-filter-query">关键词<input id="matchQuery" placeholder="牌局编号 / 场地 / 日期"></label>
           </div>
         </section>
@@ -365,6 +366,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.7.5-interface-hierarchy-polish"></script>
+  <script type="module" src="/app.js?v=4.7.8-source-correction"></script>
 </body>
 </html>

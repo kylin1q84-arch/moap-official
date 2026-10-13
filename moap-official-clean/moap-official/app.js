@@ -7,6 +7,7 @@ import { buildGoatSystem } from "./goat-engine.js";
 import { validateMoapData } from "./data-validation.js";
 import { MOAP_CONFIG } from "./config.js";
 import { normalizeOfficialMatchArchive } from "./official-match-normalization.js";
+import { correctSourceData } from "./source-data-corrections.js";
 // Keep semantic icon markup local to the application module so the production
 // deployment remains resilient even when static module assets are edge-cached
 // independently of app.js.
@@ -89,6 +90,18 @@ const VENUE_OVERRIDES = {
   MSL0069: "七囍茶室（厦门站店）"
 };
 function normalizedVenue(matchId, venue, {isOfficialSplitSession=false}={}){ const displayVenue=VENUE_OVERRIDES[String(matchId||"")] || venue || ""; return isOfficialSplitSession ? String(displayVenue).replace(/上半场\s*$/u,"").trimEnd() : displayVenue; }
+
+// Match format is a product classification; segment evidence is a separate concern.
+const LONG_MATCH_RULES=Object.freeze([{season:"S1",round:5,format:"split_long"}]);
+function matchFormatKey(match){
+  if(match?.isSplitSession)return "split_long";
+  return LONG_MATCH_RULES.find(rule=>rule.season===match?.season&&rule.round===Number(match?.round))?.format||"regular";
+}
+function matchFormatLabel(match){return matchFormatKey(match)==="split_long"?"双段长局":"常规局";}
+function hasMatchSegmentEvidence(matchId){
+  const segments=state.matchSegments?.[matchId];
+  return Array.isArray(segments)&&["first_half","second_half"].every(key=>segments.some(segment=>segment.key===key&&Array.isArray(segment.results)&&segment.results.length>0));
+}
 
 const HONOR_NAME_OVERRIDES = {};
 function honorCatalogItem(honorId){ return HONOR_CATALOG.find(x => x.honorId === honorId); }
@@ -220,7 +233,7 @@ function competitionRanks(rows,key){
   let last=null,rank=0;return rows.map((x,i)=>{const v=x[key];if(i===0||v!==last)rank=i+1;last=v;return {...x,rank};});
 }
 function buildLiveState(db){
-  const normalization=normalizeOfficialMatchArchive(db);
+  const normalization=normalizeOfficialMatchArchive(correctSourceData(db));
   normalization.issues.forEach(issue=>console.error("Official match normalization failed",issue));
   db=normalization.db;
   const players=db.players.map(p=>({playerId:p.id,name:p.name,joinSeason:p.join_season,status:p.active?"Active":"Inactive"}));
@@ -1066,7 +1079,8 @@ function populateSelects(){
   renderMatchPlayerOptions();
   const seasons=(state.seasons||[]).map(s=>s.id);
   $("#matchSeason").innerHTML='<option value="all">全部赛季</option>'+seasons.map(s=>`<option value="${s}">${s}</option>`).join("");
-  $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.status==="active"?"selected":""}>${s.id}${s.status==="active"?"（进行中）":""}</option>`).join("");
+  const currentSeason=latestActualSeason();
+  $("#entrySeason").innerHTML=(state.seasons||[]).map(s=>`<option value="${s.id}" ${s.id===currentSeason?"selected":""}>${s.id}${s.id===currentSeason?"（进行中）":""}</option>`).join("");
   if(!state.players.some(p=>p.playerId===currentPlayer)) currentPlayer=state.players[0]?.playerId||"P001";
   $("#playerSelect").value=currentPlayer;
   $("#overviewSeasonPlayerSelect").value=currentPlayer;
@@ -1235,8 +1249,9 @@ function matchResultStripHtml(played,{detail=false}={}){
   return `<div class="match-result-strip ${detail?"match-detail-result-strip":""}">${played.map((r,index)=>`<span class="match-result-item ${r.isMvp?"is-mvp":""}"><span class="match-result-rank">${String(index+1).padStart(2,"0")}</span><span class="match-result-player">${escapeHtml(r.player)}</span><b class="${scoreClass(r.score)}">${fmtScore(r.score)}</b>${r.isMvp?'<small class="match-result-mvp">MVP</small>':'<small class="match-result-mvp" aria-hidden="true"></small>'}</span>`).join("")}</div>`;
 }
 function matchCard(m){
-  const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=hasPreciseMatchup(m),hasDetail=precise||!!state.matchSegments?.[m.matchId]?.length,isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
-  return `<article class="season-log-entry match-ledger-row ${hasDetail?"is-clickable":""} ${isLatest?"is-latest":""}" ${hasDetail?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}牌局详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">最新牌局</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${hasDetail?'<span class="match-ledger-view">查看牌局 →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
+  const played=m.results.filter(r=>!r.isAbsent).sort((a,b)=>b.score-a.score),precise=hasPreciseMatchup(m),hasDetail=precise||hasMatchSegmentEvidence(m.matchId)||matchFormatKey(m)==="split_long",isLatest=m.matchId===(state.matches||[]).at(-1)?.matchId;
+  const format=matchFormatKey(m)==="split_long"?`<span class="match-format-label"> · ${matchFormatLabel(m)}</span>`:"";
+  return `<article class="season-log-entry match-ledger-row ${hasDetail?"is-clickable":""} ${isLatest?"is-latest":""}" ${hasDetail?`data-match-id="${escapeHtml(m.matchId)}" tabindex="0" role="button" aria-label="查看${escapeHtml(m.matchId)}牌局详情"`:""}><header class="match-ledger-row-head"><div class="match-ledger-id-block">${isLatest?'<span class="match-latest-label">最新牌局</span>':""}<strong class="match-ledger-id">${escapeHtml(m.matchId)}</strong></div><div class="match-ledger-meta"><b>${escapeHtml(m.season)} · 第${m.round}局 · ${escapeHtml(m.matchType)}${format}</b><small>${escapeHtml(m.date)} · ${escapeHtml(m.venue||"未填写场地")}</small></div>${hasDetail?'<span class="match-ledger-view">查看牌局 →</span>':""}</header>${matchResultStripHtml(played)}</article>`;
 }
 let matchDetailSegmentMatchId=null;
 let matchDetailSegmentView="full";
@@ -1308,13 +1323,13 @@ function splitSessionResultsHtml(rows,{showMvp=true}={}){
   if(!played.length)return '<p class="match-detail-segment-empty">本段暂无有效成绩。</p>';
   return `<div class="match-detail-split-results">${played.map(row=>`<div class="match-detail-score-unit"><span class="match-detail-score-player">${escapeHtml(row.player)}</span><span class="match-detail-score-value"><b class="${scoreClass(row.score)}">${fmtScore(row.score)}</b>${showMvp&&row.isMvp?'<small>MVP</small>':""}</span></div>`).join("")}</div>`;
 }
-function splitSessionPanelHtml(match,view){
+function splitSessionPanelHtml(match,view,{hasSegments=true}={}){
   const segment=view==="full"?null:(state.matchSegments?.[match.matchId]||[]).find(item=>item.key===view);
   const rows=view==="full"
     ?match.results.filter(row=>!row.isAbsent&&row.score!=null).sort((a,b)=>b.score-a.score)
     :segment?.results||[];
   const matrix=view==="full"
-    ?(hasPreciseMatchup(match)?singleMatchMatrixHtml(match):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>')
+    ?(hasPreciseMatchup(match)?singleMatchMatrixHtml(match):`<div class="match-detail-segment-empty">${hasSegments?"本段":"本场"}未记录精准对位数据</div>`)
     :(segment?matchSegmentMatrixHtml(segment):'<div class="match-detail-segment-empty">本段未记录精准对位数据</div>');
   return `${splitSessionResultsHtml(rows,{showMvp:view==="full"})}<div class="match-detail-split-matrix"><small>精准对位</small>${matrix}</div>`;
 }
@@ -1340,13 +1355,17 @@ function openMatchModal(matchId){
   const modal=$("#matchModalBackdrop .match-detail-modal");
   modal?.classList.toggle("match-detail-four",participants===4);
   modal?.classList.toggle("match-detail-five",participants===5);
-  const header=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 牌局详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>`;
-  matchDetailSegmentMatchId=match.isSplitSession?match.matchId:null;
+  const format=matchFormatKey(match)==="split_long"?`<span class="match-format-label"> · ${matchFormatLabel(match)}</span>`:"";
+  const header=`<header class="honor-modal-header"><div><p>${escapeHtml(match.season)} 第${match.round}局 · ${escapeHtml(match.matchType)}${format}</p><h2 id="matchModalTitle">${escapeHtml(match.matchId)} 牌局详情</h2><strong>${escapeHtml(match.date)} · ${escapeHtml(match.venue||"未填写场地")}</strong></div></header>`;
+  const hasSegments=hasMatchSegmentEvidence(match.matchId);
+  matchDetailSegmentMatchId=hasSegments?match.matchId:null;
   matchDetailSegmentView="full";
-  if(match.isSplitSession){
+  if(hasSegments){
     const tabs=`<div class="match-detail-segment-tabs" role="tablist" aria-label="牌局数据视图">${MATCH_DETAIL_SEGMENT_TABS.map(([key,label])=>`<button type="button" id="matchDetailTab-${key}" role="tab" data-match-detail-view="${key}" aria-selected="${key==="full"}" aria-controls="matchDetailSegmentPanel" tabindex="${key==="full"?"0":"-1"}">${label}</button>`).join("")}</div>`;
     $("#matchModalBody").innerHTML=`${header}${tabs}<div id="matchDetailSegmentPanel" class="match-detail-segment-panel" role="tabpanel" aria-labelledby="matchDetailTab-full" tabindex="0"></div>`;
     setMatchDetailSegmentView("full");
+  }else if(matchFormatKey(match)==="split_long"){
+    $("#matchModalBody").innerHTML=`${header}<div class="match-detail-segment-panel">${splitSessionPanelHtml(match,"full",{hasSegments:false})}</div>`;
   }else{
     const precise=hasPreciseMatchup(match)
       ?`<div class="honor-modal-section match-detail-focus"><h3><span>方向数据</span>本场精准对位数据</h3>${singleMatchMatrixHtml(match)}</div>`
@@ -1357,11 +1376,12 @@ function openMatchModal(matchId){
 }
 
 function filteredMatches(){
-  const season=$("#matchSeason").value,type=$("#matchType").value,q=$("#matchQuery").value.trim().toLowerCase();
+  const season=$("#matchSeason").value,type=$("#matchType").value,format=$("#matchFormat").value,q=$("#matchQuery").value.trim().toLowerCase();
   const selected=[...selectedMatchPlayers];
   return [...state.matches].reverse().filter(m=>{
     if(season!=="all"&&m.season!==season)return false;
     if(type!=="all"&&m.matchType!==type)return false;
+    if(format!=="all"&&matchFormatKey(m)!==format)return false;
     if(selected.length){
       const participants=m.results.filter(r=>!r.isAbsent&&r.score!=null).map(r=>r.playerId);
       const participantSet=new Set(participants);
@@ -1390,7 +1410,7 @@ function refreshMatches(){
   const target=$("#matchList");
   transitionMatchContent({target,update:()=>renderMatches(true)});
 }
-["matchSeason","matchType"].forEach(id=>$("#"+id).addEventListener("change",refreshMatches));
+["matchSeason","matchType","matchFormat"].forEach(id=>$("#"+id).addEventListener("change",refreshMatches));
 $("#matchQuery").addEventListener("input",refreshMatches);
 $("#matchPlayerTrigger")?.addEventListener("click",()=>{$("#matchPlayerMenu")?.hidden?openMatchPlayerDropdown():closeMatchPlayerDropdown({focusTrigger:true});});
 $("#matchPlayerTrigger")?.addEventListener("keydown",event=>{if(!["Enter"," ","ArrowDown","ArrowUp"].includes(event.key))return;event.preventDefault();if($("#matchPlayerMenu")?.hidden)openMatchPlayerDropdown({focus:event.key==="ArrowUp"?"last":"selected"});});

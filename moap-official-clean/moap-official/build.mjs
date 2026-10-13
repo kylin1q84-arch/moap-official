@@ -8,6 +8,7 @@ const sourceFiles = [
   'index.html',
   'app.js',
   'official-match-normalization.js',
+  'source-data-corrections.js',
   'animations.js',
   'motion-runtime.js',
   'gsap-index.js',
