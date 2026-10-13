@@ -822,7 +822,7 @@ function reportFor(r,all){
   const seasonView=seasonAssessment(r),careerView=careerAssessment(r);
   return {trendKey,headline,summary,strengths:strengths.length?strengths:['近期表现接近个人常态，暂无特别突出的单项'],risks,next,seasonLabel:seasonView.label,seasonSummary:seasonView.summary,seasonOutlook:seasonView.outlook,careerLabel:careerView.label,careerSummary:careerView.summary,careerEvaluation:careerView.evaluation,careerOutlook:careerView.outlook,careerStrengths:careerView.strengths,careerRisks:careerView.risks};
 }
-export function buildMslStatusCenter(players,matches,honors={}){
+export function buildMoapStatusCenter(players,matches,honors={}){
   const current=computePower(players,matches),previous=computePower(players,sortedMatches(matches).slice(0,-1));
   const prevBy=Object.fromEntries(previous.map(x=>[x.playerId,x])),careerBy=careerMetrics(players,matches,honors);
   const seasonRatingSystem=buildCurrentSeasonRatings(players,matches),seasonRatingBy=Object.fromEntries(seasonRatingSystem.rows.map(x=>[x.playerId,x]));

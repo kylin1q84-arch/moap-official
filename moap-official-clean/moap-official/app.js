@@ -1,7 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 import { HONOR_CATALOG, CORE_HONOR_IDS } from "./honor-details.js";
-import { calculateHonorSystem, buildMslStatusCenter, formatMvpStars } from "./analytics-engine.js";
+import { calculateHonorSystem, buildMoapStatusCenter, formatMvpStars } from "./analytics-engine.js";
 import { buildRecordCenter, buildDataLeaderboard } from "./records-engine.js";
 import { buildGoatSystem } from "./goat-engine.js";
 import { validateMoapData } from "./data-validation.js";
@@ -142,7 +142,7 @@ function applyAnalyticsToState(target){
   const goatSystem=buildGoatSystem(target.players,orderedMatches,target.honors,target.recordCenter,previousGoat);
   target.goat=goatSystem.rows;
   target.goatMethodology=goatSystem.methodology;
-  target.statusCenter=buildMslStatusCenter(target.players,orderedMatches,target.honors);
+  target.statusCenter=buildMoapStatusCenter(target.players,orderedMatches,target.honors);
   target.profiles=target.profiles||{};
   const stats={};
   target.players.forEach(p=>{stats[p.playerId]=officialHonorStats(target.honors[p.playerId]||[]);});
@@ -329,7 +329,7 @@ function buildLiveState(db){
   const topGoat=goat[0],topHonor=officialHonorRanking(players,honorStats)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
   const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"MOAP Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"牌局中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新牌局月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
-  const statusCenter=buildMslStatusCenter(players,matches,honors);
+  const statusCenter=buildMoapStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(normalization.segments,players),sourceToOfficialMatchId:normalization.sourceToOfficialMatchId,rawSourceContext:normalization.rawSourceContext,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
 
