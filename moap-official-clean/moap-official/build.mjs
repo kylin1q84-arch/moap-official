@@ -9,6 +9,8 @@ const sourceFiles = [
   'app.js',
   'official-match-normalization.js',
   'source-data-corrections.js',
+  'match-id.js',
+  'match-format.js',
   'animations.js',
   'motion-runtime.js',
   'gsap-index.js',
@@ -64,7 +66,7 @@ console.log('Supabase key: configured')
 console.log('Honor details: included')
 console.log('Directional precise matchup matrix: included')
 console.log('Unique honor engine: included')
-console.log('MSL form center and S1-current career evaluation: included')
+console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
 

@@ -1,12 +1,12 @@
 // Source IDs remain the database identity. Only these reviewed pairs are folded
 // into one official match in the in-memory archive.
 export const OFFICIAL_SPLIT_SESSIONS = Object.freeze([
-  {firstHalfId:"MSL0042",secondHalfId:"MSL0043",expectedSeason:"S2",expectedDate:"2025-10-04",matrixEvidence:"unrecorded"},
-  {firstHalfId:"MSL0074",secondHalfId:"MSL0075",expectedSeason:"S3",expectedDate:"2026-10-05",matrixEvidence:"required"}
+  {firstHalfId:"MOAP0042",secondHalfId:"MOAP0043",expectedSeason:"S2",expectedDate:"2025-10-04",matrixEvidence:"unrecorded"},
+  {firstHalfId:"MOAP0074",secondHalfId:"MOAP0075",expectedSeason:"S3",expectedDate:"2026-10-05",matrixEvidence:"required"}
 ]);
 
 const sourceOrdinal = id => {
-  const match = /^MSL(\d{4,})$/.exec(String(id || ""));
+  const match = /^MOAP(\d{4,})$/.exec(String(id || ""));
   return match ? Number(match[1]) : NaN;
 };
 const cloneRow = row => ({...row});
@@ -131,7 +131,7 @@ export function assignOfficialMatchIds(groups) {
   const sourceToOfficialMatchId = {};
   const matches = [], results = [], matchups = [], segments = [];
   groups.forEach((group, index) => {
-    const officialId = `MSL${String(index + 1).padStart(4, "0")}`;
+    const officialId = `MOAP${String(index + 1).padStart(4, "0")}`;
     const sourceMatchIds = group.sources.map(row => row.id);
     sourceMatchIds.forEach(id => {sourceToOfficialMatchId[id] = officialId;});
     matches.push({...group.primary, id:officialId, sourceMatchIds,
@@ -157,7 +157,7 @@ export function assignOfficialRounds(matches) {
 
 function normalizationChecks(matches, results, matchups, issues) {
   const ids = matches.map(match => match.id);
-  const idErrors = ids.filter((id, index) => id !== `MSL${String(index + 1).padStart(4, "0")}`);
+  const idErrors = ids.filter((id, index) => id !== `MOAP${String(index + 1).padStart(4, "0")}`);
   const roundErrors = [];
   const roundsBySeason = new Map();
   for (const match of matches) {
@@ -224,11 +224,10 @@ export function normalizeOfficialMatchArchive(db) {
     Math.max(nextSourceRoundBySeason[row.season_id] || 0, Number(row.round) || 0);
   for (const season of Object.keys(nextSourceRoundBySeason)) nextSourceRoundBySeason[season]++;
   const rawSourceContext = {maxSourceOrdinal,
-    nextSourceMatchId:`MSL${String(maxSourceOrdinal + 1).padStart(4, "0")}`,
+    nextSourceMatchId:`MOAP${String(maxSourceOrdinal + 1).padStart(4, "0")}`,
     nextSourceRoundBySeason};
   const checks = normalizationChecks(assigned.matches,assigned.results,assigned.matchups,issues);
   return {db:{...db,matches:assigned.matches,results:assigned.results,matchups:assigned.matchups},
     segments:assigned.segments,sourceToOfficialMatchId:assigned.sourceToOfficialMatchId,
     rawSourceContext,issues,checks};
 }
-

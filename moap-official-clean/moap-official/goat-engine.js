@@ -1,3 +1,5 @@
+import { CORE_HONOR_IDS } from "./honor-details.js";
+
 const EPS = 1e-9;
 const num = value => Number.isFinite(Number(value)) ? Number(value) : 0;
 const sum = values => values.reduce((total, value) => total + num(value), 0);
@@ -46,8 +48,9 @@ function competitionRanks(rows) {
 
 function honorMetrics(players, honors) {
   return players.map(player => {
-    const awards = (honors?.[player.playerId] || []).filter(award => award.honorId === "H001" || award.honorId === "H003");
+    const awards = (honors?.[player.playerId] || []).filter(award => CORE_HONOR_IDS.has(award.honorId));
     const titles = awards.filter(award => award.honorId === "H001").length;
+    const peakTitles = awards.filter(award => award.honorId === "H002").length;
     const mvAwards = awards.filter(award => award.honorId === "H003").length;
     return {
       playerId: player.playerId,
@@ -55,6 +58,7 @@ function honorMetrics(players, honors) {
       officialHonorCount: awards.length,
       adjustedHonorValue: awards.length,
       titles,
+      peakTitles,
       mvAwards
     };
   });
@@ -181,7 +185,7 @@ function componentLabel(key) {
 }
 
 function goatLabel(row) {
-  if (row.rank === 1 && row.goatIndex >= 85) return "MSL历史领跑者";
+  if (row.rank === 1 && row.goatIndex >= 85) return "MOAP历史领跑者";
   if (row.goatIndex >= 85) return "历史级竞争者";
   if (row.goatIndex >= 75) return "冠军级核心";
   if (row.goatIndex >= 65) return "长期核心";
@@ -191,21 +195,21 @@ function goatLabel(row) {
 }
 
 function buildEvaluation(row, allRows) {
-  const rankedHonor = [...allRows].sort((a, b) => b.titles - a.titles || b.mvAwards - a.mvAwards || b.officialHonorCount - a.officialHonorCount || a.playerId.localeCompare(b.playerId));
-  const honorRank = rankedHonor.findIndex(item => item.titles === row.titles && item.mvAwards === row.mvAwards && item.officialHonorCount === row.officialHonorCount) + 1;
+  const rankedHonor = [...allRows].sort((a, b) => b.titles - a.titles || b.mvAwards - a.mvAwards || b.peakTitles - a.peakTitles || b.officialHonorCount - a.officialHonorCount || a.playerId.localeCompare(b.playerId));
+  const honorRank = rankedHonor.findIndex(item => item.titles === row.titles && item.mvAwards === row.mvAwards && item.peakTitles === row.peakTitles && item.officialHonorCount === row.officialHonorCount) + 1;
   const rankedTotal = [...allRows].sort((a, b) => b.careerRaw.total - a.careerRaw.total || a.playerId.localeCompare(b.playerId));
   const totalRank = rankedTotal.findIndex(item => item.playerId === row.playerId) + 1;
   const components = Object.entries(row.breakdown).sort((a, b) => (b[1].score / b[1].max) - (a[1].score / a[1].max));
   const strengths = components.slice(0, 2).map(([key, item]) => `${componentLabel(key)} ${item.score.toFixed(1)}/${item.max}`);
   const weakness = components.at(-1);
   const facts = [
-    `荣誉${row.officialHonorCount}次（总冠军${row.titles}次、年度MVP${row.mvAwards}次），历史第${honorRank}`,
+    `荣誉${row.officialHonorCount}次（赛季总冠军${row.titles}次、巅峰赛冠军${row.peakTitles}次、年度MVP${row.mvAwards}次），历史第${honorRank}`,
     `S1至今累计${row.careerRaw.total >= 0 ? "+" : ""}${row.careerRaw.total}分，历史第${totalRank}`,
     `保持${row.recordRaw.recordCount}项GOAT有效纪录，加权纪录值${row.recordRaw.recordValue.toFixed(2)}`,
     `覆盖${row.careerRaw.activeSeasons}/${row.careerRaw.eligibleSeasons}个可参赛赛季，参赛率${row.careerRaw.participationRate.toFixed(1)}%`
   ];
   const summary = `${row.player}当前GOAT指数${row.goatIndex.toFixed(1)}，排名第${row.rank}，历史定位为“${goatLabel(row)}”。主要支撑来自${strengths.join("与")}。`;
-  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续增加总冠军或年度最有价值牌手荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累牌局数据。";
+  const outlook = weakness ? `目前最需要补强的是${componentLabel(weakness[0])}（${weakness[1].score.toFixed(1)}/${weakness[1].max}）；后续增加赛季总冠军、巅峰赛冠军或年度最有价值牌手荣誉、提升跨赛季稳定性或打破高含金量纪录，都会直接改变GOAT竞争格局。` : "继续积累牌局数据。";
   return { label: goatLabel(row), summary, outlook, strengths, facts };
 }
 
@@ -275,7 +279,7 @@ export function buildGoatSystem(players, matches, honors = {}, recordCenter = {}
 
   return {
     rows,
-    methodology: "GOAT指数满分100：荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。生涯表现30分由累计积分11分、场均积分7分、正分率5分、MVP率7分构成；荣誉维度仅统计MSL总冠军与MSL年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
+    methodology: "GOAT指数满分100：荣誉40%＋生涯表现30%＋单场/连续历史纪录15%＋持续性与适应性15%。生涯表现30分由累计积分11分、场均积分7分、正分率5分、MVP率7分构成；荣誉维度统计MOAP赛季总冠军、MOAP巅峰赛冠军与MOAP年度最有价值牌手，不读取其他奖项。历史纪录按S/A/B含金量分级，评分由固定数据模型生成，AI只负责解释。"
   };
 }
 

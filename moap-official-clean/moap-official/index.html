@@ -7,7 +7,7 @@
   <title>MOAP｜五人麻将数据系统</title>
   <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.7.7-match-format">
+  <link rel="stylesheet" href="/style.css?v=4.8.0-moap-identity">
 </head>
 <body>
 
@@ -64,7 +64,7 @@
           <div class="overview-metrics-strip" id="overviewKpis"></div>
         </section>
         <section class="overview-open-section overview-editorial-recap">
-          <header class="overview-section-head"><div><span>牌局数据简报</span><h3>最新牌局 · MSL赛后简报</h3></div><small>自动读取最新牌局与纪录动态</small></header>
+          <header class="overview-section-head"><div><span>牌局数据简报</span><h3>最新牌局 · MOAP赛后简报</h3></div><small>自动读取最新牌局与纪录动态</small></header>
           <div id="latestAiRecap"></div>
         </section>
         <section class="overview-open-section overview-season-spotlight" aria-labelledby="overviewSeasonSpotlightTitle">
@@ -86,12 +86,12 @@
       <section class="view" data-view="records">
         <header class="records-workbench-masthead page-identity">
           <div class="page-identity-copy"><span class="records-kicker page-identity-eyebrow">纪录工作台 / 历史数据</span><h2 class="page-identity-title">记录中心</h2><p class="page-identity-description">查询综合排名、单场纪录与连续纪录</p></div>
-          <div class="records-official-mark page-identity-meta" aria-label="MSL历史纪录册"><span>MSL 纪录册</span><strong>历史</strong></div>
+          <div class="records-official-mark page-identity-meta" aria-label="MOAP历史纪录册"><span>MOAP 纪录册</span><strong>历史</strong></div>
         </header>
 
         <section class="records-query-stage records-data-stage record-data-leaderboard" aria-labelledby="dataQueryTitle">
           <header class="records-query-head record-data-head">
-            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MSL综合数据榜</h3><small>按赛季、牌局类型和数据类型查询</small></div>
+            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MOAP综合数据榜</h3><small>按赛季、牌局类型和数据类型查询</small></div>
             <div class="records-filter-bar record-filter-row record-query-toolbar records-data-filters">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>牌局类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
@@ -104,7 +104,7 @@
 
         <section class="records-query-stage records-ledger-stage record-center-card" aria-labelledby="recordQueryTitle">
           <header class="records-query-head record-toolbar">
-            <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MSL历史纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
+            <div class="record-query-copy"><span class="records-kicker">纪录查询</span><h3 id="recordQueryTitle">MOAP历史纪录</h3><small>查询纪录保持者、创造时间与数据依据</small><small class="records-method-note" id="recordMethodNote"></small></div>
             <div class="record-filter-cluster">
               <div class="records-filter-bar record-filter-row compact record-query-toolbar records-record-filters">
                 <label>纪录类型<select id="recordSectionFilter"><option value="single" selected>单场纪录</option><option value="continuous">连续纪录</option></select></label>
@@ -130,7 +130,7 @@
           <div class="status-current-leader page-identity-meta"><span>观察窗口</span><strong>最近 5 场</strong></div>
         </header>
         <section class="status-ranking-stage" aria-labelledby="statusRankingTitle">
-          <header class="status-stage-head"><div><span>状态排名</span><h3 id="statusRankingTitle">MSL状态实力榜</h3></div></header>
+          <header class="status-stage-head"><div><span>状态排名</span><h3 id="statusRankingTitle">MOAP状态实力榜</h3></div></header>
           <div class="power-list" id="powerRanking"></div>
         </section>
         <section class="status-intelligence-stage" aria-labelledby="statusIntelligenceTitle">
@@ -152,7 +152,7 @@
 
       <section class="view" data-view="player">
         <div class="hero player-observatory-masthead page-identity">
-          <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MSL</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
+          <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MOAP</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
           <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="player-profile-stage player-observatory-stage">
@@ -196,7 +196,7 @@
             <label class="match-filter-season">赛季<select id="matchSeason"><option value="all">全部赛季</option><option>S1</option><option>S2</option><option>S3</option></select></label>
             <div class="match-player-filter"><span class="filter-label">牌手</span><button type="button" class="match-player-trigger" id="matchPlayerTrigger" aria-expanded="false">全部牌手</button><div class="match-player-menu" id="matchPlayerMenu" hidden><div id="matchPlayerOptions" class="match-player-options"></div><div class="match-player-footer"><span id="matchPlayerCount">已选择0人</span><button type="button" id="matchPlayerClear">清空</button></div></div></div>
             <label class="match-filter-type">牌局类型<select id="matchType"><option value="all">全部类型</option><option>四人局</option><option>五人局</option></select></label>
-            <label class="match-filter-format">赛制<select id="matchFormat"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">双段长局</option></select></label>
+            <label class="match-filter-format">赛制<select id="matchFormat"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">巅峰赛</option></select></label>
             <label class="match-filter-query">关键词<input id="matchQuery" placeholder="牌局编号 / 场地 / 日期"></label>
           </div>
         </section>
@@ -366,6 +366,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.7.8-source-correction"></script>
+  <script type="module" src="/app.js?v=4.8.0-moap-identity"></script>
 </body>
 </html>

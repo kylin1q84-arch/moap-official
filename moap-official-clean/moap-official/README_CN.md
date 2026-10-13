@@ -1,41 +1,19 @@
-# MOAP Cloud v2（完整云端版）
+# MOAP
 
-这一版以原来的 `MOAP_Web_MVP_v1/index.html` 为母版，保留原有深绿金色界面和全部主要交互：
+五人麻将数据系统 · 实时分析
 
-- 联赛总览、排行榜、个人档案、累计积分曲线
-- 最近比赛、筛选搜索、四人局/五人局数据
-- 对位净分矩阵、对位胜率矩阵
-- 荣誉中心、GOAT、系统健康检查
-- 管理员云端录入，积分合计与人数强制校验
-- Supabase 邮箱密码登录；管理员可写，普通成员只读
+MOAP 使用原生 HTML、CSS、JavaScript。页面先显示仓库内的认证基线，再通过现有 Supabase 公开读取更新牌局、对位、纪录、状态与荣誉。生产数据库及其历史原始记录不由本仓库改写。
 
-## 数据来源
+## 牌局编号与赛制
 
-网页登录后会实时读取 Supabase 的 `players`、`seasons`、`matches`、`match_results`、`award_results`、`system_versions` 和当前账号 `profiles`。
-`src/certified-data.js` 仅保留 v10.1 的认证说明与离线基线，不再作为比赛主数据库；页面实际排名和对位均由 Supabase 原始比赛记录重算。
+浏览器读取原始数据后，先根据牌局 ID 末尾数字统一为 `MOAPxxxx`，再进行 Source Data Correction 和规范档案合并。原始 Source ID 与对外规范档案 ID 分属不同序列；录入新牌局使用 Source 序列的最大号加一。
 
-## 你现有数据库不需要重做
+赛制包括常规局与巅峰赛。当前巅峰赛为 S1 `MOAP0005`、S2 `MOAP0042`、S3 `MOAP0073`。S2、S3 各有两段真实来源证据，详情可切换全场、上半场与下半场；S1 不生成不存在的半场数据。
 
-原来的 5 名玩家、65 场比赛、325 条结果和登录账号全部保留。建议在 Supabase SQL Editor 运行一次：
+## 荣誉
 
-`supabase/08_cloud_v2_upgrade.sql`
+核心荣誉仅有：MOAP赛季总冠军（H001）、MOAP巅峰赛冠军（H002）、MOAP年度最有价值牌手（H003）。H002 只读取每赛季唯一巅峰赛规范档案的全场最终积分；并列最高分共同获奖，多场巅峰赛会报告数据异常而不擅自选取。
 
-它只修复 RPC 与权限，不删除数据。
+## 部署
 
-## Vercel 部署
-
-1. 新建一个干净 GitHub 私有仓库，例如 `moap-cloud-v2`。
-2. 上传本 ZIP 解压后的**内部全部文件**，确保仓库首页直接看到 `package.json`、`src`、`vercel.json`。
-3. Vercel 导入仓库。Root Directory 保持 `./`。
-4. 保留已有环境变量：
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-5. 点击 Deploy。`vercel.json` 已固定 Build Command 和 Output Directory，不需要手动选择 Next.js，也不要填写 `public`。
-
-## 登录权限
-
-数据库 `profiles.role`：
-- `admin`：可以录入比赛
-- `viewer`：只能查看
-
-罗海泓账号应绑定 `P001 / admin`。
+`npm run build` 输出至 `dist`。Vercel 构建需提供 `NEXT_PUBLIC_SUPABASE_URL` 与 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`。本轮不需要数据库迁移，也不改变公开云端读取方式。

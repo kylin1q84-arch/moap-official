@@ -1,4 +1,5 @@
-import { HONOR_CATALOG } from "./honor-details.js";
+import { HONOR_CATALOG, CORE_HONOR_IDS } from "./honor-details.js";
+import { isPeakMatch } from "./match-format.js";
 
 const EPS = 1e-9;
 const byId = Object.fromEntries(HONOR_CATALOG.map(item => [item.honorId, item]));
@@ -433,6 +434,7 @@ function criteriaText(criteria, row) {
 
 function evidenceFor(id, row) {
   if (id === "H001") return row.longestPositiveEvidence || row.entries;
+  if (id === "H002") return row.entries || [];
   if (id === "H003") return row.entries.filter(entry => entry.isMvp);
   return [];
 }
@@ -468,6 +470,7 @@ function evaluateAward(scope, id, rows, criteria, { eligibility = () => true, re
 }
 
 function awardTiebreak(result) {
+  if (result.honorId === "H002") return {triggered:false, decidedBy:"peakScore", decidedLabel:"巅峰赛最终积分", summary:"最高分并列时共同获得冠军，不设同分决胜。"};
   const ranking = result.ranking || [];
   const criteria = result.criteria || [];
   const top = ranking[0];
@@ -524,6 +527,7 @@ function rankingDetailFor(result, row) {
   if(result.honorId==="H001")return {...base,metrics:{
     total:row.total,average:row.average,mvpPoints:row.mvpTotal,positivePoints:row.positiveTotal,explosionPoints:row.explosionTotal
   }};
+  if(result.honorId==="H002")return {...base,metrics:{peakScore:row.peakScore},peakMatch:row.entries?.[0]||null};
   if(result.honorId==="H003")return {...base,metrics:{
     totalStars:row.mvpStars,mvpCount:row.mvps,fiveStar:row.fiveStarMvps,fourStar:row.fourStarMvps,threeStar:row.threeStarMvps,twoStar:row.twoStarMvps,oneStar:row.oneStarMvps,
     fourPlus:row.fourPlusMvps,threePlus:row.threePlusMvps,mvpPoints:row.mvpTotal,mvpRate:row.mvpRate
@@ -578,6 +582,18 @@ function seasonAwards(players, matches, season) {
     { key: "explosionTotal", dir: "desc", label: "爆发场次积分", unit: "分" }
   ], { eligibility: row => row.games > 0 });
 
+  const peakMatches=matches.filter(match=>match.season===season&&isPeakMatch(match));
+  const issues=peakMatches.length>1?[{code:"MULTIPLE_PEAK_MATCHES",season,matchIds:peakMatches.map(match=>match.matchId)}]:[];
+  const peak=peakMatches.length===1?peakMatches[0]:null;
+  const peakRows=peak?(peak.results||[]).filter(result=>!result.isAbsent&&result.score!=null).map(result=>({
+    playerId:result.playerId,
+    player:players.find(player=>player.playerId===result.playerId)?.name||result.player||result.playerId,
+    peakScore:Number(result.score),
+    entries:[{matchId:peak.matchId,season:peak.season,round:peak.round,date:peak.date,matchType:peak.matchType,venue:peak.venue||"未填写场地",score:Number(result.score),isMvp:!!result.isMvp}]
+  })):[];
+  const peakAward=push("H002",peakRows,[{key:"peakScore",dir:"desc",label:"巅峰赛最终积分",unit:"分"}]);
+  if(issues.length){peakAward.status="DATA_ISSUE";peakAward.reason="MULTIPLE_PEAK_MATCHES";peakAward.summary=`${season}存在多场巅峰赛，需核对数据后再评选。`;}
+
   push("H003", rows, [
     { key: "mvpStars", dir: "desc", label: "累计MVP星数", unit: "星" },
     { key: "fiveStarMvps", dir: "desc", label: "五星MVP次数", unit: "次" },
@@ -593,7 +609,7 @@ function seasonAwards(players, matches, season) {
     for (const winner of result.winners) awards.push(awardObject(result, winner));
   }
 
-  return { season, rows, results, awards };
+  return { season, rows, results, awards, issues };
 }
 
 export function calculateHonorSystem(players, matches) {
@@ -602,10 +618,12 @@ export function calculateHonorSystem(players, matches) {
     .sort((a, b) => seasonNumber(a) - seasonNumber(b));
   const honors = Object.fromEntries(players.map(player => [player.playerId, []]));
   const board = [];
+  const issues = [];
   const seasonMetricsMap = {};
 
   for (const season of seasons) {
     const calculation = seasonAwards(players, matches, season);
+    issues.push(...calculation.issues);
     seasonMetricsMap[season] = calculation.rows;
     calculation.awards.forEach(award => honors[award.ownerPlayerId].push(award));
     calculation.results.forEach(result => {
@@ -638,7 +656,7 @@ export function calculateHonorSystem(players, matches) {
     });
   }
 
-  return { honors, board, seasons, seasonMetrics: seasonMetricsMap, catalog: HONOR_CATALOG };
+  return { honors, board, seasons, seasonMetrics: seasonMetricsMap, catalog: HONOR_CATALOG, issues };
 }
 
 function recentEntries(matches,pid,n=5){const arr=[];for(const m of sortedMatches(matches)){const r=playerResult(m,pid);if(r&&!r.isAbsent&&r.score!=null)arr.push({matchId:m.matchId,season:m.season,round:m.round,date:m.date,matchType:m.matchType,venue:m.venue||'未填写场地',score:num(r.score),isMvp:!!r.isMvp});}return arr.slice(-n);}
@@ -647,11 +665,11 @@ function minmax(rows,key){const vals=rows.map(x=>num(x[key])),lo=Math.min(...val
 function weightedRecent(entries){const base=[.10,.15,.20,.25,.30].slice(5-entries.length),ws=sum(base),explosions=entries.filter(x=>x.score>=50);return {score:entries.length?sum(entries.map((x,i)=>x.score*base[i]))/ws:0,positive:entries.length?sum(entries.map((x,i)=>(x.score>=0?1:0)*base[i]))/ws:0,mvp:entries.length?sum(entries.map((x,i)=>(x.isMvp?1:0)*base[i]))/ws:0,explosionRate:entries.length?sum(entries.map((x,i)=>(x.score>=50?1:0)*base[i]))/ws:0,explosionAverage:mean(explosions.map(x=>x.score))};}
 function ordinalRanks(rows,key,dir='desc'){const sorted=[...rows].sort((a,b)=>dir==='asc'?num(a[key])-num(b[key]):num(b[key])-num(a[key])||String(a.playerId).localeCompare(String(b.playerId)));let rank=0,prev=null;const out={};sorted.forEach((row,index)=>{const value=num(row[key]);if(index===0||!eq(value,prev))rank=index+1;prev=value;out[row.playerId]=rank;});return out;}
 function officialHonorRanks(rows){
-  const sorted=[...rows].sort((a,b)=>num(b.titles)-num(a.titles)||num(b.mvAwards)-num(a.mvAwards)||num(b.officialHonorCount)-num(a.officialHonorCount)||String(a.playerId).localeCompare(String(b.playerId)));
+  const sorted=[...rows].sort((a,b)=>num(b.titles)-num(a.titles)||num(b.mvAwards)-num(a.mvAwards)||num(b.peakTitles)-num(a.peakTitles)||num(b.officialHonorCount)-num(a.officialHonorCount)||String(a.playerId).localeCompare(String(b.playerId)));
   let rank=0,previous="";
   const out={};
   sorted.forEach((row,index)=>{
-    const key=`${num(row.titles)}|${num(row.mvAwards)}|${num(row.officialHonorCount)}`;
+    const key=`${num(row.titles)}|${num(row.mvAwards)}|${num(row.peakTitles)}|${num(row.officialHonorCount)}`;
     if(index===0||key!==previous)rank=index+1;
     previous=key;
     out[row.playerId]=rank;
@@ -680,10 +698,10 @@ function careerMetrics(players,matches,honors={}){
   });
   let rows=players.map(p=>{
     const entries=recentEntries(matches,p.playerId,999),scores=entries.map(x=>x.score),games=entries.length,mvps=entries.filter(x=>x.isMvp).length;
-    const hs=(honors?.[p.playerId]||[]).filter(h=>h.honorId==='H001'||h.honorId==='H003');
+    const hs=(honors?.[p.playerId]||[]).filter(h=>CORE_HONOR_IDS.has(h.honorId));
     const seasonHistory=seasons.map(s=>seasonRows[s].find(x=>x.playerId===p.playerId)).filter(x=>x&&x.games>0);
     const explosions=entries.filter(x=>x.score>=50);
-    return {playerId:p.playerId,player:p.name,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,explosionCount:explosions.length,explosionPoints:sum(explosions.map(x=>x.score)),explosionAverage:mean(explosions.map(x=>x.score)),explosionRate:games?explosions.length/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores),officialHonorCount:hs.length,titles:hs.filter(h=>h.honorId==='H001').length,mvAwards:hs.filter(h=>h.honorId==='H003').length,seasonHistory};
+    return {playerId:p.playerId,player:p.name,games,total:sum(scores),average:mean(scores),positiveRate:games?entries.filter(x=>x.score>=0).length/games:0,mvps,mvpRate:games?mvps/games:0,explosionCount:explosions.length,explosionPoints:sum(explosions.map(x=>x.score)),explosionAverage:mean(explosions.map(x=>x.score)),explosionRate:games?explosions.length/games:0,best:games?Math.max(...scores):null,worst:games?Math.min(...scores):null,volatility:std(scores),officialHonorCount:hs.length,titles:hs.filter(h=>h.honorId==='H001').length,peakTitles:hs.filter(h=>h.honorId==='H002').length,mvAwards:hs.filter(h=>h.honorId==='H003').length,seasonHistory};
   });
   const active=rows.filter(x=>x.games>0),nTotal=minmax(active,'total'),nAvg=minmax(active,'average'),nPos=minmax(active,'positiveRate'),nMvp=minmax(active,'mvpRate'),nHonor=minmax(active,'officialHonorCount');
   rows=rows.map(r=>({...r,overallRating:r.games?Math.round(50+49*(nTotal(r)*.30+nAvg(r)*.20+nPos(r)*.15+nMvp(r)*.20+nHonor(r)*.15)):50}));
@@ -780,8 +798,8 @@ function careerAssessment(r){
   if(c.volatility>=35)risks.push(`生涯波动指数${c.volatility.toFixed(1)}，牌局上下限差距较大`);
   if(!risks.length)risks.push('长期数据结构较均衡，主要观察能否继续抬高个人峰值');
   const best=c.bestSeason;
-  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、${c.explosionCount}场爆发，获得${c.officialHonorCount}次荣誉（总冠军${c.titles}次、年度MVP${c.mvAwards}次）。`;
-  const evaluation=`${r.player}的MSL生涯定位为“${c.ratingLabel}”，综合评分${c.overallRating}，历史排名第${c.overallRank}。${c.trend}${best?`，其中${best.season}以${best.rating}分成为目前评分最高的单赛季。`:''}${strengths.length?`长期优势主要体现在${strengths.slice(0,3).join('、')}。`:''}`;
+  const summary=`${c.seasonRange}共出战${c.games}场，累计${c.total>=0?'+':''}${c.total}分，场均${c.average.toFixed(2)}分，正分率${(c.positiveRate*100).toFixed(1)}%，取得${c.mvps}次MVP、${c.explosionCount}场爆发，获得${c.officialHonorCount}次荣誉（赛季总冠军${c.titles}次、巅峰赛冠军${c.peakTitles}次、年度MVP${c.mvAwards}次）。`;
+  const evaluation=`${r.player}的MOAP生涯定位为“${c.ratingLabel}”，综合评分${c.overallRating}，历史排名第${c.overallRank}。${c.trend}${best?`，其中${best.season}以${best.rating}分成为目前评分最高的单赛季。`:''}${strengths.length?`长期优势主要体现在${strengths.slice(0,3).join('、')}。`:''}`;
   const outlook=c.overallRank<=2?'已经进入历史长期核心层，后续重点是把高水平赛季转化为更多总冠军与年度最有价值牌手荣誉。':c.total>=0?'具备进入长期核心层的基础，提升MVP效率与高分场次将明显拉高综合评分。':'目前仍处于生涯追赶阶段，优先目标是改善累计积分、正分率与赛季稳定性。';
   return {label:c.ratingLabel,summary,evaluation,outlook,strengths,risks};
 }
@@ -799,7 +817,7 @@ function reportFor(r,all){
   if(r.weightedScore<r.seasonAverage)risks.push(`近期加权表现低于赛季场均${r.seasonAverage.toFixed(1)}`);
   if(!risks.length)risks.push('当前没有明显数据预警，重点观察状态延续性');
   const direction=r.movement>0?`实力榜上升${r.movement}位`:r.movement<0?`实力榜下降${Math.abs(r.movement)}位`:'实力榜位置保持不变';
-  const summary=`${r.player}目前位列MSL实力榜第${r.rank}，状态指数${r.powerIndex}。${direction}。最近5场累计${r.recentTotal>=0?'+':''}${r.recentTotal}，${latest?`最新一场${latest.score>=0?'+':''}${latest.score}${latest.isMvp?'并获得MVP':''}`:'近期暂无有效牌局'}。`;
+  const summary=`${r.player}目前位列MOAP实力榜第${r.rank}，状态指数${r.powerIndex}。${direction}。最近5场累计${r.recentTotal>=0?'+':''}${r.recentTotal}，${latest?`最新一场${latest.score>=0?'+':''}${latest.score}${latest.isMvp?'并获得MVP':''}`:'近期暂无有效牌局'}。`;
   const next=latest?.isMvp?'下一场重点观察能否延续MVP级输出，并在精准对位中建立稳定吃分对象。':r.powerIndex<45?'下一场重点是止住负分趋势，提高整场稳定性。':'下一场重点观察正分延续性与关键局爆发。';
   const seasonView=seasonAssessment(r),careerView=careerAssessment(r);
   return {trendKey,headline,summary,strengths:strengths.length?strengths:['近期表现接近个人常态，暂无特别突出的单项'],risks,next,seasonLabel:seasonView.label,seasonSummary:seasonView.summary,seasonOutlook:seasonView.outlook,careerLabel:careerView.label,careerSummary:careerView.summary,careerEvaluation:careerView.evaluation,careerOutlook:careerView.outlook,careerStrengths:careerView.strengths,careerRisks:careerView.risks};

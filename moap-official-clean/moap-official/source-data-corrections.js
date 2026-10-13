@@ -1,7 +1,7 @@
 // Source-only corrections run after the public Supabase read and before the
 // official-match normalization layer. They never write back to Supabase.
 const MATCH_CORRECTIONS = Object.freeze({
-  MSL0076: Object.freeze({
+  MOAP0076: Object.freeze({
     matchDate: "2026-10-12",
     originalSeason: "S4",
     originalRound: 1,
