@@ -6885,3 +6885,31 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
   [data-view="player"] .player-profile-stage .profile-honors-head{margin-bottom:2px}
   [data-view="player"] .player-profile-stage .profile-honor-row{min-height:35px;padding:4px 2px}
 }
+/* Format filters use the existing Premium Dropdown; only their local layout changes. */
+[data-view="records"] .records-data-filters,
+[data-view="records"] .record-filter-cluster .records-record-filters{grid-template-columns:repeat(4,minmax(124px,148px))}
+[data-view="player"] .player-season-data-card .player-season-filters{grid-template-columns:repeat(3,minmax(150px,200px))}
+[data-view="rival"] .rival-stage-controls{display:flex;align-items:flex-end;gap:16px;min-width:0}
+[data-view="rival"] .rival-format-filter{display:block;min-width:145px;color:var(--rival-muted);font-size:12px;font-weight:650;letter-spacing:.07em}
+[data-view="rival"] .rival-format-filter .moap-select{min-width:0;margin-top:6px}
+[data-view="rival"] .rival-format-filter .moap-select-trigger{height:38px;min-height:38px}
+@media(max-width:1200px){
+  [data-view="records"] .records-data-filters,
+  [data-view="records"] .record-filter-cluster .records-record-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-view="records"] .records-data-filters label:nth-child(3),
+  [data-view="records"] .records-record-filters label:first-child{grid-column:auto}
+}
+@media(max-width:760px){
+  [data-view="records"] .records-query-stage .record-filter-cluster .records-record-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-view="player"] .player-season-data-card .player-season-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-view="player"] .player-season-data-card .player-season-filters label:last-child{grid-column:1/-1}
+  [data-view="rival"] .rival-stage-controls{width:100%;justify-content:space-between;gap:12px}
+  [data-view="rival"] .rival-format-filter{flex:1 1 0;min-width:0}
+  [data-view="rival"] #rivalModeToggle{flex:0 0 auto;align-self:flex-end}
+}
+@media(max-width:340px){
+  [data-view="records"] .records-data-filters,
+  [data-view="records"] .records-query-stage .record-filter-cluster .records-record-filters{grid-template-columns:1fr}
+  [data-view="player"] .player-season-data-card .player-season-filters{grid-template-columns:1fr}
+  [data-view="player"] .player-season-data-card .player-season-filters label:last-child{grid-column:auto}
+}

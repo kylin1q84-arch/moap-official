@@ -6,3 +6,6 @@ export function matchFormatKey(match) {
 }
 export function isPeakMatch(match) { return matchFormatKey(match) === "split_long"; }
 export function matchFormatLabel(match) { return isPeakMatch(match) ? "巅峰赛" : "常规局"; }
+export function filterMatchesByFormat(matches=[],format="all") {
+  return format==="all" ? matches : matches.filter(match=>matchFormatKey(match)===format);
+}

@@ -7,7 +7,7 @@
   <title>MOAP｜五人麻将数据系统</title>
   <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/style.css?v=4.8.0-moap-identity">
+  <link rel="stylesheet" href="/style.css?v=4.8.1-format-filters">
 </head>
 <body>
 
@@ -91,10 +91,11 @@
 
         <section class="records-query-stage records-data-stage record-data-leaderboard" aria-labelledby="dataQueryTitle">
           <header class="records-query-head record-data-head">
-            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MOAP综合数据榜</h3><small>按赛季、牌局类型和数据类型查询</small></div>
+            <div><span class="records-kicker">数据查询</span><h3 id="dataQueryTitle">MOAP综合数据榜</h3><small>按赛季、牌局类型、赛制和数据类型查询</small></div>
             <div class="records-filter-bar record-filter-row record-query-toolbar records-data-filters">
               <label>赛季<select id="dataSeasonFilter"><option value="all">全部赛季</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
               <label>牌局类型<select id="dataMatchTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+              <label>赛制<select id="dataFormatFilter"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">巅峰赛</option></select></label>
               <label>数据类型<select id="dataMetricFilter"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
             </div>
           </header>
@@ -110,6 +111,7 @@
                 <label>纪录类型<select id="recordSectionFilter"><option value="single" selected>单场纪录</option><option value="continuous">连续纪录</option></select></label>
                 <label>赛季<select id="recordSeasonFilter"><option value="all">全部</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></label>
                 <label>牌局类型<select id="recordTypeFilter"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+                <label>赛制<select id="recordFormatFilter"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">巅峰赛</option></select></label>
               </div>
               <div class="records-result-count" id="recordResultCount" aria-live="polite"><span>查询结果</span><strong>— 项纪录</strong></div>
             </div>
@@ -169,6 +171,7 @@
               <div><span>赛季数据</span><h3>赛季个人综合数据</h3><small>S1–S3 + 合计 · 支持牌局类型与数据类型筛选</small></div>
               <div class="record-filter-row player-season-filters">
                 <label>牌局类型<select id="playerSeasonMatchType"><option value="all">全部</option><option value="four">四人局</option><option value="five">五人局</option></select></label>
+                <label>赛制<select id="playerSeasonFormat"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">巅峰赛</option></select></label>
                 <label>数据类型<select id="playerSeasonMetric"><option value="points">积分</option><option value="mvp">MVP</option><option value="positive">正分</option><option value="negative">负分</option><option value="soloWin">独赢</option><option value="soloLoss">独输</option><option value="explosion">爆发</option><option value="explosionTier">爆发档位</option></select></label>
               </div>
             </div>
@@ -296,10 +299,10 @@
                 <h3>方向对位矩阵</h3>
                 <p>行 = 攻击方 · 列 = 承受方 · A→B 与 B→A 为两条独立关系</p>
               </div>
-              <div class="segmented-control" id="rivalModeToggle" aria-label="对位统计口径">
+              <div class="rival-stage-controls"><label class="rival-format-filter">赛制<select id="rivalFormatFilter"><option value="all">全部赛制</option><option value="regular">常规局</option><option value="split_long">巅峰赛</option></select></label><div class="segmented-control" id="rivalModeToggle" aria-label="对位统计口径">
                 <button type="button" class="active" data-rival-mode="cumulative" aria-pressed="true">累计</button>
                 <button type="button" data-rival-mode="average" aria-pressed="false">场均</button>
-              </div>
+              </div></div>
             </header>
             <div class="rival-direction-note"><span>A → B</span><small>点击有数据的方向格查看双方关系；方向矩阵不要求对称。</small></div>
             <div class="matrix-wrap rival-matrix-scroll"><table class="matrix" id="netMatrix"></table></div>
@@ -366,6 +369,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.8.0-moap-identity"></script>
+  <script type="module" src="/app.js?v=4.8.1-format-filters"></script>
 </body>
 </html>
