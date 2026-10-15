@@ -1820,10 +1820,19 @@ function groupPlayerHonors(honors){
     .map(group=>({...group,awards:group.awards.sort((a,b)=>scopeOrder(a.scope)-scopeOrder(b.scope))}))
     .sort((a,b)=>(catalogOrder[a.honorId]??999)-(catalogOrder[b.honorId]??999));
 }
+const HONOR_ICON_PATHS={
+  H001:'<path d="M3 9.5l4.2 3L9 8.3 12 5l3 3.3 1.8 4.2 4.2-3-1.6 7.2H4.6L3 9.5Z"/><path d="M5 19h14M6.3 21h11.4"/><path d="m12 1.6 1 1-1 1-1-1Z"/>',
+  H002:'<path d="M12 2.5 21 12l-9 9-9-9 9-9.5Z"/><path d="m5.8 14.2 3.1-3.1 2 2L13.5 8l4.7 6.2"/><path d="m12 16.1 1.1 1.1-1.1 1.1-1.1-1.1Z"/>',
+  H003:'<path d="M12 2.5 13.3 10.7 21.5 12l-8.2 1.3L12 21.5l-1.3-8.2L2.5 12l8.2-1.3L12 2.5Z"/><path d="m12 9.6 2.4 2.4-2.4 2.4L9.6 12 12 9.6Z"/><path d="M5.4 5.4a9.4 9.4 0 0 0-1.5 2.3m14.7-2.3a9.4 9.4 0 0 1 1.5 2.3M5.4 18.6a9.4 9.4 0 0 1-1.5-2.3m14.7 2.3a9.4 9.4 0 0 0 1.5-2.3"/>'
+};
+function renderHonorIcon(honorId){
+  const paths=HONOR_ICON_PATHS[honorId];
+  return paths?`<svg class="profile-honor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`:"";
+}
 function profileHonorRowHtml(group){
   const earned=group.awards.length>0;
   const scopes=earned?group.awards.map(h=>h.scope==="CAREER"?"生涯":h.scope).join(" · "):"尚未获得";
-  const content=`<span class="profile-honor-name"><strong>${escapeHtml(safeHonorName(group))}</strong><b>×${group.awards.length}</b></span><span class="profile-honor-seasons">${escapeHtml(scopes)}</span>`;
+  const content=`<span class="profile-honor-name"><span class="profile-honor-title">${renderHonorIcon(group.honorId)}<strong>${escapeHtml(safeHonorName(group))}</strong></span><b>×${group.awards.length}</b></span><span class="profile-honor-seasons">${escapeHtml(scopes)}</span>`;
   if(!earned)return `<div class="profile-honor-row is-unearned" aria-disabled="true">${content}</div>`;
   return `<button type="button" class="profile-honor-row profile-honor-clickable" data-profile-honor="${escapeHtml(group.honorId)}" aria-label="查看${escapeHtml(safeHonorName(group))}荣誉履历">${content}</button>`;
 }

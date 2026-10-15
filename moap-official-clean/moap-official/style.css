@@ -6913,3 +6913,23 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
   [data-view="player"] .player-season-data-card .player-season-filters{grid-template-columns:1fr}
   [data-view="player"] .player-season-data-card .player-season-filters label:last-child{grid-column:auto}
 }
+
+/* Player honor identity: three reusable inline SVG marks, with no new surface. */
+[data-view="player"] .profile-honor-name{align-items:center}
+[data-view="player"] .profile-honor-title{display:inline-flex;align-items:center;gap:12px;min-width:0}
+[data-view="player"] .profile-honor-title strong{min-width:0;overflow-wrap:anywhere}
+[data-view="player"] .profile-honor-icon{
+  display:block;
+  width:26px;
+  height:26px;
+  flex:none;
+  color:var(--gold);
+  transition:color .15s ease;
+}
+@media(hover:hover) and (pointer:fine){
+  [data-view="player"] .profile-honor-clickable:hover .profile-honor-icon{color:var(--gold2)}
+}
+[data-view="player"] .profile-honor-clickable:focus-visible .profile-honor-icon{color:var(--gold2)}
+@media(prefers-reduced-motion:reduce){
+  [data-view="player"] .profile-honor-icon{transition:none}
+}
