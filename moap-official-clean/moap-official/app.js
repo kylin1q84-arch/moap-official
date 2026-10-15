@@ -1821,13 +1821,13 @@ function groupPlayerHonors(honors){
     .sort((a,b)=>(catalogOrder[a.honorId]??999)-(catalogOrder[b.honorId]??999));
 }
 const HONOR_ICON_PATHS={
-  H001:'<path d="M3 9.5l4.2 3L9 8.3 12 5l3 3.3 1.8 4.2 4.2-3-1.6 7.2H4.6L3 9.5Z"/><path d="M5 19h14M6.3 21h11.4"/><path d="m12 1.6 1 1-1 1-1-1Z"/>',
-  H002:'<path d="M12 2.5 21 12l-9 9-9-9 9-9.5Z"/><path d="m5.8 14.2 3.1-3.1 2 2L13.5 8l4.7 6.2"/><path d="m12 16.1 1.1 1.1-1.1 1.1-1.1-1.1Z"/>',
-  H003:'<path d="M12 2.5 13.3 10.7 21.5 12l-8.2 1.3L12 21.5l-1.3-8.2L2.5 12l8.2-1.3L12 2.5Z"/><path d="m12 9.6 2.4 2.4-2.4 2.4L9.6 12 12 9.6Z"/><path d="M5.4 5.4a9.4 9.4 0 0 0-1.5 2.3m14.7-2.3a9.4 9.4 0 0 1 1.5 2.3M5.4 18.6a9.4 9.4 0 0 1-1.5-2.3m14.7 2.3a9.4 9.4 0 0 0 1.5-2.3"/>'
+  H001:'<path d="M10 5.5h12v7.3c0 6.1-2.4 9.2-6 9.2s-6-3.1-6-9.2z"/><path d="M10 8H5.5v3.3c0 4.5 2.5 6.4 6.3 6.4M22 8h4.5v3.3c0 4.5-2.5 6.4-6.3 6.4"/><path d="M16 22v4M11.5 26h9M9.5 29h13"/>',
+  H002:'<path d="M16 3.5 27 16 16 28.5 5 16Z"/><path d="m9.5 17 6.5-7 6.5 7"/><path d="m12.5 19 3.5-3.5 3.5 3.5"/>',
+  H003:'<path d="m16 3.5 3.7 8 8.8 1.1-6.5 6.1 1.7 8.7L16 23.1l-7.7 4.3 1.7-8.7-6.5-6.1 8.8-1.1z"/><path d="m16 10.3 1.7 4 4.3.4-3.2 3 1 4.2-3.8-2.2-3.8 2.2 1-4.2-3.2-3 4.3-.4z" opacity=".65"/>'
 };
 function renderHonorIcon(honorId){
   const paths=HONOR_ICON_PATHS[honorId];
-  return paths?`<svg class="profile-honor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`:"";
+  return paths?`<svg class="profile-honor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g transform="scale(.75)">${paths}</g></svg>`:"";
 }
 function profileHonorRowHtml(group){
   const earned=group.awards.length>0;
