@@ -34,7 +34,6 @@ import {
   prefersReducedMotion,
   transitionView,
   animateViewExperience,
-  prepareViewExperience,
   transitionRecordContent,
   transitionReportContent,
   transitionMatchContent,
@@ -43,13 +42,14 @@ import {
   animateEntryValidation,
   animateNumbers,
   animateRecordDetails,
+  animateMatchDetails,
   animatePlayerSeasonNumbers,
   transitionPlayerProfile,
   transitionPlayerData,
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.8.4-goat-crown";
+} from "./animations.js?v=4.9.0-motion-feedback";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -724,7 +724,7 @@ function showView(id,{immediate=false,forceRender=false}={}){
     incoming,
     swap,
     immediate,
-    onEntered:()=>immediate?animateViewExperience(incoming,id):prepareViewExperience(incoming,id)
+    onEntered:()=>animateViewExperience(incoming,id)
   });
 }
 
@@ -1310,7 +1310,7 @@ function ensureMatchModal(){
 }
 function closeMatchModal(){
   const m=$("#matchModalBackdrop");
-  if(m){m.hidden=true;document.body.classList.remove("modal-open");}
+  if(m&&!m.hidden)animateMatchDetails(m,{open:false,onComplete:()=>{m.hidden=true;document.body.classList.remove("modal-open");}});
   matchDetailSegmentMatchId=null;
   matchDetailSegmentView="full";
 }
@@ -1405,7 +1405,7 @@ function openMatchModal(matchId){
       :`<div class="honor-modal-section match-detail-empty"><h3><span>可用性</span>本场未启用精准对位记录</h3><p>${firstPreciseMatchId()?`精准对位数据自 ${escapeHtml(firstPreciseMatchId())} 起开始记录。`:"暂无精准对位记录。"}</p></div>`;
     $("#matchModalBody").innerHTML=`${header}${precise}`;
   }
-  $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");
+  $("#matchModalBackdrop").hidden=false;document.body.classList.add("modal-open");animateMatchDetails($("#matchModalBackdrop"),{open:true});
 }
 
 function filteredMatches(){
@@ -1440,8 +1440,8 @@ function renderMatches(reset=false,{append=false,startIndex=0}={}){
   return visible.length;
 }
 function refreshMatches(){
-  const target=$("#matchList");
-  transitionMatchContent({target,update:()=>renderMatches(true)});
+  const root=$('.view[data-view="matches"]'),target=$("#matchList");
+  transitionMatchContent({target,update:()=>renderMatches(true),onUpdated:()=>animateNumbers(root,{duration:.52})});
 }
 ["matchSeason","matchType","matchFormat"].forEach(id=>$("#"+id).addEventListener("change",refreshMatches));
 $("#matchQuery").addEventListener("input",refreshMatches);

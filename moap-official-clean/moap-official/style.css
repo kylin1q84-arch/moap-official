@@ -6927,11 +6927,11 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
   height:24px;
   flex:none;
   color:var(--gold);
-  transition:color .15s ease;
+  transition:color .15s ease,transform .15s ease;
 }
 [data-view="player"] .profile-honor-icon path{vector-effect:non-scaling-stroke}
 @media(hover:hover) and (pointer:fine){
-  [data-view="player"] .profile-honor-clickable:hover .profile-honor-icon{color:var(--gold2)}
+  [data-view="player"] .profile-honor-clickable:hover .profile-honor-icon{color:var(--gold2);transform:scale(1.05)}
 }
 [data-view="player"] .profile-honor-clickable:focus-visible .profile-honor-icon{color:var(--gold2)}
 @media(prefers-reduced-motion:reduce){

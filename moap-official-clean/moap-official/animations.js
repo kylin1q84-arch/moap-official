@@ -18,6 +18,8 @@ const NUMBER_SELECTOR = [
   ".record-ranking-row > b",
   ".record-info-grid b",
   ".record-modal-header strong",
+  "#recordResultCount strong",
+  "#matchResultCount",
   ".score-row > b",
   ".monthly-kpis b",
   ".monthly-grid b",
@@ -41,9 +43,12 @@ let viewTimeline = null;
 let recordTimeline = null;
 let filterTimeline = null;
 let detailTimeline = null;
+let matchDetailTimeline = null;
 let playerEntryTimeline = null;
 let playerSwitchTimeline = null;
 let playerDataTimeline = null;
+let playerSeasonRowsTween = null;
+let playerHonorTween = null;
 let playerTrendTimeline = null;
 let playerTrendInteractionCleanup = null;
 const playerTrendPlayed = new WeakSet();
@@ -55,6 +60,7 @@ let overviewTimeline = null;
 let statusTimeline = null;
 let matchTimeline = null;
 let matchContentTimeline = null;
+let matchRowsTween = null;
 let rivalTimeline = null;
 let rivalDetailTimeline = null;
 let systemTimeline = null;
@@ -162,10 +168,15 @@ function timelineTargets(timeline){
 }
 
 function killEntryMotion(){
-  const timelines=[recordTimeline,overviewTimeline,statusTimeline,matchTimeline,rivalTimeline,systemTimeline,entryTimeline,playerEntryTimeline];
-  const interrupted=timelines.flatMap(timelineTargets);
+  const timelines=[recordTimeline,overviewTimeline,statusTimeline,matchTimeline,rivalTimeline,systemTimeline,entryTimeline,playerEntryTimeline,playerSwitchTimeline,playerDataTimeline,filterTimeline,matchContentTimeline,monthlyTimeline];
+  const rowTweens=[matchRowsTween,playerSeasonRowsTween,playerHonorTween];
+  const interrupted=[...timelines.flatMap(timelineTargets),...rowTweens.flatMap(tween=>tween?.targets?.()||[])];
   timelines.forEach(killTimeline);
-  recordTimeline=overviewTimeline=statusTimeline=matchTimeline=rivalTimeline=systemTimeline=entryTimeline=playerEntryTimeline=null;
+  rowTweens.forEach(killTimeline);
+  matchRowsTween=null;
+  playerSeasonRowsTween=null;
+  playerHonorTween=null;
+  recordTimeline=overviewTimeline=statusTimeline=matchTimeline=rivalTimeline=systemTimeline=entryTimeline=playerEntryTimeline=playerSwitchTimeline=playerDataTimeline=filterTimeline=matchContentTimeline=monthlyTimeline=null;
   clearMotionProps(interrupted);
 }
 
@@ -215,9 +226,17 @@ export function initAnimationSystem(){
     const engine=motionEngine();
     engine.killTweensOf(target);
     engine.timeline()
-      .to(target,{scale:.97,duration:.07,ease:"power1.out",overwrite:true})
+      .to(target,{scale:.987,duration:.07,ease:"power1.out",overwrite:true})
       .to(target,{scale:1,duration:.12,ease:"power2.out",clearProps:"transform"});
   },{passive:true});
+  document.addEventListener("change",event=>{
+    const select=event.target;
+    if(!select?.matches?.(".view select"))return;
+    const control=select.closest(".moap-select")?.querySelector(".moap-select-trigger")||select;
+    if(motionDisabled()||!control)return;
+    gsap.killTweensOf(control,"borderColor");
+    gsap.fromTo(control,{borderColor:"rgba(242,217,144,.56)"},{borderColor:"rgba(215,178,91,.25)",duration:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter,clearProps:"borderColor",overwrite:true});
+  });
   document.addEventListener("visibilitychange",()=>{
     document.documentElement.classList.toggle("motion-paused",document.hidden);
   });
@@ -247,10 +266,28 @@ export function animateNavIndicator(navRoot,activeButton,{immediate=false}={}){
 export function transitionView({outgoing,incoming,swap,immediate=false,onEntered}){
   viewTimeline?.kill();
   viewTimeline=null;
+  clearMotionProps([outgoing,incoming].filter(Boolean));
   finishNumberTweens(outgoing);
   killEntryMotion();
-  swap();
-  onEntered?.();
+  if(immediate||motionDisabled()||!outgoing||!incoming||outgoing===incoming){
+    swap();
+    onEntered?.();
+    return;
+  }
+  const gsap=motionEngine();
+  viewTimeline=gsap.timeline({
+    onComplete:()=>{
+      clearMotionProps([outgoing,incoming]);
+      viewTimeline=null;
+    }
+  })
+    .to(outgoing,{autoAlpha:0,y:-4,duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit})
+    .call(()=>{
+      swap();
+      gsap.set(incoming,{autoAlpha:0,y:MOAP_MOTION.distance.enter});
+      onEntered?.();
+    })
+    .to(incoming,{autoAlpha:1,y:0,duration:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter});
 }
 
 function sceneHeaderParts(root){
@@ -272,9 +309,7 @@ function prepareSectionReveals(root,view){
   if(!root?.querySelectorAll)return;
   const selectorByView={
     overview:".overview-editorial-recap,.overview-season-spotlight,.monthly-report-card",
-    status:".status-intelligence-stage",
-    player:".player-season-data-card",
-    rival:".rival-pair-lens,.rival-flow-stage"
+    status:".status-intelligence-stage"
   };
   const selector=selectorByView[view];
   if(!selector)return;
@@ -354,16 +389,19 @@ function animateStatusEntry(root){
   animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.48});
 }
 
-export function animateMatchRows(root,{startIndex=0,delay=0}={}){
+export function animateMatchRows(root,{startIndex=0,delay=0,refresh=false}={}){
   if(!root?.querySelectorAll)return;
   const gsap=motionEngine();
   const rows=[...root.querySelectorAll(".season-log-entry")].slice(startIndex,startIndex+8);
+  matchRowsTween?.kill?.();
+  matchRowsTween=null;
+  if(!rows.length)return;
   if(motionDisabled()){
     clearExtendedMotionProps(rows);
     return;
   }
   const mobile=mobileMotion();
-  gsap.fromTo(rows,{autoAlpha:.7,y:mobile?3:5},{autoAlpha:1,y:0,duration:mobile?.27:.33,stagger:mobile?.03:.045,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform"});
+  matchRowsTween=gsap.fromTo(rows,{autoAlpha:refresh?.48:.7,y:mobile?3:5},{autoAlpha:1,y:0,duration:mobile?.27:.33,stagger:mobile?.03:MOAP_MOTION.stagger.fast,delay,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",onComplete:()=>{matchRowsTween=null;}});
 }
 
 function animateMatchesEntry(root){
@@ -398,12 +436,20 @@ export function transitionMatchContent({target,update,onUpdated,append=false,sta
     onUpdated?.();
     return;
   }
-  gsap.killTweensOf(target);
-  matchContentTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);matchContentTimeline=null;}})
-    .to(target,{autoAlpha:.66,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
-    .call(()=>{update();onUpdated?.();})
-    .set(target,{autoAlpha:.66,y:mobileMotion()?2:3})
-    .to(target,{autoAlpha:1,y:0,duration:.18,ease:MOAP_MOTION.ease.enter});
+  let updated=false;
+  const applyUpdate=()=>{if(updated)return;updated=true;update();onUpdated?.();};
+  const cleanup=()=>{clearMotionProps([target]);matchContentTimeline=null;};
+  matchContentTimeline=gsap.to(target,{
+    autoAlpha:.56,y:-MOAP_MOTION.distance.micro,
+    duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit,
+    onInterrupt:()=>{applyUpdate();cleanup();},
+    onComplete:()=>{
+      applyUpdate();
+      gsap.set(target,{autoAlpha:.72,y:mobileMotion()?2:MOAP_MOTION.distance.micro});
+      animateMatchRows(target,{refresh:true});
+      matchContentTimeline=gsap.to(target,{autoAlpha:1,y:0,duration:.22,ease:MOAP_MOTION.ease.enter,onComplete:cleanup,onInterrupt:cleanup});
+    }
+  });
 }
 
 function bindRivalMatrixFocus(root){
@@ -473,15 +519,29 @@ function animateRivalEntry(root){
 export function transitionRivalContent({root,update,onUpdated}){
   const targets=[root?.querySelector?.(".rival-matrix-scroll"),root?.querySelector?.("#rivalSummaryTable"),root?.querySelector?.("#rivalKpis")].filter(Boolean);
   const gsap=motionEngine();
+  const interrupted=timelineTargets(rivalTimeline);
   rivalTimeline?.kill();
+  clearMotionProps([...interrupted,...targets]);
   if(!targets.length||motionDisabled()){
     update();bindRivalMatrixFocus(root);onUpdated?.();return;
   }
-  rivalTimeline=gsap.timeline({onComplete:()=>{clearMotionProps(targets);rivalTimeline=null;}})
-    .to(targets,{autoAlpha:.66,y:2,duration:.1,ease:MOAP_MOTION.ease.exit})
-    .call(()=>{update();bindRivalMatrixFocus(root);onUpdated?.();})
-    .set(targets,{autoAlpha:.66,y:3})
-    .to(targets,{autoAlpha:1,y:0,duration:.18,ease:MOAP_MOTION.ease.enter});
+  let updated=false;
+  let rows=[];
+  const applyUpdate=()=>{if(updated)return;updated=true;update();bindRivalMatrixFocus(root);onUpdated?.();};
+  const cleanup=()=>{clearMotionProps([...targets,...rows]);rivalTimeline=null;};
+  rivalTimeline=gsap.to(targets,{
+    autoAlpha:.6,y:-MOAP_MOTION.distance.micro,duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit,
+    onInterrupt:()=>{applyUpdate();cleanup();},
+    onComplete:()=>{
+      applyUpdate();
+      rows=[...root.querySelectorAll("#netMatrix tbody tr, #rivalSummaryTable .rival-summary-row")]
+        .filter(element=>element.getClientRects().length).slice(0,8);
+      gsap.set(targets,{autoAlpha:.75,y:MOAP_MOTION.distance.micro});
+      rivalTimeline=gsap.timeline({onComplete:cleanup,onInterrupt:cleanup})
+        .to(targets,{autoAlpha:1,y:0,duration:.23,ease:MOAP_MOTION.ease.enter},0);
+      if(rows.length)rivalTimeline.fromTo(rows,{autoAlpha:.55,y:MOAP_MOTION.distance.micro},{autoAlpha:1,y:0,duration:.23,stagger:MOAP_MOTION.stagger.micro,ease:MOAP_MOTION.ease.enter},.04);
+    }
+  });
 }
 
 export function transitionRivalDetail({target,update,onUpdated}){
@@ -571,17 +631,26 @@ export function animateEntryValidation({summary,detail,readyButton,signature,rea
 export function transitionReportContent({target,update,onUpdated}){
   const gsap=motionEngine();
   monthlyTimeline?.kill();
+  clearMotionProps([target].filter(Boolean));
   if(!target||motionDisabled()){
     update();onUpdated?.();return;
   }
-  monthlyTimeline=gsap.timeline({onComplete:()=>{clearMotionProps([target]);monthlyTimeline=null;}})
-    .to(target,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
-    .call(()=>{update();onUpdated?.();})
-    .fromTo(target,{autoAlpha:0,y:5},{autoAlpha:1,y:0,duration:.24,ease:MOAP_MOTION.ease.enter});
+  target.setAttribute("aria-busy","true");
+  let updated=false;
+  const applyUpdate=()=>{if(updated)return;updated=true;update();onUpdated?.();};
+  const cleanup=()=>{clearMotionProps([target]);target.removeAttribute("aria-busy");monthlyTimeline=null;};
+  monthlyTimeline=gsap.to(target,{autoAlpha:.56,y:-MOAP_MOTION.distance.micro,duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit,
+    onInterrupt:()=>{applyUpdate();cleanup();},
+    onComplete:()=>{
+      applyUpdate();
+      monthlyTimeline=gsap.fromTo(target,{autoAlpha:.7,y:MOAP_MOTION.distance.small},{autoAlpha:1,y:0,duration:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter,onComplete:cleanup,onInterrupt:cleanup});
+    }
+  });
 }
 
 export function animateViewExperience(root,view){
   if(!root)return;
+  if(view==="overview")applyAmbientViewState(root,view);
   animateNumbers(root);
   prepareSectionReveals(root,view);
   if(view==="overview")animateOverviewEntry(root);
@@ -599,23 +668,6 @@ function applyAmbientViewState(root,view){
   if(view==="overview"){
     root.querySelector(".command-goat-spotlight")?.classList.toggle("motion-atmosphere",enabled);
     root.querySelector("#goatRanking > .goat-row")?.classList.toggle("motion-leader",enabled);
-  }else if(view==="player"){
-    animatePlayerTrend(root,{delay:.08});
-  }else if(view==="rival"){
-    bindRivalMatrixFocus(root);
-  }
-}
-
-export function prepareViewExperience(root,view){
-  if(!root)return;
-  prepareSectionReveals(root,view);
-  applyAmbientViewState(root,view);
-  if(view==="overview")animateSemanticIcons(root,'[data-motion-icon="crown"]',{delay:.14,duration:.42});
-  else if(view==="status")animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.16});
-  else if(view==="system")animateSemanticIcons(root,'[data-motion-icon="shield"], [data-motion-icon="audit-check"]',{delay:.16,duration:.4,stagger:.055});
-  else if(view==="entry"){
-    const checkIcon=root.querySelector('[data-motion-icon="check-circle"]');
-    if(checkIcon&&!checkIcon.closest("[data-entry-check-icon]")?.hidden)animateSemanticIcon(checkIcon,{delay:.16,duration:.35});
   }
 }
 
@@ -664,16 +716,29 @@ export function transitionRecordContent({targets,update,onUpdated}){
     return;
   }
 
-  update();
-  onUpdated?.();
-  gsap.set(elements,{opacity:.7});
-  filterTimeline=gsap.timeline({
+  elements.forEach(element=>element.setAttribute("aria-busy","true"));
+  let updated=false;
+  let rows=[];
+  const applyUpdate=()=>{
+    if(updated)return;
+    updated=true;
+    update();
+    onUpdated?.();
+  };
+  const cleanup=()=>{clearMotionProps([...elements,...rows]);elements.forEach(element=>element.removeAttribute("aria-busy"));filterTimeline=null;};
+  filterTimeline=gsap.to(elements,{
+    autoAlpha:.58,y:-MOAP_MOTION.distance.micro,
+    duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit,
+    onInterrupt:()=>{applyUpdate();cleanup();},
     onComplete:()=>{
-      clearMotionProps(elements);
-      filterTimeline=null;
+      applyUpdate();
+      rows=elements.flatMap(element=>[...element.querySelectorAll("#dataLeaderboardBody tr, #recordTableBody tr, .records-mobile-data-row, .records-mobile-record, .records-mobile-empty")])
+        .filter(element=>element.getClientRects().length).slice(0,8);
+      filterTimeline=gsap.timeline({onComplete:cleanup,onInterrupt:cleanup})
+        .to(elements,{autoAlpha:1,y:0,duration:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter},0);
+      if(rows.length)filterTimeline.fromTo(rows,{autoAlpha:0,y:MOAP_MOTION.distance.small},{autoAlpha:1,y:0,duration:.24,stagger:MOAP_MOTION.stagger.micro,ease:MOAP_MOTION.ease.enter},.06);
     }
-  })
-    .to(elements,{opacity:1,duration:.18,ease:"power1.out",stagger:.01});
+  });
 }
 
 function parseNumericText(text){
@@ -798,6 +863,20 @@ export function animatePlayerSeasonNumbers(root=document,{baseDelay=0}={}){
       return baseDelay+(isTotal ? .16 : itemIndex*.04);
     }
   });
+  playerSeasonRowsTween?.kill?.();
+  const visibleRows=[...(table?.querySelectorAll("tbody tr")||[]),...(cards?.querySelectorAll(".player-season-summary-card")||[])]
+    .filter(element=>element.getClientRects().length).slice(0,8);
+  if(!motionDisabled()&&visibleRows.length){
+    playerSeasonRowsTween=motionEngine().fromTo(visibleRows,{autoAlpha:.7,y:MOAP_MOTION.distance.micro},{autoAlpha:1,y:0,duration:.24,delay:baseDelay,stagger:MOAP_MOTION.stagger.micro,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",onComplete:()=>{playerSeasonRowsTween=null;}});
+  }
+}
+
+function animatePlayerHonorRows(root,{delay=0}={}){
+  playerHonorTween?.kill?.();
+  playerHonorTween=null;
+  const rows=[...root?.querySelectorAll?.("#profileHonorList .profile-honor-row")||[]];
+  if(motionDisabled()||!rows.length)return;
+  playerHonorTween=motionEngine().fromTo(rows,{autoAlpha:.7,y:MOAP_MOTION.distance.micro},{autoAlpha:1,y:0,duration:.22,delay,stagger:MOAP_MOTION.stagger.fast,ease:MOAP_MOTION.ease.enter,clearProps:"opacity,visibility,transform",onComplete:()=>{playerHonorTween=null;}});
 }
 
 function mobileMotion(){
@@ -1105,6 +1184,7 @@ export function animatePlayerCenterEntry(root){
   const mobile=mobileMotion();
   clearMotionProps(animated);
   animatePlayerDataExperience(root,{delay:.14});
+  animatePlayerHonorRows(root,{delay:.24});
   playerEntryTimeline=gsap.timeline({
     defaults:{ease:MOAP_MOTION.ease.enter},
     onComplete:()=>{
@@ -1121,9 +1201,12 @@ export function transitionPlayerProfile({root,update,onUpdated}){
   const gsap=motionEngine();
   playerEntryTimeline?.kill();
   playerSwitchTimeline?.kill();
+  const interruptedHonorRows=playerHonorTween?.targets?.()||[];
+  playerHonorTween?.kill?.();
+  playerHonorTween=null;
   stopPlayerDataExperience(root);
   const before=playerLayers(root);
-  clearMotionProps(before);
+  clearMotionProps([...before,...interruptedHonorRows]);
 
   if(motionDisabled()||!before.length){
     update();
@@ -1133,18 +1216,30 @@ export function transitionPlayerProfile({root,update,onUpdated}){
   }
 
   const mobile=mobileMotion();
+  let updated=false;
+  const applyUpdate=({animate=true}={})=>{
+    if(updated)return;
+    updated=true;
+    update();
+    onUpdated?.();
+    if(animate){
+      animatePlayerDataExperience(root,{delay:.08,forceTrend:true});
+      animatePlayerHonorRows(root,{delay:.1});
+    }
+  };
   playerSwitchTimeline=gsap.timeline({
     onComplete:()=>{
       clearMotionProps(playerLayers(root));
       playerSwitchTimeline=null;
+    },
+    onInterrupt:()=>{
+      applyUpdate({animate:false});
+      clearMotionProps([...before,...playerLayers(root)]);
+      playerSwitchTimeline=null;
     }
   })
     .to(before,{autoAlpha:0,y:mobile?2:3,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit,stagger:.008})
-    .call(()=>{
-      update();
-      onUpdated?.();
-      animatePlayerDataExperience(root,{delay:.08,forceTrend:true});
-    })
+    .call(()=>applyUpdate())
     .fromTo(
       playerLayers(root),
       {autoAlpha:0,y:mobile?4:5},
@@ -1163,18 +1258,17 @@ export function transitionPlayerData({target,update,onUpdated}){
     return;
   }
 
-  playerDataTimeline=gsap.timeline({
+  elements.forEach(element=>element.setAttribute("aria-busy","true"));
+  let updated=false;
+  const applyUpdate=()=>{if(updated)return;updated=true;update();onUpdated?.();};
+  const cleanup=()=>{clearMotionProps(elements);elements.forEach(element=>element.removeAttribute("aria-busy"));playerDataTimeline=null;};
+  playerDataTimeline=gsap.to(elements,{autoAlpha:.58,y:-MOAP_MOTION.distance.micro,duration:MOAP_MOTION.duration.instant,ease:MOAP_MOTION.ease.exit,
+    onInterrupt:()=>{applyUpdate();cleanup();},
     onComplete:()=>{
-      clearMotionProps(elements);
-      playerDataTimeline=null;
+      applyUpdate();
+      playerDataTimeline=gsap.fromTo(elements,{autoAlpha:.7,y:mobileMotion()?3:MOAP_MOTION.distance.small},{autoAlpha:1,y:0,duration:.25,ease:MOAP_MOTION.ease.enter,onComplete:cleanup,onInterrupt:cleanup});
     }
-  })
-    .to(elements,{autoAlpha:0,y:3,duration:.12,ease:MOAP_MOTION.ease.exit})
-    .call(()=>{
-      update();
-      onUpdated?.();
-    })
-    .fromTo(elements,{autoAlpha:0,y:mobileMotion()?3:6},{autoAlpha:1,y:0,duration:.2,ease:MOAP_MOTION.ease.enter});
+  });
 }
 
 export function animateGoatRanking(root){
@@ -1241,4 +1335,34 @@ export function animateRecordDetails(backdrop,{open,onComplete}={}){
   })
     .to(panel,{autoAlpha:0,y:6,scale:.99,duration:.2,ease:MOAP_MOTION.ease.exit})
     .to(backdrop,{autoAlpha:0,duration:.14,ease:MOAP_MOTION.ease.exit},"-=.1");
+}
+
+export function animateMatchDetails(backdrop,{open,onComplete}={}){
+  const panel=backdrop?.querySelector(".match-detail-modal");
+  const gsap=motionEngine();
+  matchDetailTimeline?.kill();
+  if(!backdrop||!panel||motionDisabled()){
+    if(!open)onComplete?.();
+    return;
+  }
+  if(open){
+    gsap.set(backdrop,{autoAlpha:0});
+    gsap.set(panel,{autoAlpha:0,scale:.99,y:MOAP_MOTION.distance.enter,transformOrigin:"center top"});
+    matchDetailTimeline=gsap.timeline({onComplete:()=>{
+      gsap.set(backdrop,{clearProps:"opacity,visibility"});
+      gsap.set(panel,{clearProps:"opacity,visibility,transform,transformOrigin"});
+      matchDetailTimeline=null;
+    }})
+      .to(backdrop,{autoAlpha:1,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.enter},0)
+      .to(panel,{autoAlpha:1,scale:1,y:0,duration:MOAP_MOTION.duration.normal,ease:MOAP_MOTION.ease.enter},.04);
+    return;
+  }
+  matchDetailTimeline=gsap.timeline({onComplete:()=>{
+    gsap.set(backdrop,{clearProps:"opacity,visibility"});
+    gsap.set(panel,{clearProps:"opacity,visibility,transform,transformOrigin"});
+    matchDetailTimeline=null;
+    onComplete?.();
+  }})
+    .to(panel,{autoAlpha:0,scale:.99,y:MOAP_MOTION.distance.micro,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit},0)
+    .to(backdrop,{autoAlpha:0,duration:MOAP_MOTION.duration.fast,ease:MOAP_MOTION.ease.exit},.06);
 }
