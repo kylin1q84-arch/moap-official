@@ -313,7 +313,7 @@ function animateOverviewEntry(root){
   rankingRows[0]?.classList.toggle("motion-leader",!motionDisabled());
   if(motionDisabled()){
     clearMotionProps(animated);
-    animateSemanticIcons(root,'[data-motion-icon="trophy"]');
+    animateSemanticIcons(root,'[data-motion-icon="crown"]');
     return;
   }
   clearMotionProps(animated);
@@ -325,7 +325,7 @@ function animateOverviewEntry(root){
   if(metrics.length)overviewTimeline.fromTo(metrics,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.27:.34,stagger:mobile?.03:.045,ease:MOAP_MOTION.ease.enter},.39);
   if(standingCard)overviewTimeline.fromTo(standingCard,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?4:6},{autoAlpha:1,y:0,duration:mobile?.3:.36,ease:MOAP_MOTION.ease.enter},.36);
   if(rankingRows.length)overviewTimeline.fromTo(rankingRows,{autoAlpha:SCENE_ENTRY_ALPHA,y:mobile?3:6},{autoAlpha:1,y:0,duration:mobile?.26:.34,stagger:mobile?.03:.04,ease:MOAP_MOTION.ease.enter},.53);
-  animateSemanticIcons(root,'[data-motion-icon="trophy"]',{delay:.3,duration:.42});
+  animateSemanticIcons(root,'[data-motion-icon="crown"]',{delay:.3,duration:.42});
 }
 
 function animateStatusEntry(root){
@@ -610,7 +610,7 @@ export function prepareViewExperience(root,view){
   if(!root)return;
   prepareSectionReveals(root,view);
   applyAmbientViewState(root,view);
-  if(view==="overview")animateSemanticIcons(root,'[data-motion-icon="trophy"]',{delay:.14,duration:.42});
+  if(view==="overview")animateSemanticIcons(root,'[data-motion-icon="crown"]',{delay:.14,duration:.42});
   else if(view==="status")animateStatusTrendChanges(root.querySelector("#powerRanking"),{delay:.16});
   else if(view==="system")animateSemanticIcons(root,'[data-motion-icon="shield"], [data-motion-icon="audit-check"]',{delay:.16,duration:.4,stagger:.055});
   else if(view==="entry"){

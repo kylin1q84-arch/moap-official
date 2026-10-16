@@ -5900,12 +5900,14 @@ select.moap-native-select{
   gap:7px;
 }
 #exportBtn .export-icon{width:14px;height:14px;stroke-width:1.65}
-[data-view="overview"] .command-goat-kicker{
+[data-view="overview"] .command-goat-identity>.command-goat-kicker{
   display:inline-flex;
   align-items:center;
-  gap:6px;
+  gap:9px;
+  max-width:100%;
 }
-[data-view="overview"] .command-goat-kicker .overview-trophy-icon{width:15px;height:15px;stroke-width:1.65;vertical-align:0}
+[data-view="overview"] .command-goat-kicker>span{min-width:0}
+[data-view="overview"] .command-goat-kicker .overview-goat-crown-icon{width:22px;height:22px;stroke-width:1.8;color:var(--gold);vertical-align:0}
 [data-view="status"] .status-change-panel b{display:flex;align-items:center;min-height:18px}
 [data-view="status"] .status-trend-value{display:inline-flex;align-items:center;gap:4px;line-height:1}
 [data-view="status"] .status-trend-icon{width:14px;height:14px;stroke-width:1.7;vertical-align:0}
@@ -5919,7 +5921,8 @@ select.moap-native-select{
 
 @media(max-width:760px){
   #exportBtn .export-icon{width:13px;height:13px}
-  [data-view="overview"] .command-goat-kicker .overview-trophy-icon{width:14px;height:14px}
+  [data-view="overview"] .command-goat-identity>.command-goat-kicker{gap:8px}
+  [data-view="overview"] .command-goat-kicker .overview-goat-crown-icon{width:20px;height:20px}
   [data-view="status"] .status-trend-icon{width:13px;height:13px}
   [data-view="system"] .system-health-label{justify-content:flex-start}
 }

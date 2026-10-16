@@ -14,7 +14,7 @@ import { matchFormatKey, matchFormatLabel, filterMatchesByFormat } from "./match
 // deployment remains resilient even when static module assets are edge-cached
 // independently of app.js.
 const ICON_PATHS = Object.freeze({
-  trophy: '<path d="M8 4h8v3.4a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5.5a2 2 0 0 0 0 4H8M16 5h2.5a2 2 0 0 1 0 4H16M12 11.5V16M8.5 20h7M10 16h4"/>',
+  crown: '<path d="M3 8.5 7.5 12l4.5-7 4.5 7L21 8.5l-1.5 9H4.5L3 8.5Z"/><path d="M4.7 20h14.6"/>',
   "trend-up": '<path d="M3 16 9 10l4 4 7-8"/><path d="M15 6h5v5"/>',
   "trend-down": '<path d="m3 8 6 6 4-4 7 8"/><path d="M15 18h5v-5"/>',
   "check-circle": '<circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.6 2.6L16.5 9"/>',
@@ -49,7 +49,7 @@ import {
   animateNavIndicator,
   animateStatusTrendChanges,
   animateIconClick
-} from "./animations.js?v=4.3.18-rival-workspace";
+} from "./animations.js?v=4.8.4-goat-crown";
 let state = JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT));
 clearLegacyRivalState(state);
 let currentView = "overview";
@@ -845,7 +845,7 @@ function renderOverview(){
   const goatChange=Number(goat.indexChange||0),goatMovement=Number(goat.movement||0);
   const compositionNames={honors:"荣誉",career:"生涯",records:"纪录",longevity:"稳定性"};
   const composition=Object.entries(goat.breakdown||{}).map(([key,item])=>{const score=Number(item?.score||0),max=Number(item?.max||0),level=max?Math.max(0,Math.min(100,score/max*100)):0;return `<div class="command-composition-segment"><div><span>${escapeHtml(compositionNames[key]||String(key).toUpperCase())}</span><small>${escapeHtml(item?.label||key)}</small></div><b>${score.toFixed(1)}<small> / ${max.toFixed(0)}</small></b><div class="command-composition-meter" aria-label="${escapeHtml(item?.label||key)} ${score.toFixed(1)} / ${max.toFixed(0)}"><i style="width:${level.toFixed(2)}%"></i></div></div>`;}).join("");
-  $("#overviewGoatHero").innerHTML=`<div class="command-goat-identity"><span class="command-goat-kicker">${iconSvg("trophy","overview-trophy-icon")}<span>当前 GOAT · 历史 #${goat.rank||"—"}${goatMovement?` · ${goatMovement>0?"↑":"↓"}${Math.abs(goatMovement)}`:""}</span></span><h3>${escapeHtml(goat.player||"—")}</h3><p>${escapeHtml(goat.evaluation?.label||"历史观察中")}</p></div><div class="command-goat-index" tabindex="0"><span>GOAT 指数</span><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)} <small>本期变化</small></b></div><div class="command-goat-composition"><div class="command-composition-head"><span>GOAT 构成</span><small>百分制</small></div><div class="command-composition-rail">${composition}</div></div><p class="command-goat-copy">${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p>`;
+  $("#overviewGoatHero").innerHTML=`<div class="command-goat-identity"><span class="command-goat-kicker">${iconSvg("crown","overview-goat-crown-icon")}<span>当前 GOAT · 历史 #${goat.rank||"—"}${goatMovement?` · ${goatMovement>0?"↑":"↓"}${Math.abs(goatMovement)}`:""}</span></span><h3>${escapeHtml(goat.player||"—")}</h3><p>${escapeHtml(goat.evaluation?.label||"历史观察中")}</p></div><div class="command-goat-index" tabindex="0"><span>GOAT 指数</span><strong>${Number(goat.goatIndex||0).toFixed(1)}</strong><b class="${goatChange>0?"score-pos":goatChange<0?"score-neg":""}">${goatChange>0?"+":""}${goatChange.toFixed(1)} <small>本期变化</small></b></div><div class="command-goat-composition"><div class="command-composition-head"><span>GOAT 构成</span><small>百分制</small></div><div class="command-composition-rail">${composition}</div></div><p class="command-goat-copy">${escapeHtml(goat.evaluation?.summary||"暂无GOAT综合评价。")}</p>`;
   const latestDate=String(latest?.date||"—"),dateParts=latestDate.match(/^(\d{4})-(\d{2})-(\d{2})$/),shortDate=dateParts?`${dateParts[2]}.${dateParts[3]}`:latestDate;
   $("#overviewKpis").innerHTML=[["累计牌局",String(state.matches.length),`${state.matches.length} 场牌局记录`],["当前赛季",currentSeason,"自动识别最新赛季"],["最新牌局",shortDate,latest?.matchId||"等待牌局"]].map(x=>`<div class="overview-metric"><span>${x[0]}</span><strong class="kpi-value">${x[1]}</strong><small>${x[2]}</small></div>`).join("");
   renderGoatRows("#goatRanking");
