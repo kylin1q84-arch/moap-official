@@ -92,6 +92,15 @@ const NAV_GROUPS = [
   {label:"系统",ids:["system","entry"]}
 ];
 
+const MOAP_RELEASE = Object.freeze({
+  version:"v2.3.1",
+  releaseStage:"功能完善版本",
+  releaseDate:"2026-10-16",
+  currentStatus:"全站筛选、荣誉体系、牌局详情与交互动效已完成整合",
+  certification:"LIVE DATA VERIFIED",
+  note:"完成 MOAP 品牌统一、赛制筛选、巅峰赛体系、荣誉档案、牌局详情与全站交互反馈优化。"
+});
+
 
 const VENUE_OVERRIDES = {
   MOAP0026: "拾月金秋茶馆（浦南一里店）",
@@ -171,7 +180,7 @@ function applyAnalyticsToState(target){
   const top=target.goat[0],honorTop=officialHonorRanking(target.players,stats)[0];
   const seasonIds=[...new Set(orderedMatches.map(match=>match.season))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
   const awardWinners=id=>seasonIds.map(season=>{const row=target.honorBoard.find(item=>item.scope===season&&item.honorId===id);return row?.winners?.length?`${season} ${row.winners.join("/")}`:null;}).filter(Boolean).join("；")||"暂无";
-  target.version={...(target.version||{}),version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"MOAP Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:target.meta.healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${target.players.find(p=>p.playerId===honorTop.playerId)?.name||honorTop.playerId} · ${honorTop.honorCount}次荣誉`:"—",seasonMvp:awardWinners("H003"),note:"牌局中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新牌局月份。"};
+  target.version={...(target.version||{}),...MOAP_RELEASE,formulaIntegrity:target.meta.healthScore===100?"PASS":"CHECK WARNINGS",currentGoat:top?.player||"—",goatIndex:top?.goatIndex||0,honorKing:honorTop?`${target.players.find(p=>p.playerId===honorTop.playerId)?.name||honorTop.playerId} · ${honorTop.honorCount}次荣誉`:"—",seasonMvp:awardWinners("H003")};
   return target;
 }
 applyAnalyticsToState(state);
@@ -342,7 +351,7 @@ function buildLiveState(db){
   const passCount=checks.filter(x=>x.result==="PASS").length,healthScore=Math.round(passCount/checks.length*100);
   const topGoat=goat[0],topHonor=officialHonorRanking(players,honorStats)[0];
   const awardWinners=id=>seasonIds.map(s=>{const row=honorSystem.board.find(a=>a.scope===s&&a.honorId===id);return row?.winners?.length?`${s} ${row.winners.join("/")}`:null}).filter(Boolean).join("；")||"暂无";
-  const version={...CERTIFIED_SNAPSHOT.version,version:"v2.3.0 Matchup & Honor Detail Upgrade",releaseStage:"MOAP Feature Release",releaseDate:"2026-08-24",currentStatus:"exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting",formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",certification:"LIVE DATA VERIFIED",note:"牌局中心升级完全匹配多选；对位中心新增累计/场均并整合汇总；荣誉详情支持逐牌手逐指标追溯；个人中心荣誉并入档案首页；月报默认最新牌局月份。",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
+  const version={...CERTIFIED_SNAPSHOT.version,...MOAP_RELEASE,formulaIntegrity:healthScore===100?"PASS":"CHECK WARNINGS",currentGoat:topGoat?.player||"—",goatIndex:topGoat?.goatIndex||0,honorKing:topHonor?`${players.find(p=>p.playerId===topHonor.playerId)?.name||topHonor.playerId} · ${topHonor.honorCount}次荣誉`:"—",seasonMvp:awardWinners("H003"),scoringKing:"已由记录中心替代"};
   const statusCenter=buildMoapStatusCenter(players,matches,honors);
   return {...JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT)),meta:{...CERTIFIED_SNAPSHOT.meta,matches:matches.length,results:db.results.length,players:players.length,healthScore},players,seasons,matches,leaderboard,seasonStats,honors,honorBoard:honorSystem.board,honorCatalog:honorSystem.catalog,profiles,goat,goatMethodology:goatSystem.methodology,statusCenter,recordCenter,matchups:matchupRows,matchSegments:normalizeMatchSegments(normalization.segments,players),sourceToOfficialMatchId:normalization.sourceToOfficialMatchId,rawSourceContext:normalization.rawSourceContext,rivalNet,rivalHistory,rivalSummary,rivalryMeta,version,healthChecks:checks};
 }
@@ -1869,7 +1878,7 @@ function championSeasonDetailHtml(award,isOpen=false){
   const row=honorWinnerRow(award),m=row?.metrics||{},tie=award?.details?.tiebreak||{},basis=tie.triggered?(tie.decidedLabel||"全部条件相同"):"累计总积分";
   const winner=award.details?.winner||"—";
   const body=`<div class="profile-honor-winner">获奖者：<strong>${escapeHtml(winner)}</strong> · 赛季排名 #${row?.rank||1}</div><div class="profile-honor-metric-grid champion-metrics">${honorStatHtml("累计总积分",fmtScore(m.total||0),scoreClass(m.total||0))}${honorStatHtml("场均积分",fmtAvg(m.average||0))}${honorStatHtml("MVP场次积分",fmtScore(m.mvpPoints||0),scoreClass(m.mvpPoints||0))}${honorStatHtml("正分场次积分",fmtScore(m.positivePoints||0),scoreClass(m.positivePoints||0))}${honorStatHtml("爆发场次积分",fmtScore(m.explosionPoints||0),scoreClass(m.explosionPoints||0))}</div><div class="profile-honor-decision"><span>同分决胜：<b>${tie.triggered?"已触发":"未触发"}</b></span><span>最终依据：<b>${escapeHtml(basis)}</b></span><p>${escapeHtml(tie.summary||"本赛季由累计总积分直接决出冠军，未触发同分决胜。")}</p></div>${championRankingHtml(award)}<details class="profile-honor-rule"><summary>查看荣誉规则</summary><p>${escapeHtml(award.details?.rule||honorCatalogItem("H001")?.rule||"")}</p></details>`;
-  return profileHonorSeasonCardHtml({award,title:"MOAP总冠军",summary:winner,body,isOpen});
+  return profileHonorSeasonCardHtml({award,title:honorDisplayName("H001","MOAP赛季总冠军"),summary:winner,body,isOpen});
 }
 function peakSeasonDetailHtml(award,isOpen=false){
   const rows=award?.details?.ranking||[],winner=honorWinnerRow(award),match=winner?.peakMatch||award?.details?.evidence?.[0]||{};
@@ -1947,21 +1956,50 @@ function renderSystem(){
   const systemLabels={
     PASS:"通过",FAIL:"异常","CHECK WARNINGS":"需要检查",
     "LIVE DATA VERIFIED":"实时数据已验证",
-    "v2.3.0 Matchup & Honor Detail Upgrade":"v2.3.0 对位与荣誉详情升级",
     "v10.1 LTS Official":"v10.1 长期维护",
     "Official LTS Release":"长期维护版本",
     "OFFICIAL VERIFIED":"已验证",
     "Official Feature Release":"功能版本",
-    "Official Match Normalization":"牌局规范化",
-    "official matches.id":"规范牌局 matches.id",
-    "official match_results.id":"规范牌局 match_results.id",
+    "Official Match Normalization":"规范牌局校验",
+    "official matches.id":"规范牌局 · 牌局编号",
+    "official match_results.id":"规范牌局成绩 · 成绩编号",
+    "award_results":"荣誉结果记录",
+    "match_results.player_id":"牌局成绩 · 牌手关联",
+    "matches.season_id":"牌局 · 赛季字段",
+    "match_results.score/is_absent":"牌局成绩 · 得分与缺席状态",
+    "match_results→matches":"成绩记录 → 牌局记录",
+    "matches.matchId":"牌局 · 牌局编号",
+    "season + round":"赛季与轮次",
+    "match.results.score":"牌局成绩 · 得分",
+    "match.results.playerId":"牌局成绩 · 牌手关联",
+    "MVP score = max score":"MVP 得分等于本场最高分",
+    "matchup_transfers：方向格可为正/负/0，A→B 与 B→A 独立":"精准对位记录 · 方向格可为正、负或零，双向独立",
+    "只累计该牌手作为行方向(from_player_id)的所有格":"只累计该牌手作为攻击方的方向格",
+    "Results.ResultID":"牌局成绩 · 成绩编号",
+    "Matches.MatchID":"牌局 · 牌局编号",
+    "Award_Engine_Registry":"荣誉登记记录",
+    "Results.PlayerID":"牌局成绩 · 牌手关联",
+    "Results.Season":"牌局成绩 · 赛季字段",
+    "Results.Score/IsAbsent":"牌局成绩 · 得分与缺席状态",
+    "Results→Matches":"成绩记录 → 牌局记录",
+    "ResultID 唯一性":"牌局成绩编号唯一",
+    "Matches 表 MatchID 唯一性":"牌局编号唯一",
+    "Registry HonorID 唯一性":"荣誉编号唯一",
+    "缺失 PlayerID":"成绩关联牌手缺失",
+    "缺失 Season":"牌局赛季缺失",
+    "非缺席但缺失 Score":"有效牌手成绩缺失",
+    "Result MatchID 未登记":"成绩关联牌局缺失",
+    "Result MatchID 未在 Matches 登记":"成绩关联牌局缺失",
+    "Rule_Book 与 Registry 缺口":"荣誉规则与登记记录不一致",
+    "牌局成绩 ResultID 唯一性":"牌局成绩编号唯一",
+    "牌局 MatchID 唯一性":"牌局编号唯一",
     "正式比赛编号连续":"牌局编号连续",
     "正式比赛编号唯一":"牌局编号唯一",
     "正式赛季轮次连续":"赛季轮次连续",
     "正式成绩与对位外键有效":"牌局成绩与对位关联有效",
     "比赛ID唯一性":"牌局 ID 唯一性",
     "精准对位行和对应比赛总分":"精准对位行和对应牌局总分",
-    "exact multi-player filtering, matchup averages, integrated honor evidence, compact player profile and latest-month reporting":"多牌手精确筛选、对位场均、荣誉依据整合、个人档案与最新月报均已上线"
+    "缺失PlayerID":"成绩关联牌手缺失"
   };
   const present=value=>{
     if(value===undefined||value===null||value==="")return "—";
