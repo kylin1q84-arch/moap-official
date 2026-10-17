@@ -6733,7 +6733,7 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
   grid-template-columns:minmax(260px,1.1fr) minmax(240px,.9fr);
   max-width:920px;
 }
-[data-view="player"] .player-profile-stage .profile-name-block h3{font-size:clamp(42px,3.4vw,46px)}
+[data-view="player"] .player-profile-stage .profile-name-block h3{font-size:clamp(34px,2.7vw,38px)}
 [data-view="player"] .player-profile-stage .profile-career-ovr b{font-size:clamp(48px,4vw,56px)}
 [data-view="player"] .player-profile-stage .profile-goat-status b{
   padding-left:0;
@@ -6845,7 +6845,7 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
   [data-view="player"] .player-profile-stage{margin-bottom:36px!important;padding-bottom:16px}
   [data-view="player"] .player-profile-stage .player-observatory-identity-column{padding-top:18px}
   [data-view="player"] .player-profile-stage .profile-name-block{display:block}
-  [data-view="player"] .player-profile-stage .profile-name-block h3{font-size:40px}
+  [data-view="player"] .player-profile-stage .profile-name-block h3{font-size:32px}
   [data-view="player"] .player-profile-stage .profile-career-ovr b{font-size:48px}
   [data-view="player"] .player-profile-stage .profile-goat-status b{font-size:22px}
   [data-view="player"] .player-profile-stage .profile-honors-home{margin-top:18px!important;padding:0;border:0}

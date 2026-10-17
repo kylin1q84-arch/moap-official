@@ -1,5 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
+const CERTIFIED_BASELINE_LABEL = `认证基线快照 · 截至 ${CERTIFIED_SNAPSHOT.meta.releaseDate} · ${CERTIFIED_SNAPSHOT.meta.matches} 场`;
 import { HONOR_CATALOG, CORE_HONOR_IDS } from "./honor-details.js";
 import { calculateHonorSystem, buildMoapStatusCenter, formatMvpStars } from "./analytics-engine.js";
 import { buildRecordCenter, buildDataLeaderboard } from "./records-engine.js";
@@ -2078,19 +2079,19 @@ async function start(){
   if(gate) gate.hidden=true;
   document.querySelector("#appShell").hidden=false;
 
-  // 先显示 v10.1 LTS 认证基线，再同步 Supabase。
+  // 先显示认证基线快照，再同步 Supabase 实时数据。
   // 即使网络、API Key 或 RLS 出错，页面也不会再变成空白数据。
   if(!appBooted)boot();
 
   const badge=document.querySelector("#accountBadge");
   if(!MOAP_CONFIG.supabaseUrl || !MOAP_CONFIG.supabaseKey){
     currentRole="readonly";
-    if(badge){badge.hidden=false;badge.textContent="认证基线模式 · 缺少云端配置";}
+    if(badge){badge.hidden=false;badge.textContent=`认证基线模式 · 缺少云端配置 · ${CERTIFIED_BASELINE_LABEL}`;}
     const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
     if(entryStatus)entryStatus.textContent="基线数据";
-    if(entryNote)entryNote.textContent="云端配置缺失";
+    if(entryNote)entryNote.textContent=`当前使用${CERTIFIED_BASELINE_LABEL}`;
     initNav();
-    toast("缺少 Supabase 配置，当前显示 v10.1 LTS 认证基线。");
+    toast(`缺少 Supabase 配置，当前显示${CERTIFIED_BASELINE_LABEL}。`);
     return;
   }
 
@@ -2100,15 +2101,15 @@ async function start(){
   }catch(err){
     console.error(err);
     currentRole="readonly";
-    if(badge){badge.hidden=false;badge.textContent="认证基线模式 · 云端未授权";}
-    document.querySelector("#healthBadge").textContent="云端同步失败 · 基线可用";
+    if(badge){badge.hidden=false;badge.textContent=`认证基线模式 · 云端未授权 · ${CERTIFIED_BASELINE_LABEL}`;}
+    document.querySelector("#healthBadge").textContent=`云端同步失败 · ${CERTIFIED_BASELINE_LABEL}`;
     const entryStatus=$("#entryConnectionStatus"),entryNote=$("#entryConnectionNote");
     if(entryStatus)entryStatus.textContent="未连接";
-    if(entryNote)entryNote.textContent="当前使用认证基线";
+    if(entryNote)entryNote.textContent=`当前使用${CERTIFIED_BASELINE_LABEL}`;
     initNav();
     if(currentView==="entry") currentView="overview";
     showView(currentView);
-    toast("云端同步失败，已保留 v10.1 基线："+(err.message||String(err)));
+    toast(`云端同步失败，当前显示${CERTIFIED_BASELINE_LABEL}：${err.message||String(err)}`);
   }
 }
 start();
