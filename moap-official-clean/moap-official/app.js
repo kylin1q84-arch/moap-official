@@ -962,7 +962,7 @@ function statusStateLabel(label){
     [/深陷低谷/,"snowflake","is-down"]
   ];
   const match=rules.find(([pattern])=>pattern.test(text))||[null,"activity","is-neutral"];
-  return {text,icon:iconSvg(match[1],\`status-state-icon \${match[2]}\`)};
+  return {text,icon:iconSvg(match[1],"status-state-icon " + match[2])};
 }
 
 function renderStatus(){
