@@ -174,14 +174,24 @@ function seasonEndMatch(matches,season){
 }
 
 function honorEvidence(playerId,honorId,honors,matches){
-  const awards=(honors?.[playerId]||[]).filter(award=>award.honorId===honorId).sort((a,b)=>String(a.scope||"").localeCompare(String(b.scope||""),undefined,{numeric:true}));
+  const awards=(honors?.[playerId]||[])
+    .filter(award=>award.honorId===honorId)
+    .sort((a,b)=>String(a.scope||"").localeCompare(String(b.scope||""),undefined,{numeric:true}));
   if(!awards.length)return {evidence:null,count:0,awards:[]};
+
   const award=awards[0];
-  const direct=(award.details?.evidence||[]).find(item=>item?.matchId);
-  const match=direct?matches.find(item=>item.matchId===direct.matchId):seasonEndMatch(matches,award.scope);
+  const settlementHonor=honorId==="H001"||honorId==="H003";
+  const direct=settlementHonor?null:(award.details?.evidence||[]).find(item=>item?.matchId);
+  const match=settlementHonor
+    ? seasonEndMatch(matches,award.scope)
+    : (direct?matches.find(item=>item.matchId===direct.matchId):seasonEndMatch(matches,award.scope));
   const result=match?.results?.find(row=>row.playerId===playerId);
+  const evidenceType=settlementHonor?"season_settlement":"direct_match";
+
   return {
-    evidence:match?evidenceFrom(match,result,{awardScope:award.scope,awardName:award.name||""}):{season:award.scope||"",awardScope:award.scope||"",awardName:award.name||""},
+    evidence:match
+      ? evidenceFrom(match,result,{awardScope:award.scope,awardName:award.name||"",evidenceType})
+      : {season:award.scope||"",awardScope:award.scope||"",awardName:award.name||"",evidenceType:"season_settlement"},
     count:awards.length,
     awards
   };
