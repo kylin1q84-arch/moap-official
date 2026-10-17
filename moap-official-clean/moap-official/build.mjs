@@ -69,7 +69,7 @@ if (!indexHtml.includes('/achievements.css')) {
   indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.0">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.0"></script>\n</body>')
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.1-data-sync"></script>\n</body>')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
@@ -83,5 +83,6 @@ console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
 console.log('Achievement center V1 with 32 unlockable emblems: included')
+console.log('Achievement archive uses official split-session normalization and directional matchup evidence: included')
 
 console.log('Monthly report, immersive ambient background, centered record tables, season personal data, matchup detail page and current-season OVR: included')
