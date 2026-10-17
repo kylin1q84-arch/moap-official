@@ -51,6 +51,14 @@ try {
   // 头像资源尚未提供时允许正常构建；后续只需添加 assets/players/*.png。
 }
 
+const achievementRuntimePath = join(outputDir, 'achievements-runtime.js')
+let achievementRuntime = await readFile(achievementRuntimePath, 'utf8')
+if (!achievementRuntime.includes('"./achievements-engine.js"')) {
+  throw new Error('MOAP build failed: achievement engine import was not found for cache versioning.')
+}
+achievementRuntime = achievementRuntime.replace('"./achievements-engine.js"', '"./achievements-engine.js?v=1.0.2-settlement"')
+await writeFile(achievementRuntimePath, achievementRuntime, 'utf8')
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 
@@ -69,7 +77,7 @@ if (!indexHtml.includes('/achievements.css')) {
   indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.0">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.1-data-sync"></script>\n</body>')
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.2-settlement"></script>\n</body>')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
@@ -84,5 +92,6 @@ console.log('Single/continuous record center and expanded data leaderboard: incl
 console.log('Fixed GOAT model and data validation: included')
 console.log('Achievement center V1 with 32 unlockable emblems: included')
 console.log('Achievement archive uses official split-session normalization and directional matchup evidence: included')
+console.log('Official title and annual MVP achievement evidence uses season settlement: included')
 
 console.log('Monthly report, immersive ambient background, centered record tables, season personal data, matchup detail page and current-season OVR: included')
