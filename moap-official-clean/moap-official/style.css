@@ -2560,7 +2560,7 @@ select.moap-native-select{
   position:relative;
   isolation:isolate;
   overflow:visible;
-  margin-bottom:72px;
+  margin-bottom:36px;
   border:0;
   border-top:1px solid var(--overview-rule-gold);
   border-bottom:1px solid var(--overview-rule-gold);
@@ -2900,7 +2900,7 @@ select.moap-native-select{
 @media(max-width:760px){
   [data-view="overview"] .overview-masthead{min-height:0;margin-bottom:13px;padding:3px 1px 14px}
   [data-view="overview"] .overview-masthead h2{font-size:28px}
-  [data-view="overview"] .league-command-scene{margin-bottom:48px;border-radius:0}
+  [data-view="overview"] .league-command-scene{margin-bottom:28px;border-radius:0}
   [data-view="overview"] .league-command-grid{grid-template-columns:1fr;min-height:0}
   [data-view="overview"] .command-goat-zone,
   [data-view="overview"] .command-goat-standing{padding:22px 20px}
