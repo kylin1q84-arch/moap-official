@@ -187,7 +187,7 @@ async function openAchievementView({playerId=null}={}){
 
 function renderLoading(){
   const grid=$("#achievementGrid");
-  if(grid&&!achievementSystem)grid.innerHTML='<div class="achievement-loading"><span></span><strong>正在读取成就档案</strong><small>同步云端牌局并回放历史解锁条件</small></div>';
+  if(grid&&!achievementSystem)grid.innerHTML='<div class="achievement-loading"><span></span><strong>正在读取成就档案</strong><small>同步主站同源牌局并回放历史解锁条件</small></div>';
 }
 
 function renderError(error){
@@ -204,7 +204,7 @@ async function fetchTable(sb,table){
 
 function certifiedArchive(){
   return {
-    source:"认证基线",
+    source:`认证基线 · ${CERTIFIED_SNAPSHOT.meta.matches||0}场`,
     players:JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT.players||[])),
     matches:JSON.parse(JSON.stringify(CERTIFIED_SNAPSHOT.matches||[]))
   };
@@ -214,22 +214,41 @@ async function fetchArchive(){
   if(!MOAP_CONFIG.supabaseUrl||!MOAP_CONFIG.supabaseKey)return certifiedArchive();
   const sb=createClient(MOAP_CONFIG.supabaseUrl,MOAP_CONFIG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   try{
-    const [players,seasons,matches,results]=await Promise.all([
-      fetchTable(sb,"players"),fetchTable(sb,"seasons"),fetchTable(sb,"matches"),fetchTable(sb,"match_results")
+    const [players,seasons,matches,results,matchupsResponse]=await Promise.all([
+      fetchTable(sb,"players"),
+      fetchTable(sb,"seasons"),
+      fetchTable(sb,"matches"),
+      fetchTable(sb,"match_results"),
+      sb.from("matchup_transfers").select("*")
     ]);
     if(!players.length||!matches.length||!results.length)throw new Error("云端数据为空");
-    const normalized=normalizeOfficialMatchArchive(correctSourceData(canonicalizeMatchIds({players,seasons,matches,results,awards:[],matchups:[]}))).db;
+
+    let matchups=[];
+    if(matchupsResponse.error){
+      const message=String(matchupsResponse.error.message||"");
+      const missingTable=matchupsResponse.error.code==="42P01"||matchupsResponse.error.code==="PGRST205"||message.includes("Could not find the table")||message.includes("does not exist");
+      if(!missingTable)throw new Error(`matchup_transfers: ${message}`);
+    }else matchups=matchupsResponse.data||[];
+
+    const normalization=normalizeOfficialMatchArchive(correctSourceData(canonicalizeMatchIds({players,seasons,matches,results,awards:[],matchups})));
+    if(normalization.issues.length)console.warn("Achievement archive normalization warnings",normalization.issues);
+    const normalized=normalization.db;
     const mappedPlayers=normalized.players.map(player=>({playerId:player.id,name:player.name,joinSeason:player.join_season,status:player.active?"Active":"Inactive"}));
     const names=Object.fromEntries(mappedPlayers.map(player=>[player.playerId,player.name]));
     const resultMap={};
     normalized.results.forEach(result=>(resultMap[result.match_id]??=[]).push(result));
-    const mappedMatches=normalized.matches.slice().sort((a,b)=>String(a.match_date).localeCompare(String(b.match_date))||num(a.round)-num(b.round)||String(a.id).localeCompare(String(b.id))).map(match=>({
+    const mappedMatches=normalized.matches.slice().sort((a,b)=>String(a.match_date).localeCompare(String(b.match_date))||String(a.id).localeCompare(String(b.id))).map(match=>({
       matchId:match.id,
       season:match.season_id,
       round:match.round,
       date:match.match_date,
       matchType:match.match_type,
       venue:match.venue||"",
+      sourceMatchIds:match.sourceMatchIds||[match.id],
+      primarySourceMatchId:match.primarySourceMatchId||match.id,
+      sourceOrdinalStart:match.sourceOrdinalStart??null,
+      sourceRounds:match.sourceRounds||[match.round],
+      isSplitSession:!!match.isSplitSession,
       results:(resultMap[match.id]||[]).map(result=>({
         playerId:result.player_id,
         player:names[result.player_id]||result.player_id,
@@ -238,9 +257,9 @@ async function fetchArchive(){
         isAbsent:!!result.is_absent
       }))
     }));
-    return {source:"SUPABASE · 云端实时",players:mappedPlayers,matches:mappedMatches};
+    return {source:`主站同源 · SUPABASE · ${mappedMatches.length}场`,players:mappedPlayers,matches:mappedMatches};
   }catch(error){
-    console.warn("Achievement center cloud read failed; using certified snapshot.",error);
+    console.warn("Achievement center live archive read failed; using certified baseline.",error);
     return {...certifiedArchive(),warning:error.message};
   }
 }
@@ -307,7 +326,7 @@ function renderAchievements({goatPending=false}={}){
   const profile=achievementSystem.byPlayer[selectedPlayerId];
   if(!profile)return;
   const player=archive.players.find(item=>item.playerId===selectedPlayerId);
-  $("#achievementDataSource").textContent=archive.warning?"认证基线 · 云端读取异常":archive.source;
+  $("#achievementDataSource").textContent=archive.warning?`${archive.source} · 云端读取异常`:archive.source;
   $("#achievementProfileTitle").textContent=player?.name||profile.player;
   $("#achievementPlayerCode").textContent=`${selectedPlayerId} · ACHIEVEMENT PROFILE${goatPending?" · GOAT历史回放中":""}`;
   $("#achievementUnlocked").textContent=`${profile.unlocked} / ${profile.total}`;
