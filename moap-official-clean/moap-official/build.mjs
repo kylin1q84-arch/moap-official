@@ -1,4 +1,4 @@
-import { copyFile, cp, mkdir, rm, stat, writeFile } from 'node:fs/promises'
+import { copyFile, cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,6 +17,9 @@ const sourceFiles = [
   'gsap-core.js',
   'CSSPlugin.js',
   'style.css',
+  'achievements.css',
+  'achievements-engine.js',
+  'achievements-runtime.js',
   'certified-data.js',
   'honor-details.js',
   'analytics-engine.js',
@@ -60,6 +63,16 @@ await writeFile(
   'utf8'
 )
 
+const indexPath = join(outputDir, 'index.html')
+let indexHtml = await readFile(indexPath, 'utf8')
+if (!indexHtml.includes('/achievements.css')) {
+  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.0">\n</head>')
+}
+if (!indexHtml.includes('/achievements-runtime.js')) {
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.0"></script>\n</body>')
+}
+await writeFile(indexPath, indexHtml, 'utf8')
+
 console.log('MOAP v2.3.1 build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
@@ -69,5 +82,6 @@ console.log('Unique honor engine: included')
 console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
+console.log('Achievement center V1 with 32 unlockable emblems: included')
 
 console.log('Monthly report, immersive ambient background, centered record tables, season personal data, matchup detail page and current-season OVR: included')
