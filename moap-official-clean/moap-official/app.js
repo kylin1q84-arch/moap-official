@@ -19,6 +19,14 @@ const ICON_PATHS = Object.freeze({
   "trend-up": '<path d="M3 16 9 10l4 4 7-8"/><path d="M15 6h5v5"/>',
   "trend-down": '<path d="m3 8 6 6 4-4 7 8"/><path d="M15 18h5v-5"/>',
   "check-circle": '<circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.6 2.6L16.5 9"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  activity: '<path d="M22 12h-4l-3 8-6-16-3 8H2"/>',
+  zap: '<path d="M13 2 4 14h7l-1 8 10-13h-7z"/>',
+  flame: '<path d="M8.5 14.5A3.5 3.5 0 0 0 12 18a4 4 0 0 0 4-4c0-2.2-1.5-4.1-4-7-1.2 2.2-3.5 4.5-3.5 7.5Z"/><path d="M11 18a2 2 0 0 0 2-2c0-.8-.4-1.4-1-2.1-.9 1-1 1.5-1 2.1"/>',
+  "minus-circle": '<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
+  "cloud-rain": '<path d="M20 16.2A4.8 4.8 0 0 0 18 7h-1.1A7 7 0 1 0 4 15.3"/><path d="m8 16-1 4m6-4-1 4m6-4-1 4"/>',
+  snowflake: '<path d="M12 2v20M4.9 6l14.2 12M4.9 18 19.1 6M8 4l4 2 4-2M8 20l4-2 4 2M3 10l4 2-1 4M21 10l-4 2 1 4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   save: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h8V4M8 20v-6h8v6"/>',
   shield: '<path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z"/><path d="m9 12 2 2 4-4"/>',
   "audit-check": '<path d="m5 12 4 4L19 6"/>',
@@ -936,6 +944,27 @@ function buildDetailedLatestRecap(){
   return {title:`${(mvpRows.length?mvpRows:[top]).map(x=>x.player).join(" / ")}拿下${latest.season}第${latest.round}局MVP`,meta:`${latest.matchId} · ${latest.date} · ${latest.matchType} · ${latest.venue||"未填写场地"}`,body:`${top.player}以${fmtScore(top.score)}领跑本场，${bottom.player}以${fmtScore(bottom.score)}收官。以下为本轮完整数据摘要。`,bullets,recordNotes,scores:pp.map(x=>({player:x.player,score:Number(x.score),isMvp:!!x.isMvp}))};
 }
 
+
+function statusStateLabel(label){
+  const text=String(label||"").replace(/^[^A-Za-z0-9\u4e00-\u9fff]+/,"").trim();
+  const rules=[
+    [/样本不足/,"clock","is-muted"],
+    [/MVP状态/,"crown","is-mvp"],
+    [/连续正分/,"target","is-positive"],
+    [/强势上升|回暖中/,"trend-up","is-up"],
+    [/高开低走|状态下滑/,"trend-down","is-down"],
+    [/爆发模式/,"zap","is-volatile"],
+    [/表现起伏/,"activity","is-volatile"],
+    [/炙手可热|手感火热/,"flame","is-hot"],
+    [/状态稳定/,"shield","is-stable"],
+    [/状态平平/,"minus-circle","is-neutral"],
+    [/状态低迷/,"cloud-rain","is-down"],
+    [/深陷低谷/,"snowflake","is-down"]
+  ];
+  const match=rules.find(([pattern])=>pattern.test(text))||[null,"activity","is-neutral"];
+  return {text,icon:iconSvg(match[1],\`status-state-icon \${match[2]}\`)};
+}
+
 function renderStatus(){
   const center=state.statusCenter||{rankings:[],storylines:[],methodology:"",gameRecap:null},rows=center.rankings||[];
   const hot=rows[0],cold=rows.at(-1),up=[...rows].sort((a,b)=>b.movement-a.movement||b.indexChange-a.indexChange)[0];
@@ -961,10 +990,10 @@ function renderStatus(){
       const fullLabel=`${rawMatchId} · ${item.date||"日期未知"}${item.isMvp?" · MVP":""}`;
       return `<span class="status-recent-node ${item.score>0?"is-positive":item.score<0?"is-negative":"is-neutral"}" title="${escapeHtml(fullLabel)}" aria-label="${escapeHtml(fullLabel)}"><small class="status-match-id" data-mobile-id="#${escapeHtml(shortNumber)}">#${escapeHtml(matchNumber)}</small><b>${fmtScore(item.score)}</b></span>`;
     }).join("");
-    const statusSummary=[r.label,r.report?.headline,r.archetype].filter(Boolean).join(" · ");
+    const stateLabel=statusStateLabel(r.label),statusSummary=[stateLabel.text,r.report?.headline,r.archetype].filter(Boolean).join(" · ");
     const seasonLabel=r.seasonPerformance?.season||latestActualSeason();
     const movementValue=movementText(r),indexChange=Number(r.indexChange||0);
-    return `<button type="button" class="status-ranking-row ${r.rank===1?"is-leader":""}" data-status-player="${r.playerId}" aria-label="查看${escapeHtml(r.player)}个人中心"><span class="status-rank-number">${String(r.rank).padStart(2,"0")}</span><div class="status-player-profile"><div class="status-player-primary"><strong>${escapeHtml(r.player)}</strong><span class="status-view-cue">查看牌手 →</span></div><div class="status-state-summary">${escapeHtml(statusSummary||"暂无状态描述")}</div><div class="status-rating-pair"><span><small>${escapeHtml(seasonLabel)} OVR</small><b>${r.seasonPerformance?.rating??"—"}</b></span><span><small>生涯 OVR</small><b>${r.career?.overallRating??"—"}</b></span></div></div><div class="status-recent-form"><div class="status-recent-head"><span>最近5场得分</span><small>旧 → 新</small><strong class="status-recent-total-mobile">近5场合计 ${fmtScore(r.recentTotal)}</strong></div><div class="status-recent-strip" aria-label="${escapeHtml(r.player)}最近${(r.recent||[]).length}场">${recent||'<small>暂无近期牌局</small>'}</div></div><div class="status-change-panel"><div><span>较上一轮排名</span><b class="${r.movement>0?"score-pos":r.movement<0?"score-neg":""}">${statusTrendMarkup(r.movement,`${r.playerId}-movement`)}</b></div><div><span>较上一轮指数</span><b class="${indexChange>0?"score-pos":indexChange<0?"score-neg":""}">${statusTrendMarkup(indexChange,`${r.playerId}-index`)}</b></div></div><div class="status-rank-index"><small>状态指数</small><b data-animate-number data-animation-key="status-index-${r.playerId}">${r.powerIndex}</b><span class="status-recent-total">近5场合计 ${fmtScore(r.recentTotal)}</span></div><div class="status-index-rail" aria-hidden="true"><i style="width:${railWidth}%"></i></div></button>`;
+    return `<button type="button" class="status-ranking-row ${r.rank===1?"is-leader":""}" data-status-player="${r.playerId}" aria-label="查看${escapeHtml(r.player)}个人中心"><span class="status-rank-number">${String(r.rank).padStart(2,"0")}</span><div class="status-player-profile"><div class="status-player-primary"><strong>${escapeHtml(r.player)}</strong><span class="status-view-cue">查看牌手 →</span></div><div class="status-state-summary">${stateLabel.icon}<span class="status-state-copy">${escapeHtml(statusSummary||"暂无状态描述")}</span></div><div class="status-rating-pair"><span><small>${escapeHtml(seasonLabel)} OVR</small><b>${r.seasonPerformance?.rating??"—"}</b></span><span><small>生涯 OVR</small><b>${r.career?.overallRating??"—"}</b></span></div></div><div class="status-recent-form"><div class="status-recent-head"><span>最近5场得分</span><small>旧 → 新</small><strong class="status-recent-total-mobile">近5场合计 ${fmtScore(r.recentTotal)}</strong></div><div class="status-recent-strip" aria-label="${escapeHtml(r.player)}最近${(r.recent||[]).length}场">${recent||'<small>暂无近期牌局</small>'}</div></div><div class="status-change-panel"><div><span>较上一轮排名</span><b class="${r.movement>0?"score-pos":r.movement<0?"score-neg":""}">${statusTrendMarkup(r.movement,`${r.playerId}-movement`)}</b></div><div><span>较上一轮指数</span><b class="${indexChange>0?"score-pos":indexChange<0?"score-neg":""}">${statusTrendMarkup(indexChange,`${r.playerId}-index`)}</b></div></div><div class="status-rank-index"><small>状态指数</small><b data-animate-number data-animation-key="status-index-${r.playerId}">${r.powerIndex}</b><span class="status-recent-total">近5场合计 ${fmtScore(r.recentTotal)}</span></div><div class="status-index-rail" aria-hidden="true"><i style="width:${railWidth}%"></i></div></button>`;
   }).join("");
   if(renderedViews.has("status"))animateStatusTrendChanges($("#powerRanking"));
   $("#statusStorylines").innerHTML=observations.length?observations.map(x=>`<article class="status-observation-item"><span>${x.number}</span><div><h4>${escapeHtml(x.title)}</h4><p>${escapeHtml(x.player)} · <b>${escapeHtml(x.detail)}</b></p></div></article>`).join(""):`<div class="empty">暂无足够的近期牌局数据。</div>`;

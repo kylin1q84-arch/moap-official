@@ -6937,3 +6937,31 @@ body main .view .page-identity .page-identity-description{font-size:13px;line-he
 @media(prefers-reduced-motion:reduce){
   [data-view="player"] .profile-honor-icon{transition:none}
 }
+
+
+/* MOAP v4.9.4 · State center semantic status icons */
+[data-view="status"] .status-state-summary{gap:6px}
+[data-view="status"] .status-state-summary .status-state-icon{
+  display:inline-block;
+  flex:0 0 18px;
+  width:18px;
+  height:18px;
+  margin:0;
+  vertical-align:middle;
+  stroke-width:1.8;
+}
+[data-view="status"] .status-state-summary .status-state-copy{
+  min-width:0;
+  padding-left:0!important;
+  border-left:0!important;
+  color:inherit;
+}
+[data-view="status"] .status-state-summary .status-state-icon.is-mvp,
+[data-view="status"] .status-state-summary .status-state-icon.is-up,
+[data-view="status"] .status-state-summary .status-state-icon.is-hot,
+[data-view="status"] .status-state-summary .status-state-icon.is-volatile{color:#E7C86A}
+[data-view="status"] .status-state-summary .status-state-icon.is-positive,
+[data-view="status"] .status-state-summary .status-state-icon.is-stable{color:#75D7AE}
+[data-view="status"] .status-state-summary .status-state-icon.is-down{color:#E88C8C}
+[data-view="status"] .status-state-summary .status-state-icon.is-neutral,
+[data-view="status"] .status-state-summary .status-state-icon.is-muted{color:rgba(190,205,199,.72)}
