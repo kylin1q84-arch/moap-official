@@ -74,10 +74,10 @@ await writeFile(
 const indexPath = join(outputDir, 'index.html')
 let indexHtml = await readFile(indexPath, 'utf8')
 if (!indexHtml.includes('/achievements.css')) {
-  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.3-collection-merge">\n</head>')
+  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.4-emblem-motion">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.3-collection-merge"></script>\n</body>')
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.4-emblem-motion"></script>\n</body>')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
