@@ -335,6 +335,114 @@
 [data-view="achievements"] .achievement-card.is-unlocked.rarity-epic .achievement-emblem-svg{filter:drop-shadow(0 0 11px color-mix(in srgb,var(--rarity) 17%,transparent))}
 [data-view="achievements"] .achievement-card.is-locked .achievement-emblem-svg{opacity:.26;filter:grayscale(1)}
 [data-view="achievements"] .achievement-card.is-locked .achievement-card-copy{opacity:.55}
+
+/* Always-on achievement motion: rotating sigil, breathing light, and a small orbiting spark. */
+[data-view="achievements"] .achievement-emblem-wrap{
+  --halo-low:.10;
+  --halo-high:.34;
+}
+[data-view="achievements"] .achievement-emblem-wrap::before,
+[data-view="achievements"] .achievement-emblem-wrap::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  pointer-events:none;
+}
+[data-view="achievements"] .achievement-emblem-wrap::before{
+  z-index:0;
+  width:82%;
+  height:82%;
+  border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--rarity) 30%,transparent) 0%,transparent 70%);
+  filter:blur(8px);
+  opacity:var(--halo-low);
+  transform:translate(-50%,-50%) scale(.82);
+  animation:moap-achievement-halo 3.8s ease-in-out infinite;
+}
+[data-view="achievements"] .achievement-emblem-wrap::after{
+  z-index:2;
+  width:4px;
+  height:4px;
+  margin:-2px 0 0 -2px;
+  border-radius:50%;
+  background:var(--rarity);
+  box-shadow:0 0 8px 2px color-mix(in srgb,var(--rarity) 58%,transparent);
+  opacity:.62;
+  transform:rotate(0deg) translateY(-53px);
+  transform-origin:center;
+  animation:moap-achievement-orbit 9s linear infinite;
+}
+[data-view="achievements"] .achievement-emblem-svg{
+  position:relative;
+  z-index:1;
+}
+[data-view="achievements"] .achievement-emblem-ring{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:moap-achievement-ring 24s linear infinite;
+}
+[data-view="achievements"] .achievement-emblem-rays{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:moap-achievement-rays 3.6s ease-in-out infinite;
+}
+[data-view="achievements"] .achievement-emblem-glyph{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:moap-achievement-glyph 4.2s ease-in-out infinite;
+}
+[data-view="achievements"] .achievement-card.is-unlocked .achievement-emblem-wrap{
+  --halo-low:.16;
+  --halo-high:.48;
+}
+[data-view="achievements"] .achievement-card.is-unlocked.rarity-epic .achievement-emblem-wrap{
+  --halo-low:.20;
+  --halo-high:.62;
+}
+[data-view="achievements"] .achievement-card.is-unlocked.rarity-legendary .achievement-emblem-wrap{
+  --halo-low:.25;
+  --halo-high:.78;
+}
+[data-view="achievements"] .achievement-card.is-locked .achievement-emblem-wrap{
+  --halo-low:.025;
+  --halo-high:.10;
+}
+[data-view="achievements"] .achievement-card.is-locked .achievement-emblem-wrap::after{
+  opacity:.14;
+  box-shadow:0 0 4px 1px color-mix(in srgb,var(--rarity) 30%,transparent);
+  animation-duration:16s;
+}
+@keyframes moap-achievement-ring{
+  to{transform:rotate(360deg)}
+}
+@keyframes moap-achievement-orbit{
+  to{transform:rotate(360deg) translateY(-53px)}
+}
+@keyframes moap-achievement-halo{
+  0%,100%{opacity:var(--halo-low,.10);transform:translate(-50%,-50%) scale(.82)}
+  50%{opacity:var(--halo-high,.34);transform:translate(-50%,-50%) scale(1.12)}
+}
+@keyframes moap-achievement-rays{
+  0%,100%{opacity:.28;transform:scale(.94)}
+  50%{opacity:.72;transform:scale(1.07)}
+}
+@keyframes moap-achievement-glyph{
+  0%,100%{transform:scale(.97)}
+  50%{transform:scale(1.045)}
+}
+
+/* Offset phases so the collection feels alive rather than pulsing in sync. */
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 2) .achievement-emblem-ring{animation-delay:-8s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 3) .achievement-emblem-ring{animation-delay:-16s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 2) .achievement-emblem-rays{animation-delay:-1.2s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 3) .achievement-emblem-rays{animation-delay:-2.4s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 2) .achievement-emblem-glyph{animation-delay:-1.4s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 3) .achievement-emblem-glyph{animation-delay:-2.8s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 2) .achievement-emblem-wrap::before{animation-delay:-1.3s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 3) .achievement-emblem-wrap::before{animation-delay:-2.6s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 2) .achievement-emblem-wrap::after{animation-delay:-3s}
+[data-view="achievements"] .achievement-grid>.achievement-card:nth-child(3n + 3) .achievement-emblem-wrap::after{animation-delay:-6s}
 [data-view="achievements"] .achievement-repeat{
   position:absolute;
   right:7px;
@@ -592,6 +700,11 @@
 @media(prefers-reduced-motion:reduce){
   [data-view="achievements"] .achievement-card,
   [data-view="achievements"] .achievement-emblem-svg,
+  [data-view="achievements"] .achievement-emblem-ring,
+  [data-view="achievements"] .achievement-emblem-rays,
+  [data-view="achievements"] .achievement-emblem-glyph,
+  [data-view="achievements"] .achievement-emblem-wrap::before,
+  [data-view="achievements"] .achievement-emblem-wrap::after,
   .achievement-modal,
   .achievement-modal-backdrop{transition:none!important;animation:none!important}
   [data-view="achievements"] .achievement-card::before{display:none}
