@@ -272,20 +272,25 @@
   content:"";
   position:absolute;
   inset:0;
+  border-radius:inherit;
   opacity:0;
   pointer-events:none;
   background:linear-gradient(116deg,transparent 20%,rgba(255,239,190,.06) 42%,transparent 61%);
-  transform:translateX(-55%);
-  transition:opacity .2s ease;
+  transform:translate3d(-75%,0,0);
 }
 @media(hover:hover) and (pointer:fine){
   [data-view="achievements"] .achievement-card:hover{
     transform:translateY(-2px);
     border-color:color-mix(in srgb,var(--rarity) 40%,transparent);
   }
-  [data-view="achievements"] .achievement-card.is-unlocked:hover::before{opacity:1;animation:achievementSheen .75s ease both}
+  [data-view="achievements"] .achievement-card.is-unlocked:hover::before{animation:achievementSheen .8s cubic-bezier(.22,.61,.36,1) both}
 }
-@keyframes achievementSheen{to{transform:translateX(65%)}}
+@keyframes achievementSheen{
+  0%{opacity:0;transform:translate3d(-75%,0,0)}
+  12%{opacity:1}
+  82%{opacity:.72}
+  100%{opacity:0;transform:translate3d(75%,0,0)}
+}
 
 [data-view="achievements"] .achievement-card-top{
   display:flex;
