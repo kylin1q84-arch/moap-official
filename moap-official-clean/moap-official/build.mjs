@@ -74,10 +74,10 @@ await writeFile(
 const indexPath = join(outputDir, 'index.html')
 let indexHtml = await readFile(indexPath, 'utf8')
 if (!indexHtml.includes('/achievements.css')) {
-  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.2-hover-simple">\n</head>')
+  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.3-collection-merge">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.2-settlement"></script>\n</body>')
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.3-collection-merge"></script>\n</body>')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
@@ -91,6 +91,7 @@ console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
 console.log('Achievement center V1 with 32 unlockable emblems: included')
+console.log('Official honors integrated into the unified achievement collection and filters: included')
 console.log('Achievement archive uses official split-session normalization and directional matchup evidence: included')
 console.log('Achievement card sheen disabled; smooth lift-only hover: included')
 console.log('Official title and annual MVP achievement evidence uses season settlement: included')
