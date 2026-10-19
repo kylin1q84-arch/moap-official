@@ -74,7 +74,7 @@ await writeFile(
 const indexPath = join(outputDir, 'index.html')
 let indexHtml = await readFile(indexPath, 'utf8')
 if (!indexHtml.includes('/achievements.css')) {
-  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.0">\n</head>')
+  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.1-hover-fix">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
   indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.2-settlement"></script>\n</body>')
@@ -92,6 +92,7 @@ console.log('Single/continuous record center and expanded data leaderboard: incl
 console.log('Fixed GOAT model and data validation: included')
 console.log('Achievement center V1 with 32 unlockable emblems: included')
 console.log('Achievement archive uses official split-session normalization and directional matchup evidence: included')
+console.log('Achievement card hover sheen fades out cleanly: included')
 console.log('Official title and annual MVP achievement evidence uses season settlement: included')
 
 console.log('Monthly report, immersive ambient background, centered record tables, season personal data, matchup detail page and current-season OVR: included')
