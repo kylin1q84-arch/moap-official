@@ -93,14 +93,9 @@ function ensureSection(){
       </div>
     </section>
 
-    <section class="achievement-official-stage" aria-labelledby="achievementOfficialTitle">
-      <header class="achievement-section-head"><div><span>02 / MOAP OFFICIAL HONORS</span><h3 id="achievementOfficialTitle">官方荣誉</h3></div><small>正式荣誉 · 最高视觉规格</small></header>
-      <div class="achievement-official-grid" id="achievementOfficialGrid"></div>
-    </section>
-
     <section class="achievement-collection-stage" aria-labelledby="achievementCollectionTitle">
       <header class="achievement-section-head achievement-collection-head">
-        <div><span>03 / ACHIEVEMENT COLLECTION</span><h3 id="achievementCollectionTitle">成就收藏</h3><small id="achievementCollectionCount">—</small></div>
+        <div><span>02 / ACHIEVEMENT COLLECTION</span><h3 id="achievementCollectionTitle">成就收藏</h3><small id="achievementCollectionCount">—</small></div>
         <div class="achievement-status-filter" id="achievementStatusFilter" role="group" aria-label="成就状态筛选">
           <button type="button" data-achievement-status="all" class="active">全部</button>
           <button type="button" data-achievement-status="unlocked">已解锁</button>
@@ -112,7 +107,7 @@ function ensureSection(){
     </section>
 
     <section class="achievement-recent-stage" aria-labelledby="achievementRecentTitle">
-      <header class="achievement-section-head"><div><span>04 / RECENT UNLOCKS</span><h3 id="achievementRecentTitle">最近解锁</h3></div><small>最近达成的 5 项成就</small></header>
+      <header class="achievement-section-head"><div><span>03 / RECENT UNLOCKS</span><h3 id="achievementRecentTitle">最近解锁</h3></div><small>最近达成的 5 项成就</small></header>
       <div class="achievement-recent-list" id="achievementRecentList"></div>
     </section>
   `;
@@ -337,7 +332,6 @@ function renderAchievements({goatPending=false}={}){
 
   renderPlayerTabs(profile.playerId);
   renderCategoryTabs(profile);
-  renderOfficial(profile);
   renderCollection(profile);
   renderRecent(profile);
   injectProfileAchievementLink();
@@ -385,21 +379,15 @@ function unlockMeta(item){
   return [evidence.season,evidence.matchId].filter(Boolean).join(" · ")||"已解锁";
 }
 
-function renderOfficial(profile){
-  const host=$("#achievementOfficialGrid");
-  if(!host)return;
-  host.innerHTML=profile.achievements.filter(item=>OFFICIAL_IDS.has(item.id)).map(item=>achievementCard(item,{official:true})).join("");
-}
-
 function filteredCollection(profile){
-  return profile.achievements.filter(item=>!OFFICIAL_IDS.has(item.id)).filter(item=>selectedCategory==="all"||item.category===selectedCategory).filter(item=>selectedStatus==="all"||(selectedStatus==="unlocked"?item.unlocked:!item.unlocked));
+  return profile.achievements.filter(item=>selectedCategory==="all"||item.category===selectedCategory).filter(item=>selectedStatus==="all"||(selectedStatus==="unlocked"?item.unlocked:!item.unlocked));
 }
 
 function renderCollection(profile){
   const rows=filteredCollection(profile),host=$("#achievementGrid");
-  if($("#achievementCollectionCount"))$("#achievementCollectionCount").textContent=`显示 ${rows.length} / ${profile.achievements.length-3} 枚收藏成就`;
+  if($("#achievementCollectionCount"))$("#achievementCollectionCount").textContent=`显示 ${rows.length} / ${profile.achievements.length} 枚成就`;
   if(!host)return;
-  host.innerHTML=rows.length?rows.map(item=>achievementCard(item)).join(""):'<div class="achievement-empty">当前筛选条件下没有成就。</div>';
+  host.innerHTML=rows.length?rows.map(item=>achievementCard(item,{official:OFFICIAL_IDS.has(item.id)})).join(""):'<div class="achievement-empty">当前筛选条件下没有成就。</div>';
 }
 
 function renderRecent(profile){
