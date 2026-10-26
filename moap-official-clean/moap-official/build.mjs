@@ -57,7 +57,7 @@ for (const filename of ['app.js', 'achievements-runtime.js']) {
   let source = await readFile(outputPath, 'utf8')
   const oldImport = '"./source-data-corrections.js"'
   if (!source.includes(oldImport)) throw new Error(`MOAP build failed: source correction import missing in ${filename}`)
-  source = source.replace(oldImport, '"./source-data-corrections.js?v=2026-10-26-moap0075-venue"')
+  source = source.replace(oldImport, '"./source-data-corrections.js?v=2026-10-26-moap0077-venue"')
   await writeFile(outputPath, source, 'utf8')
 }
 
@@ -83,12 +83,12 @@ await writeFile(
 
 const indexPath = join(outputDir, 'index.html')
 let indexHtml = await readFile(indexPath, 'utf8')
-indexHtml = indexHtml.replace('/app.js?v=4.9.5-status-svg-fix', '/app.js?v=4.9.6-moap0075-venue')
+indexHtml = indexHtml.replace('/app.js?v=4.9.5-status-svg-fix', '/app.js?v=4.9.7-venue-source-fix')
 if (!indexHtml.includes('/achievements.css')) {
   indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.4-emblem-motion">\n</head>')
 }
 if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.5-venue-correction"></script>\n</body>')
+  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.6-venue-source-fix"></script>\n</body>')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
