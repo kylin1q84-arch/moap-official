@@ -10,8 +10,10 @@ const MATCH_CORRECTIONS = Object.freeze({
   })
 });
 
+// MOAP0077 is the raw source record. After two official split-session merges,
+// it is displayed throughout MOAP as official match MOAP0075 (2026-10-23).
 const VENUE_CORRECTIONS = Object.freeze({
-  MOAP0075: Object.freeze({
+  MOAP0077: Object.freeze({
     matchDate: "2026-10-23",
     venue: "胡小鸭共享棋牌室（华美空间店）"
   })
