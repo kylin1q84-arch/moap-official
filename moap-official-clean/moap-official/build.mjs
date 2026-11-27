@@ -17,9 +17,6 @@ const sourceFiles = [
   'gsap-core.js',
   'CSSPlugin.js',
   'style.css',
-  'achievements.css',
-  'achievements-engine.js',
-  'achievements-runtime.js',
   'certified-data.js',
   'honor-details.js',
   'analytics-engine.js',
@@ -51,23 +48,16 @@ try {
   // 头像资源尚未提供时允许正常构建；后续只需添加 assets/players/*.png。
 }
 
-// Keep the corrected MOAP0075 venue in sync across the main site and Achievement Center.
-for (const filename of ['app.js', 'achievements-runtime.js']) {
-  const outputPath = join(outputDir, filename)
-  let source = await readFile(outputPath, 'utf8')
-  const oldImport = '"./source-data-corrections.js"'
-  if (!source.includes(oldImport)) throw new Error(`MOAP build failed: source correction import missing in ${filename}`)
-  source = source.replace(oldImport, '"./source-data-corrections.js?v=2026-10-26-moap0077-venue"')
-  await writeFile(outputPath, source, 'utf8')
+// Keep the corrected venue in the main application.
+// The Achievement Center is temporarily disabled in production; source is retained.
+const appPath = join(outputDir, 'app.js')
+let appSource = await readFile(appPath, 'utf8')
+const oldCorrectionImport = '"./source-data-corrections.js"'
+if (!appSource.includes(oldCorrectionImport)) {
+  throw new Error('MOAP build failed: source correction import missing in app.js')
 }
-
-const achievementRuntimePath = join(outputDir, 'achievements-runtime.js')
-let achievementRuntime = await readFile(achievementRuntimePath, 'utf8')
-if (!achievementRuntime.includes('"./achievements-engine.js"')) {
-  throw new Error('MOAP build failed: achievement engine import was not found for cache versioning.')
-}
-achievementRuntime = achievementRuntime.replace('"./achievements-engine.js"', '"./achievements-engine.js?v=1.0.2-settlement"')
-await writeFile(achievementRuntimePath, achievementRuntime, 'utf8')
+appSource = appSource.replace(oldCorrectionImport, '"./source-data-corrections.js?v=2026-10-26-moap0077-venue"')
+await writeFile(appPath, appSource, 'utf8')
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
@@ -84,11 +74,10 @@ await writeFile(
 const indexPath = join(outputDir, 'index.html')
 let indexHtml = await readFile(indexPath, 'utf8')
 indexHtml = indexHtml.replace('/app.js?v=4.9.5-status-svg-fix', '/app.js?v=4.9.7-venue-source-fix')
-if (!indexHtml.includes('/achievements.css')) {
-  indexHtml = indexHtml.replace('</head>', '  <link rel="stylesheet" href="/achievements.css?v=1.0.4-emblem-motion">\n</head>')
-}
-if (!indexHtml.includes('/achievements-runtime.js')) {
-  indexHtml = indexHtml.replace('</body>', '  <script type="module" src="/achievements-runtime.js?v=1.0.6-venue-source-fix"></script>\n</body>')
+// The retired runtime formerly injected the sidebar, mobile navigation,
+// standalone page, and Personal Center link. They must not be bootstrapped.
+if (indexHtml.includes('/achievements-runtime.js') || indexHtml.includes('/achievements.css')) {
+  throw new Error('MOAP build failed: unexpected Achievement Center injection')
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
@@ -101,10 +90,7 @@ console.log('Unique honor engine: included')
 console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
-console.log('Achievement center V1 with 32 unlockable emblems: included')
-console.log('Official honors integrated into the unified achievement collection and filters: included')
-console.log('Achievement archive uses official split-session normalization and directional matchup evidence: included')
-console.log('Achievement card sheen disabled; smooth lift-only hover: included')
-console.log('Official title and annual MVP achievement evidence uses season settlement: included')
+console.log('Achievement Center temporarily removed from deployed site; source retained in repository')
+console.log('Core official honors remain in player profiles and league reports')
 
 console.log('Monthly report, immersive ambient background, centered record tables, season personal data, matchup detail page and current-season OVR: included')
