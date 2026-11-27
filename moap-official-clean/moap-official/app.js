@@ -1,4 +1,3 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 import { CERTIFIED_SNAPSHOT } from "./certified-data.js";
 const CERTIFIED_BASELINE_LABEL = `认证基线快照 · 截至 ${CERTIFIED_SNAPSHOT.meta.releaseDate} · ${CERTIFIED_SNAPSHOT.meta.matches} 场`;
 import { HONOR_CATALOG, CORE_HONOR_IDS } from "./honor-details.js";
@@ -11,7 +10,6 @@ import { normalizeOfficialMatchArchive } from "./official-match-normalization.js
 import { correctSourceData } from "./source-data-corrections.js";
 import { canonicalizeMatchIds } from "./match-id.js";
 import { matchFormatKey, matchFormatLabel, filterMatchesByFormat } from "./match-format.js?v=4.8.1-format-filters";
-import { renderPlayerComparison } from "./player-compare.js?v=1.0.0";
 // Keep semantic icon markup local to the application module so the production
 // deployment remains resilient even when static module assets are edge-cached
 // independently of app.js.
@@ -197,11 +195,20 @@ function applyAnalyticsToState(target){
 }
 applyAnalyticsToState(state);
 
-const sb = MOAP_CONFIG.supabaseUrl && MOAP_CONFIG.supabaseKey
-  ? createClient(MOAP_CONFIG.supabaseUrl, MOAP_CONFIG.supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    })
-  : null;
+let sb = null;
+async function connectCloud(){
+  if(sb)return sb;
+  let sdk;
+  try {
+    sdk=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm");
+  } catch(error) {
+    sdk=await import("https://esm.sh/@supabase/supabase-js@2.110.7");
+  }
+  sb=sdk.createClient(MOAP_CONFIG.supabaseUrl,MOAP_CONFIG.supabaseKey,{
+    auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+  });
+  return sb;
+}
 let currentRole="admin",appBooted=false;
 
 function setAuthStatus(message,isError=false,isOk=false){
@@ -1273,7 +1280,16 @@ function renderPlayer(){
   drawTrend(pid);
 }
 
-function renderComparison(){
+async function renderComparison(){
+  let renderPlayerComparison;
+  try {
+    ({renderPlayerComparison}=await import("./player-compare.js?v=1.0.0"));
+  } catch(error) {
+    console.error(error);
+    const host=$("#playerComparison");
+    if(host)host.textContent="双人比较暂时无法加载，请刷新后重试。";
+    return;
+  }
   renderPlayerComparison($("#playerComparison"),state,{
     preferredPlayerId:comparisonEntryPlayer,
     portraitHtml:playerPortraitHtml,
@@ -2151,6 +2167,7 @@ async function start(){
   }
 
   try{
+    await connectCloud();
     await reloadCloudData();
     if(badge){badge.hidden=false;badge.textContent="公开直达模式 · 云端已同步 · 可录入";}
   }catch(err){
