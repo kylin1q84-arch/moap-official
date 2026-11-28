@@ -8,6 +8,7 @@
   <meta name="description" content="MOAP 五人麻将数据系统 · 实时分析，记录牌局、牌手表现、历史纪录与对位数据。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061411'/%3E%3Cpath d='M16 46V18h7l9 13 9-13h7v28h-7V29l-9 13-9-13v17z' fill='%23f2d990'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/style.css?v=4.9.4-status-svg">
+  <link rel="stylesheet" href="/player-compare.css?v=1.0.0">
 </head>
 <body>
 
@@ -37,7 +38,7 @@
   <div class="layout">
     <aside class="sidebar">
       <nav id="sidebarNav"></nav>
-      <div class="side-footer"><span><i aria-hidden="true"></i>SUPABASE · 云端数据</span><small>MOAP v2.3.1</small></div>
+      <div class="side-footer"><span><i aria-hidden="true"></i>SUPABASE · 云端数据</span><small>MOAP v2.4.0</small></div>
     </aside>
 
     <main>
@@ -154,7 +155,10 @@
       <section class="view" data-view="player">
         <div class="hero player-observatory-masthead page-identity">
           <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MOAP</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
-          <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
+          <div class="player-masthead-actions">
+             <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
+             <button type="button" class="player-compare-launch" id="openPlayerComparison">双人比较 VS ↗</button>
+           </div>
         </div>
         <div class="player-profile-stage player-observatory-stage">
           <div class="player-observatory-identity-column">
@@ -185,6 +189,10 @@
             <div class="trend-wrap"><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" aria-label="生涯积分曲线"></svg></div>
           </div>
         </div>
+      </section>
+
+      <section class="view" data-view="compare" aria-label="牌手双人比较">
+        <div id="playerComparison"></div>
       </section>
 
       <section class="view" data-view="matches">
@@ -368,6 +376,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.9.5-status-svg-fix"></script>
+  <script type="module" src="/app.js?v=4.10.0-player-vs"></script>
 </body>
 </html>

@@ -7,6 +7,8 @@ const outputDir = join(projectRoot, 'dist')
 const sourceFiles = [
   'index.html',
   'app.js',
+  'player-compare.js',
+  'player-compare.css',
   'official-match-normalization.js',
   'source-data-corrections.js',
   'match-id.js',
@@ -81,7 +83,7 @@ if (indexHtml.includes('/achievements-runtime.js') || indexHtml.includes('/achie
 }
 await writeFile(indexPath, indexHtml, 'utf8')
 
-console.log('MOAP v2.3.1 build completed successfully.')
+console.log('MOAP v2.4.0 build completed successfully.')
 console.log('Supabase URL: configured')
 console.log('Supabase key: configured')
 console.log('Honor details: included')
@@ -90,6 +92,7 @@ console.log('Unique honor engine: included')
 console.log('MOAP form center and S1-current career evaluation: included')
 console.log('Single/continuous record center and expanded data leaderboard: included')
 console.log('Fixed GOAT model and data validation: included')
+console.log('Player VS Player comparison and seasonal trajectory are included')
 console.log('Achievement Center temporarily removed from deployed site; source retained in repository')
 console.log('Core official honors remain in player profiles and league reports')
 
