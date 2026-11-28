@@ -11,7 +11,6 @@ import { normalizeOfficialMatchArchive } from "./official-match-normalization.js
 import { correctSourceData } from "./source-data-corrections.js";
 import { canonicalizeMatchIds } from "./match-id.js";
 import { matchFormatKey, matchFormatLabel, filterMatchesByFormat } from "./match-format.js?v=4.8.1-format-filters";
-import { renderPlayerComparison } from "./player-compare.js?v=1.0.0";
 // Keep semantic icon markup local to the application module so the production
 // deployment remains resilient even when static module assets are edge-cached
 // independently of app.js.
@@ -65,7 +64,6 @@ clearLegacyRivalState(state);
 let currentView = "overview";
 const renderedViews = new Set();
 let currentPlayer = "P001";
-let comparisonEntryPlayer = null;
 let matchLimit = 15;
 let monthlyReportMonth = "";
 let monthlyReportMonthTouched = false;
@@ -92,7 +90,6 @@ const NAV = [
   ["records","记录中心"],
   ["status","状态中心"],
   ["player","个人中心"],
-  ["compare","双人比较"], // internal route; launched from the Personal Center
   ["matches","牌局中心"],
   ["rival","对位中心"],
   ["system","系统审计"],
@@ -105,7 +102,7 @@ const NAV_GROUPS = [
 ];
 
 const MOAP_RELEASE = Object.freeze({
-  version:"v2.4.0",
+  version:"v2.3.1",
   releaseStage:"功能完善版本",
   releaseDate:"2026-10-16",
   currentStatus:"全站筛选、荣誉体系、牌局详情与交互动效已完成整合",
@@ -689,8 +686,8 @@ function initPremiumDropdownSystem(){
 
 function initNav(){
   const desktop=$("#sidebarNav"), mobile=$("#mobileNav");
-  const visibleNav = NAV.filter(([id])=>id!=="compare" && (id!=="entry" || currentRole==="admin"));
-  const navButton=([id,label])=>`<button type="button" class="nav-btn ${id===currentView||(currentView==="compare"&&id==="player")?"active":""}" data-nav="${id}">${label}</button>`;
+  const visibleNav = NAV.filter(([id])=>id!=="entry" || currentRole==="admin");
+  const navButton=([id,label])=>`<button type="button" class="nav-btn ${id===currentView?"active":""}" data-nav="${id}">${label}</button>`;
   desktop.innerHTML = `<span class="nav-active-indicator" aria-hidden="true"></span>`+NAV_GROUPS.map(group=>{
     const items=visibleNav.filter(([id])=>group.ids.includes(id));
     if(!items.length)return "";
@@ -714,7 +711,6 @@ function renderViewContent(id){
   if(id==="records") renderRecords();
   if(id==="status") renderStatus();
   if(id==="player") renderPlayer();
-  if(id==="compare") renderComparison();
   if(id==="matches") renderMatches(true);
   if(id==="rival") renderRival();
   if(id==="system") renderSystem();
@@ -728,11 +724,10 @@ function showView(id,{immediate=false,forceRender=false}={}){
   const swap=()=>{
     currentView=id;
     $$(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
-    const highlightedNav=id==="compare"?"player":id;
-    $("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===highlightedNav));
+    $$("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));
     const desktopNav=$("#sidebarNav");
-    animateNavIndicator(desktopNav,desktopNav?.querySelector(`.nav-btn[data-nav="${highlightedNav}"]`));
-    requestAnimationFrame(()=>centerActiveMobileNav(highlightedNav));
+    animateNavIndicator(desktopNav,desktopNav?.querySelector(`.nav-btn[data-nav="${id}"]`));
+    requestAnimationFrame(()=>centerActiveMobileNav(id));
     window.scrollTo({top:0,behavior:"auto"});
     if(forceRender||!renderedViews.has(id)){
       renderViewContent(id);
@@ -1272,29 +1267,6 @@ function renderPlayer(){
   renderPlayerSeasonData(pid);
   drawTrend(pid);
 }
-
-function renderComparison(){
-  renderPlayerComparison($("#playerComparison"),state,{
-    preferredPlayerId:comparisonEntryPlayer,
-    portraitHtml:playerPortraitHtml,
-    onBack:()=>showView("player"),
-    onMatch:matchId=>{
-      showView("matches");
-      window.setTimeout(()=>{
-        const input=$("#matchQuery");
-        if(!input)return;
-        input.value=matchId;
-        input.dispatchEvent(new Event("input",{bubbles:true}));
-        input.dispatchEvent(new Event("change",{bubbles:true}));
-      },260);
-    }
-  });
-  comparisonEntryPlayer=null;
-}
-$("#openPlayerComparison")?.addEventListener("click",()=>{
-  comparisonEntryPlayer=currentPlayer;
-  showView("compare",{forceRender:true});
-});
 
 $("#playerSelect").addEventListener("change",e=>{
   closeProfileHonorModal();
