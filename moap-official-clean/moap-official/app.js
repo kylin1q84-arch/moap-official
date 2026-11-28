@@ -1268,6 +1268,29 @@ function renderPlayer(){
   drawTrend(pid);
 }
 
+$("#openPlayerCompare")?.addEventListener("click", async event => {
+  const trigger = event.currentTarget;
+  trigger.disabled = true;
+  trigger.setAttribute("aria-busy", "true");
+  try {
+    const { openPlayerCompare } = await import("./player-compare.js?v=1");
+    if (currentView !== "player") return;
+    const { players, matches, goat, seasons } = state;
+    await openPlayerCompare(structuredClone({ players, matches, goat, seasons }), {
+      playerId: currentPlayer,
+      sourceLabel: state.version.version === MOAP_RELEASE.version ? "当前已同步数据" : CERTIFIED_BASELINE_LABEL,
+      canOpen: () => currentView === "player",
+      returnFocus: trigger,
+    });
+  } catch (error) {
+    console.error("Player comparison could not open", error);
+    toast("双人比较暂时无法打开，请稍后重试。");
+  } finally {
+    trigger.disabled = false;
+    trigger.removeAttribute("aria-busy");
+  }
+});
+
 $("#playerSelect").addEventListener("change",e=>{
   closeProfileHonorModal();
   const nextPlayer=e.target.value,root=$('.view[data-view="player"]');

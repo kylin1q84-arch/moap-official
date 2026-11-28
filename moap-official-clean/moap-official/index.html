@@ -153,7 +153,10 @@
 
       <section class="view" data-view="player">
         <div class="hero player-observatory-masthead page-identity">
-          <div class="page-identity-copy"><span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MOAP</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p></div>
+          <div class="page-identity-copy">
+            <span class="player-observatory-kicker page-identity-eyebrow">牌手观察 · MOAP</span><h2 class="page-identity-title">个人中心</h2><p class="page-identity-description">赛季能力、生涯轨迹与荣誉档案</p>
+            <button class="btn" id="openPlayerCompare" type="button" aria-haspopup="dialog">双人比较 VS</button>
+          </div>
           <label class="page-identity-meta page-identity-meta-control">选择牌手<select id="playerSelect"></select></label>
         </div>
         <div class="player-profile-stage player-observatory-stage">
@@ -368,6 +371,6 @@
 <div class="toast" id="toast"></div>
 
 
-  <script type="module" src="/app.js?v=4.9.5-status-svg-fix"></script>
+  <script type="module" src="/app.js?v=4.9.8-player-compare"></script>
 </body>
 </html>

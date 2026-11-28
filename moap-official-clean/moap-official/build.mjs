@@ -7,6 +7,8 @@ const outputDir = join(projectRoot, 'dist')
 const sourceFiles = [
   'index.html',
   'app.js',
+  'player-compare.js',
+  'player-compare.css',
   'official-match-normalization.js',
   'source-data-corrections.js',
   'match-id.js',
